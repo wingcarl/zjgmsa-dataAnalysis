@@ -1,0 +1,257 @@
+<% layout('/layouts/default.html', {title: 'PSC Inspection Table管理', libs: ['dataGrid']}){ %>
+<div class="main-content">
+	<div class="box box-main">
+		<div class="box-header">
+			<div class="box-title">
+				<i class="fa icon-notebook"></i> ${text('PSC Inspection Table管理')}
+			</div>
+			<div class="box-tools pull-right">
+				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
+				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
+				<% if(hasPermi('psc:pscInspection:edit')){ %>
+						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
+					<a href="${ctx}/psc/pscInspection/form" class="btn btn-default btnTool" title="${text('新增PSC Inspection Table')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<% } %>
+				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
+			</div>
+		</div>
+		<div class="box-body">
+			<#form:form id="searchForm" model="${pscInspection}" action="${ctx}/psc/pscInspection/listData" method="post" class="form-inline hide"
+					data-page-no="${parameter.pageNo}" data-page-size="${parameter.pageSize}" data-order-by="${parameter.orderBy}">
+				<div class="form-group">
+					<label class="control-label">${text('Type of inspection')}：</label>
+					<div class="control-inline">
+						<#form:input path="type" maxlength="50" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('submitted time')}：</label>
+					<div class="control-inline">
+						<#form:input path="submitted_gte" readonly="true" maxlength="20" class="form-control laydate width-datetime"
+							dataFormat="datetime" data-type="datetime" data-format="yyyy-MM-dd HH:mm" data-done="submitted_lte.click()"/>
+						&nbsp;-&nbsp;
+						<#form:input path="submitted_lte" readonly="true" maxlength="20" class="form-control laydate width-datetime"
+							dataFormat="datetime" data-type="datetime" data-format="yyyy-MM-dd HH:mm"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('inspection date')}：</label>
+					<div class="control-inline">
+						<#form:input path="inspectionDate_gte" readonly="true" maxlength="20" class="form-control laydate width-datetime"
+							dataFormat="datetime" data-type="datetime" data-format="yyyy-MM-dd HH:mm" data-done="inspectionDate_lte.click()"/>
+						&nbsp;-&nbsp;
+						<#form:input path="inspectionDate_lte" readonly="true" maxlength="20" class="form-control laydate width-datetime"
+							dataFormat="datetime" data-type="datetime" data-format="yyyy-MM-dd HH:mm"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Port')}：</label>
+					<div class="control-inline">
+						<#form:input path="port" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('IMO number')}：</label>
+					<div class="control-inline">
+						<#form:input path="imoNumber" maxlength="50" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Name')}：</label>
+					<div class="control-inline">
+						<#form:input path="name" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Callsign')}：</label>
+					<div class="control-inline">
+						<#form:input path="callsign" maxlength="50" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('MMSI')}：</label>
+					<div class="control-inline">
+						<#form:input path="mmsi" maxlength="50" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Flag')}：</label>
+					<div class="control-inline">
+						<#form:input path="flag" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Ship Type')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipType" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('PSCO')}：</label>
+					<div class="control-inline">
+						<#form:input path="psco" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('keel laid')}：</label>
+					<div class="control-inline">
+						<#form:input path="dateKeelLaid" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Classification society')}：</label>
+					<div class="control-inline">
+						<#form:input path="classSociety" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Gross tonnage')}：</label>
+					<div class="control-inline">
+						<#form:input path="grossTonnage" maxlength="10" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('deficiencies found')}：</label>
+					<div class="control-inline">
+						<#form:input path="deficiencies" maxlength="10" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Detention status')}：</label>
+					<div class="control-inline">
+						<#form:input path="detention" maxlength="10" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('detention deficiencies')}：</label>
+					<div class="control-inline">
+						<#form:input path="detentionDeficiencies" maxlength="10" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Risk profile')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipRiskProfile" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Inspection priority')}：</label>
+					<div class="control-inline">
+						<#form:input path="priority" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('Window inspection range')}：</label>
+					<div class="control-inline">
+						<#form:input path="windowInspectionRange" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-search"></i> ${text('查询')}</button>
+					<button type="reset" class="btn btn-default btn-sm isQuick"><i class="glyphicon glyphicon-repeat"></i> ${text('重置')}</button>
+				</div>
+			</#form:form>
+			<table id="dataGrid"></table>
+			<div id="dataGridPage"></div>
+		</div>
+	</div>
+</div>
+<% } %>
+<script>
+//# // 初始化DataGrid对象
+$('#dataGrid').dataGrid({
+	searchForm: $('#searchForm'),
+	columnModel: [
+		{header:'${text("Type of inspection")}', name:'type', index:'a.type', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
+			return '<a href="${ctx}/psc/pscInspection/form?id='+row.id+'" class="btnList" data-title="${text("编辑PSC Inspection Table")}">'+(val||row.id)+'</a>';
+		}},
+		{header:'${text("submitted time")}', name:'submitted', index:'a.submitted', width:150, align:"center"},
+		{header:'${text("inspection date")}', name:'inspectionDate', index:'a.inspection_date', width:150, align:"center"},
+		{header:'${text("Port")}', name:'port', index:'a.port', width:150, align:"left"},
+		{header:'${text("IMO number")}', name:'imoNumber', index:'a.imo_number', width:150, align:"left"},
+		{header:'${text("Name")}', name:'name', index:'a.name', width:150, align:"left"},
+		{header:'${text("Callsign")}', name:'callsign', index:'a.callsign', width:150, align:"left"},
+		{header:'${text("MMSI")}', name:'mmsi', index:'a.mmsi', width:150, align:"left"},
+		{header:'${text("Flag")}', name:'flag', index:'a.flag', width:150, align:"left"},
+		{header:'${text("Ship Type")}', name:'shipType', index:'a.ship_type', width:150, align:"left"},
+		{header:'${text("PSCO")}', name:'psco', index:'a.psco', width:150, align:"left"},
+		{header:'${text("keel laid")}', name:'dateKeelLaid', index:'a.date_keel_laid', width:150, align:"left"},
+		{header:'${text("Classification society")}', name:'classSociety', index:'a.class_society', width:150, align:"left"},
+		{header:'${text("Gross tonnage")}', name:'grossTonnage', index:'a.gross_tonnage', width:150, align:"left"},
+		{header:'${text("deficiencies found")}', name:'deficiencies', index:'a.deficiencies', width:150, align:"left"},
+		{header:'${text("Detention status")}', name:'detention', index:'a.detention', width:150, align:"left"},
+		{header:'${text("detention deficiencies")}', name:'detentionDeficiencies', index:'a.detention_deficiencies', width:150, align:"left"},
+		{header:'${text("Risk profile")}', name:'shipRiskProfile', index:'a.ship_risk_profile', width:150, align:"left"},
+		{header:'${text("Inspection priority")}', name:'priority', index:'a.priority', width:150, align:"left"},
+		{header:'${text("Window inspection range")}', name:'windowInspectionRange', index:'a.window_inspection_range', width:150, align:"left"},
+		{header:'${text("更新时间")}', name:'updateDate', index:'a.update_date', width:150, align:"center"},
+		{header:'${text("备注信息")}', name:'remarks', index:'a.remarks', width:150, align:"left"},
+		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
+			var actions = [];
+			//# if(hasPermi('psc:pscInspection:edit')){
+				actions.push('<a href="${ctx}/psc/pscInspection/form?id='+row.id+'" class="btnList" title="${text("编辑PSC Inspection Table")}"><i class="fa fa-pencil"></i></a>&nbsp;');
+				actions.push('<a href="${ctx}/psc/pscInspection/delete?id='+row.id+'" class="btnList" title="${text("删除PSC Inspection Table")}" data-confirm="${text("确认要删除该PSC Inspection Table吗？")}"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			//# }
+			return actions.join('');
+		}}
+	],
+	//# // 加载成功后执行事件
+	ajaxSuccess: function(data){
+		
+	}
+});
+</script><script>
+$('#btnExport').click(function(){
+	js.ajaxSubmitForm($('#searchForm'), {
+		url: '${ctx}/psc/pscInspection/exportData',
+		clearParams: 'pageNo,pageSize',
+		downloadFile: true
+	});
+});
+$('#btnImport').click(function(){
+	js.layer.open({
+		type: 1,
+		area: ['400px'],
+		title: '${text("导入PSC Inspection Table")}',
+		resize: false,
+		scrollbar: true,
+		content: js.template('importTpl'),
+		btn: ['<i class="fa fa-check"></i> ${text("导入")}',
+			'<i class="fa fa-remove"></i> ${text("关闭")}'],
+		btn1: function(index, layero){
+			var form = {
+				inputForm: layero.find('#inputForm'),
+				file: layero.find('#file').val()
+			};
+		    if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
+		    	js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
+		        return false;
+		    }
+			js.ajaxSubmitForm(form.inputForm, function(data){
+				js.showMessage(data.message);
+				if(data.result == Global.TRUE){
+					js.layer.closeAll();
+				}
+				page();
+			}, "json");
+			return true;
+		}
+	});
+});
+</script>
+<script id="importTpl" type="text/template">//<!--
+<form id="inputForm" action="${ctx}/psc/pscInspection/importData" method="post" enctype="multipart/form-data"
+	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
+	<div class="row">
+		<div class="col-xs-12 col-xs-offset-1">
+			<input type="file" id="file" name="file" class="form-file"/>
+			<div class="mt10 pt5" style="color:red">
+				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
+			</div>
+			<div class="mt10 pt5">
+				<a href="${ctx}/psc/pscInspection/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>
+			</div>
+		</div>
+	</div>
+</form>
+//--></script>
