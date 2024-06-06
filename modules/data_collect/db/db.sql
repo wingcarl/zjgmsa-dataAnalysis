@@ -49,3 +49,36 @@ CREATE TABLE ship_on_site_inspection (
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '船舶现场监督检查表' ROW_FORMAT = Dynamic;
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+CREATE TABLE psc_inspection (
+                                `id` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '编号',
+
+                                type VARCHAR(50) NOT NULL COMMENT 'Type of inspection',
+                                submitted DATETIME NOT NULL COMMENT 'submitted time',
+                                inspection_date DATE NOT NULL COMMENT 'inspection date',
+                                port VARCHAR(100) NOT NULL COMMENT 'Port',
+                                imo_number VARCHAR(50) NOT NULL COMMENT 'IMO number',
+                                name VARCHAR(100) NOT NULL COMMENT 'Name',
+                                callsign VARCHAR(50) NOT NULL COMMENT 'Callsign',
+                                mmsi VARCHAR(50) NOT NULL COMMENT 'MMSI',
+                                flag VARCHAR(100) NOT NULL COMMENT 'Flag',
+                                ship_type VARCHAR(100) NOT NULL COMMENT 'Ship Type',
+                                psco VARCHAR(100) NOT NULL COMMENT 'PSCO',
+                                date_keel_laid VARCHAR(100) NOT NULL COMMENT 'keel laid',
+                                class_society VARCHAR(100) NOT NULL COMMENT 'Classification society',
+                                gross_tonnage VARCHAR(10) NOT NULL COMMENT 'Gross tonnage',
+                                deficiencies VARCHAR(10) NOT NULL COMMENT 'deficiencies found',
+                                detention VARCHAR(10) NOT NULL COMMENT 'Detention status',
+                                detention_deficiencies VARCHAR(10) COMMENT 'detention deficiencies',
+                                ship_risk_profile VARCHAR(100) NOT NULL COMMENT 'Risk profile',
+                                priority VARCHAR(100) NOT NULL COMMENT 'Inspection priority',
+                                window_inspection_range VARCHAR(100) NOT NULL COMMENT 'Window inspection range',
+`create_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '创建者',
+    `create_date` datetime NOT NULL COMMENT '创建时间',
+    `update_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '更新者',
+    `update_date` datetime NOT NULL COMMENT '更新时间',
+    `remarks` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注信息',
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT 'PSC Inspection Table' ROW_FORMAT = Dynamic;
+SET FOREIGN_KEY_CHECKS = 1;
