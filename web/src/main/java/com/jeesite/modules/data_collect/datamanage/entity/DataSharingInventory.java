@@ -1,5 +1,8 @@
 package com.jeesite.modules.data_collect.datamanage.entity;
 
+import com.jeesite.modules.sys.entity.Office;
+import com.jeesite.common.mybatis.annotation.JoinTable;
+import com.jeesite.common.mybatis.annotation.JoinTable.Type;
 import javax.validation.constraints.Size;
 
 import com.jeesite.common.entity.DataEntity;
@@ -17,7 +20,7 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
  */
 @Table(name="data_sharing_inventory", alias="a", label="数据共享清单信息", columns={
 		@Column(name="id", attrName="id", label="编号", isPK=true),
-		@Column(name="management_department", attrName="managementDepartment", label="归口管理部门"),
+		@Column(name="management_department", attrName="managementDepartment.officeCode", label="归口管理部门"),
 		@Column(name="data_category", attrName="dataCategory", label="数据大类"),
 		@Column(name="business_segment", attrName="businessSegment", label="业务板块"),
 		@Column(name="serial_number", attrName="serialNumber", label="编号"),
@@ -32,12 +35,17 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
 		@Column(name="update_by", attrName="updateBy", label="更新者", isQuery=false),
 		@Column(name="update_date", attrName="updateDate", label="更新时间", isQuery=false),
 		@Column(name="remarks", attrName="remarks", label="备注信息", queryType=QueryType.LIKE),
+	}, joinTable={		@JoinTable(type=Type.LEFT_JOIN, entity=Office.class, attrName="managementDepartment", alias="u2",
+			on="u2.office_code = a.management_department", columns={
+				@Column(name="office_code", label="机构编码", isPK=true),
+				@Column(name="office_name", label="机构名称", isQuery=false),
+		}),
 	}, orderBy="a.update_date DESC"
 )
 public class DataSharingInventory extends DataEntity<DataSharingInventory> {
 	
 	private static final long serialVersionUID = 1L;
-	private String managementDepartment;		// 归口管理部门
+	private Office managementDepartment;		// 归口管理部门
 	private String dataCategory;		// 数据大类
 	private String businessSegment;		// 业务板块
 	private String serialNumber;		// 编号
@@ -49,7 +57,7 @@ public class DataSharingInventory extends DataEntity<DataSharingInventory> {
 	private String dataDefinition;		// 数据定义
 
 	@ExcelFields({
-		@ExcelField(title="归口管理部门", attrName="managementDepartment", align=Align.CENTER, sort=20),
+		@ExcelField(title="归口管理部门", attrName="managementDepartment.officeCode", align=Align.CENTER, sort=20),
 		@ExcelField(title="数据大类", attrName="dataCategory", align=Align.CENTER, sort=30),
 		@ExcelField(title="业务板块", attrName="businessSegment", align=Align.CENTER, sort=40),
 		@ExcelField(title="编号", attrName="serialNumber", align=Align.CENTER, sort=50),
@@ -69,12 +77,11 @@ public class DataSharingInventory extends DataEntity<DataSharingInventory> {
 		super(id);
 	}
 	
-	@Size(min=0, max=64, message="归口管理部门长度不能超过 64 个字符")
-	public String getManagementDepartment() {
+	public Office getManagementDepartment() {
 		return managementDepartment;
 	}
 
-	public void setManagementDepartment(String managementDepartment) {
+	public void setManagementDepartment(Office managementDepartment) {
 		this.managementDepartment = managementDepartment;
 	}
 	

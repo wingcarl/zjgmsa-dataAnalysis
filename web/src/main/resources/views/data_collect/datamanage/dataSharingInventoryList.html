@@ -22,7 +22,7 @@
 					<label class="control-label">${text('归口管理部门')}：</label>
 					<div class="control-inline width-120" >
 						<#form:treeselect id="managementDepartment" title="${text('机构选择')}"
-							path="managementDepartment" labelPath="" 
+							path="managementDepartment.officeCode" labelPath="managementDepartment.officeName" 
 							url="${ctx}/sys/office/treeData" allowClear="true"/>
 					</div>
 				</div>
@@ -102,7 +102,7 @@
 $('#dataGrid').dataGrid({
 	searchForm: $('#searchForm'),
 	columnModel: [
-		{header:'${text("归口管理部门")}', name:'managementDepartment', index:'a.management_department', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
+		{header:'${text("归口管理部门")}', name:'managementDepartment.officeName', index:'a.management_department', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
 			return '<a href="${ctx}/datamanage/dataSharingInventory/form?id='+row.id+'" class="btnList" data-title="${text("编辑数据共享清单")}">'+(val||row.id)+'</a>';
 		}},
 		{header:'${text("数据大类")}', name:'dataCategory', index:'a.data_category', width:150, align:"left"},

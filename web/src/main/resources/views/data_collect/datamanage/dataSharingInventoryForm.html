@@ -20,7 +20,7 @@
 								<span class="required hide">*</span> ${text('归口管理部门')}：<i class="fa icon-question hide"></i></label>
 							<div class="col-sm-8">
 								<#form:treeselect id="managementDepartment" title="${text('机构选择')}"
-									path="managementDepartment" labelPath=""
+									path="managementDepartment.officeCode" labelPath="managementDepartment.officeName"
 									url="${ctx}/sys/office/treeData"
 									class="" allowClear="true"/>
 							</div>
