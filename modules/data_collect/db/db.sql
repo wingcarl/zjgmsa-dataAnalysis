@@ -82,3 +82,25 @@ CREATE TABLE psc_inspection (
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT 'PSC Inspection Table' ROW_FORMAT = Dynamic;
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+CREATE TABLE data_sharing_inventory (
+                                        `id` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '编号',
+                                        management_department VARCHAR(64) COMMENT '归口管理部门',
+                                        data_category VARCHAR(255) COMMENT '数据大类',
+                                        business_segment VARCHAR(255) COMMENT '业务板块',
+                                        serial_number VARCHAR(255) COMMENT '编号',
+                                        data_item_name VARCHAR(255) COMMENT '数据项目名称',
+                                        unit_of_measurement VARCHAR(30) COMMENT '计数单位',
+                                        statistical_frequency VARCHAR(255) COMMENT '统计频次',
+                                        data_granularity VARCHAR(255) COMMENT '数据粒度',
+                                        data_collection_method VARCHAR(255) COMMENT '数据采集方式',
+                                        data_definition TEXT COMMENT '数据定义',
+                                        `create_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '创建者',
+                                        `create_date` datetime NOT NULL COMMENT '创建时间',
+                                        `update_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '更新者',
+                                        `update_date` datetime NOT NULL COMMENT '更新时间',
+                                        `remarks` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注信息',
+                                        PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '数据共享清单' ROW_FORMAT = Dynamic;
+SET FOREIGN_KEY_CHECKS = 1;
