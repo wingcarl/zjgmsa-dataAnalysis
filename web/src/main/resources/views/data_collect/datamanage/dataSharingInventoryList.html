@@ -131,7 +131,8 @@ $('#dataGrid').dataGrid({
 	],
 	//# // 加载成功后执行事件
 	ajaxSuccess: function(data){
-		
+		$('#dataGrid').dataGrid('mergeCell', 'managementDepartment.officeName,dataCategory,businessSegment');
+
 	}
 });
 </script><script>
