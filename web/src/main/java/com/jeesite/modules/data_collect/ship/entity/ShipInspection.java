@@ -21,7 +21,7 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
  * @author 王浩宇
  * @version 2024-06-06
  */
-@Table(name="ship_inspection", alias="a", label="海船安全检查信息表信息", columns={
+@Table(name="ship_inspection", alias="a", label="安全检查信息表信息", columns={
 		@Column(name="id", attrName="id", label="编号", isPK=true),
 		@Column(name="ship_id", attrName="shipId", label="船舶识别号"),
 		@Column(name="ship_name_cn", attrName="shipNameCn", label="中文船名", queryType=QueryType.LIKE),
@@ -37,6 +37,7 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
 		@Column(name="defect_code", attrName="defectCode", label="缺陷代码"),
 		@Column(name="defect_description", attrName="defectDescription", label="缺陷描述", queryType=QueryType.LIKE),
 		@Column(name="handling_comments", attrName="handlingComments", label="处理意见说明", queryType=QueryType.LIKE),
+		@Column(name="ship_type", attrName="shipType", label="船舶类型", queryType=QueryType.LIKE),
 		@Column(name="create_by", attrName="createBy", label="创建者", isUpdate=false, isQuery=false),
 		@Column(name="create_date", attrName="createDate", label="创建时间", isUpdate=false, isQuery=false),
 		@Column(name="update_by", attrName="updateBy", label="更新者", isQuery=false),
@@ -61,6 +62,7 @@ public class ShipInspection extends DataEntity<ShipInspection> {
 	private String defectCode;		// 缺陷代码
 	private String defectDescription;		// 缺陷描述
 	private String handlingComments;		// 处理意见说明
+	private String shipType;		// 海船内河船
 
 	@ExcelFields({
 		@ExcelField(title="船舶识别号", attrName="shipId", align=Align.CENTER, sort=20),
@@ -77,6 +79,8 @@ public class ShipInspection extends DataEntity<ShipInspection> {
 		@ExcelField(title="缺陷代码", attrName="defectCode", align=Align.CENTER, sort=130),
 		@ExcelField(title="缺陷描述", attrName="defectDescription", align=Align.CENTER, sort=140),
 		@ExcelField(title="处理意见说明", attrName="handlingComments", align=Align.CENTER, sort=150),
+			@ExcelField(title="船舶类型", attrName="shipType", align=Align.CENTER, sort=150),
+
 	})
 	public ShipInspection() {
 		this(null);
@@ -217,7 +221,15 @@ public class ShipInspection extends DataEntity<ShipInspection> {
 	public void setHandlingComments(String handlingComments) {
 		this.handlingComments = handlingComments;
 	}
-	
+
+	public String getShipType() {
+		return shipType;
+	}
+
+	public void setShipType(String shipType) {
+		this.shipType = shipType;
+	}
+
 	public Date getInspectionDate_gte() {
 		return sqlMap.getWhere().getValue("inspection_date", QueryType.GTE);
 	}

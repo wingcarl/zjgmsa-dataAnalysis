@@ -102,13 +102,13 @@
 $('#dataGrid').dataGrid({
 	searchForm: $('#searchForm'),
 	columnModel: [
-		{header:'${text("归口管理部门")}', name:'managementDepartment.officeName', index:'a.management_department', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
-			return '<a href="${ctx}/datamanage/dataSharingInventory/form?id='+row.id+'" class="btnList" data-title="${text("编辑数据共享清单")}">'+(val||row.id)+'</a>';
-		}},
+		{header:'${text("归口管理部门")}', name:'managementDepartment.officeName', index:'a.management_department', width:150, align:"left", frozen:true,
+		},
 		{header:'${text("数据大类")}', name:'dataCategory', index:'a.data_category', width:150, align:"left"},
 		{header:'${text("业务板块")}', name:'businessSegment', index:'a.business_segment', width:150, align:"left"},
 		{header:'${text("编号")}', name:'serialNumber', index:'a.serial_number', width:150, align:"left"},
-		{header:'${text("数据项目名称")}', name:'dataItemName', index:'a.data_item_name', width:150, align:"left"},
+		{header:'${text("数据项目名称")}', name:'dataItemName', index:'a.data_item_name', width:150, align:"left",formatter: function(val, obj, row, act){
+				return '<a href="${ctx}/datamanage/dataSharingInventory/form?id='+row.id+'" class="btnList" data-title="${text("编辑数据共享清单")}">'+(val||row.id)+'</a>';}},
 		{header:'${text("计数单位")}', name:'unitOfMeasurement', index:'a.unit_of_measurement', width:150, align:"left"},
 		{header:'${text("统计频次")}', name:'statisticalFrequency', index:'a.statistical_frequency', width:150, align:"center", formatter: function(val, obj, row, act){
 			return js.getDictLabel("#{@DictUtils.getDictListJson('statistical_frequency')}", val, '${text("未知")}', true);

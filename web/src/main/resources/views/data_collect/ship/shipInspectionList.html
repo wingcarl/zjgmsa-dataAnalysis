@@ -1,9 +1,9 @@
-<% layout('/layouts/default.html', {title: '海船安全检查信息表管理', libs: ['dataGrid']}){ %>
+<% layout('/layouts/default.html', {title: '安全检查信息表管理', libs: ['dataGrid']}){ %>
 <div class="main-content">
 	<div class="box box-main">
 		<div class="box-header">
 			<div class="box-title">
-				<i class="fa icon-notebook"></i> ${text('海船安全检查信息表管理')}
+				<i class="fa icon-notebook"></i> ${text('安全检查信息表管理')}
 			</div>
 			<div class="box-tools pull-right">
 				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
@@ -101,6 +101,12 @@
 					</div>
 				</div>
 				<div class="form-group">
+					<label class="control-label">${text('船舶类型')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipType" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
 					<button type="submit" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-search"></i> ${text('查询')}</button>
 					<button type="reset" class="btn btn-default btn-sm isQuick"><i class="glyphicon glyphicon-repeat"></i> ${text('重置')}</button>
 				</div>
@@ -132,6 +138,7 @@ $('#dataGrid').dataGrid({
 		{header:'${text("缺陷代码")}', name:'defectCode', index:'a.defect_code', width:150, align:"left"},
 		{header:'${text("缺陷描述")}', name:'defectDescription', index:'a.defect_description', width:150, align:"left"},
 		{header:'${text("处理意见说明")}', name:'handlingComments', index:'a.handling_comments', width:150, align:"left"},
+		{header:'${text("船舶类型")}', name:'shipType', index:'a.ship_type', width:150, align:"left"},
 		{header:'${text("更新时间")}', name:'updateDate', index:'a.update_date', width:150, align:"center"},
 		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
 			var actions = [];
@@ -159,7 +166,7 @@ $('#btnImport').click(function(){
 	js.layer.open({
 		type: 1,
 		area: ['400px'],
-		title: '${text("导入海船安全检查信息表")}',
+		title: '${text("导入安全检查信息表")}',
 		resize: false,
 		scrollbar: true,
 		content: js.template('importTpl'),

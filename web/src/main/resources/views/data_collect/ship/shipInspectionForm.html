@@ -1,9 +1,9 @@
-<% layout('/layouts/default.html', {title: '海船安全检查信息表管理', libs: ['validate']}){ %>
+<% layout('/layouts/default.html', {title: '安全检查信息表管理', libs: ['validate']}){ %>
 <div class="main-content">
 	<div class="box box-main">
 		<div class="box-header with-border">
 			<div class="box-title">
-				<i class="fa icon-note"></i> ${text(shipInspection.isNewRecord ? '新增海船安全检查信息表' : '编辑海船安全检查信息表')}
+				<i class="fa icon-note"></i> ${text(shipInspection.isNewRecord ? '新增安全检查信息表' : '编辑安全检查信息表')}
 			</div>
 			<div class="box-tools pull-right hide">
 				<button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
@@ -138,6 +138,15 @@
 								<span class="required hide">*</span> ${text('处理意见说明')}：<i class="fa icon-question hide"></i></label>
 							<div class="col-sm-8">
 								<#form:input path="handlingComments" class="form-control"/>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-4">
+						<div class="form-group">
+							<label class="control-label col-sm-4" title="">
+								<span class="required hide">*</span> ${text('船舶类型')}：<i class="fa icon-question hide"></i></label>
+							<div class="col-sm-8">
+								<#form:input path="shipType" class="form-control"/>
 							</div>
 						</div>
 					</div>
