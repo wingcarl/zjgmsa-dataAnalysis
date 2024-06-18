@@ -68,21 +68,13 @@
 $('#dataGrid').dataGrid({
 	searchForm: $('#searchForm'),
 	columnModel: [
-		{header:'${text("数据项ID")}', name:'sharingData.id', index:'a.data_id', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
-			return '<a href="${ctx}/weeklydata/dataMetrics/form?id='+row.id+'" class="btnList" data-title="${text("编辑数据指标表")}">'+(val||row.id)+'</a>';
-		}},
-
 		{header:'${text("数据大类")}', name:'dataSharing.dataCategory', index:'u4.data_category', width:150, align:"center"},
 		{header:'${text("业务板块")}', name:'dataSharing.businessSegment', index:'u4.business_segment', width:150, align:"center"},
 		{header:'${text("数据项名称")}', name:'dataSharing.dataItemName', index:'u4.data_item_name', width:150, align:"center"},
 		{header:'${text("部门名称")}', name:'departmentId.officeName', index:'a.department_id', width:150, align:"center"},
-		{header:'${text("开始时间")}', name:'startTime', index:'a.start_time', width:150, align:"center"},
-		{header:'${text("结束时间")}', name:'endTime', index:'a.end_time', width:150, align:"center"},
 		{header:'${text("本期数值")}', name:'currentValue', index:'a.current_value', width:150, align:"right", formatter: function(val, obj, row, act){
-			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+			return js.formatNumber(val,0, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
 		}},
-		{header:'${text("更新时间")}', name:'updateDate', index:'a.update_date', width:150, align:"center"},
-		{header:'${text("备注信息")}', name:'remarks', index:'a.remarks', width:150, align:"left"},
 		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
 			var actions = [];
 			//# if(hasPermi('weeklydata:dataMetrics:edit')){

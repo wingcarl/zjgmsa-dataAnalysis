@@ -4,6 +4,8 @@ import com.jeesite.common.dao.CrudDao;
 import com.jeesite.common.mybatis.annotation.MyBatisDao;
 import com.jeesite.modules.data_collect.ship.entity.ShipInspection;
 
+import java.util.List;
+
 /**
  * 海船安全检查信息表DAO接口
  * @author 王浩宇
@@ -11,5 +13,6 @@ import com.jeesite.modules.data_collect.ship.entity.ShipInspection;
  */
 @MyBatisDao
 public interface ShipInspectionDao extends CrudDao<ShipInspection> {
-	
+
+    List<ShipInspection> findDistinctList(ShipInspection shipInspection);
 }

@@ -245,5 +245,12 @@ public class ShipInspection extends DataEntity<ShipInspection> {
 	public void setInspectionDate_lte(Date inspectionDate) {
 		sqlMap.getWhere().and("inspection_date", QueryType.LTE, inspectionDate);
 	}
-	
+
+	public String[] getInspectionAgency_in(){
+		return sqlMap.getWhere().getValue("inspection_agency", QueryType.IN);
+	}
+
+	public void setInspectionAgency_in(String[] codes){
+		sqlMap.getWhere().and("inspection_agency", QueryType.IN, codes);
+	}
 }

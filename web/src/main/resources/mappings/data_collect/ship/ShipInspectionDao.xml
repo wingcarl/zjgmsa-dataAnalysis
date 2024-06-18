@@ -2,14 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.jeesite.modules.data_collect.ship.dao.ShipInspectionDao">
 	
-	<!-- 查询数据
-	<select id="findList" resultType="ShipInspection">
+	<select id="findDistinctList" resultType="ShipInspection">
 		SELECT ${sqlMap.column.toSql()}
 		FROM ${sqlMap.table.toSql()}
 		<where>
 			${sqlMap.where.toSql()}
 		</where>
+		group by ship_id,inspection_date,inspection_agency
 		ORDER BY ${sqlMap.order.toSql()}
-	</select> -->
+	</select>
 	
 </mapper>

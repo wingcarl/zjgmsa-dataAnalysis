@@ -1,6 +1,8 @@
 package com.jeesite.modules.data_collect.ship.service;
 
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,12 +25,15 @@ import javax.validation.ConstraintViolationException;
  */
 @Service
 public class ShipInspectionService extends CrudService<ShipInspectionDao, ShipInspection> {
-	
+
 	/**
 	 * 获取单条数据
 	 * @param shipInspection
 	 * @return
 	 */
+
+	@Autowired
+	ShipInspectionDao shipInspectionDao;
 	@Override
 	public ShipInspection get(ShipInspection shipInspection) {
 		return super.get(shipInspection);
@@ -133,5 +138,8 @@ public class ShipInspectionService extends CrudService<ShipInspectionDao, ShipIn
 	public void delete(ShipInspection shipInspection) {
 		super.delete(shipInspection);
 	}
-	
+
+	public List<ShipInspection> findDistinctList(ShipInspection shipInspection) {
+		return shipInspectionDao.findDistinctList(shipInspection);
+	}
 }
