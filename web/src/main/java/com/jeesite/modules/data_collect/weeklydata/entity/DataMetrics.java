@@ -2,6 +2,8 @@ package com.jeesite.modules.data_collect.weeklydata.entity;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+
+import com.jeesite.modules.data_collect.datamanage.entity.DataSharingInventory;
 import com.jeesite.modules.sys.entity.Office;
 import com.jeesite.common.mybatis.annotation.JoinTable;
 import com.jeesite.common.mybatis.annotation.JoinTable.Type;
@@ -21,7 +23,7 @@ import com.jeesite.common.mybatis.mapper.query.QueryType;
  */
 @Table(name="data_metrics", alias="a", label="数据指标表信息", columns={
 		@Column(name="id", attrName="id", label="编号", isPK=true),
-		@Column(name="data_id", attrName="dataId", label="数据项ID"),
+		@Column(name="data_id", attrName="dataSharing.id", label="数据项ID"),
 		@Column(name="department_id", attrName="departmentId.officeCode", label="部门ID"),
 		@Column(name="start_time", attrName="startTime", label="开始时间"),
 		@Column(name="end_time", attrName="endTime", label="结束时间"),
@@ -35,13 +37,20 @@ import com.jeesite.common.mybatis.mapper.query.QueryType;
 			on="u3.office_code = a.department_id", columns={
 				@Column(name="office_code", label="机构编码", isPK=true),
 				@Column(name="office_name", label="机构名称", isQuery=false),
-		}),
+		}),@JoinTable(type=Type.LEFT_JOIN,entity = DataSharingInventory.class,attrName = "dataSharing",alias = "u4",
+			on="u4.id=a.data_id",columns={
+		@Column(name="id", label="数据项编码", isPK=true),
+		@Column(name="data_category", label="数据大类", isQuery=false),
+		@Column(name="business_segment", label="业务板块", isQuery=false),
+		@Column(name="data_item_name", label="数据项目", isQuery=false),
+		@Column(name="unit_of_measurement", label="技术单位", isQuery=false),
+}),
 	}, orderBy="a.update_date DESC"
 )
 public class DataMetrics extends DataEntity<DataMetrics> {
 	
 	private static final long serialVersionUID = 1L;
-	private String dataId;		// 数据项ID
+	private DataSharingInventory dataSharing;		// 数据项ID
 	private Office departmentId;		// 部门ID
 	private Date startTime;		// 开始时间
 	private Date endTime;		// 结束时间
@@ -54,17 +63,15 @@ public class DataMetrics extends DataEntity<DataMetrics> {
 	public DataMetrics(String id){
 		super(id);
 	}
-	
-	@NotBlank(message="数据项ID不能为空")
-	@Size(min=0, max=64, message="数据项ID长度不能超过 64 个字符")
-	public String getDataId() {
-		return dataId;
+
+	public DataSharingInventory getDataSharing() {
+		return dataSharing;
 	}
 
-	public void setDataId(String dataId) {
-		this.dataId = dataId;
+	public void setDataSharing(DataSharingInventory dataSharing) {
+		this.dataSharing = dataSharing;
 	}
-	
+
 	@NotNull(message="部门ID不能为空")
 	public Office getDepartmentId() {
 		return departmentId;
