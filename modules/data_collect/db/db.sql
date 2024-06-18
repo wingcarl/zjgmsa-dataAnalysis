@@ -104,3 +104,21 @@ CREATE TABLE data_sharing_inventory (
                                         PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '数据共享清单' ROW_FORMAT = Dynamic;
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+CREATE TABLE data_metrics (
+                              `id` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '编号',
+
+                              data_id varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '数据项ID', -- 数据项ID
+                              department_id varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '部门ID', -- 部门ID
+                              start_time DATE NOT NULL COMMENT '开始时间', -- 开始时间
+                              end_time DATE NOT NULL COMMENT '结束时间', -- 结束时间
+                              current_value DECIMAL(10,2) NOT NULL COMMENT '本期数值', -- 本期数值
+                              `create_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '创建者',
+                              `create_date` datetime NOT NULL COMMENT '创建时间',
+                              `update_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '更新者',
+                              `update_date` datetime NOT NULL COMMENT '更新时间',
+                              `remarks` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注信息',
+                              PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '数据指标表' ROW_FORMAT = Dynamic;
+SET FOREIGN_KEY_CHECKS = 1;
