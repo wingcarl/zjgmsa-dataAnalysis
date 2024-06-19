@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import com.jeesite.modules.data_collect.datamanage.entity.DataSharingInventory;
 import com.jeesite.modules.data_collect.datamanage.service.DataSharingInventoryService;
+import com.jeesite.modules.data_collect.psc.entity.PscInspection;
+import com.jeesite.modules.data_collect.psc.service.PscInspectionService;
 import com.jeesite.modules.data_collect.ship.entity.ShipInspection;
 import com.jeesite.modules.data_collect.ship.service.ShipInspectionService;
 import com.jeesite.modules.sys.entity.Office;
@@ -27,6 +29,8 @@ import com.jeesite.modules.data_collect.weeklydata.dao.DataMetricsDao;
 public class DataMetricsService extends CrudService<DataMetricsDao, DataMetrics> {
 	@Autowired
 	ShipInspectionService shipInspectionService;
+	@Autowired
+	PscInspectionService pscInspectionService;
 	@Autowired
 	OfficeService officeService;
 	@Autowired
@@ -71,10 +75,38 @@ public class DataMetricsService extends CrudService<DataMetricsDao, DataMetrics>
 		List<DataMetrics> dataList = findDataMetricsList(shipInspection);
 		shipInspection.setShipType("内河船");
 		dataList.addAll(findDataMetricsList(shipInspection));
+		//查询PSC列表
+		PscInspection pscInspection = new PscInspection();
+		pscInspection.setInspectionDate_gte(dataMetrics.getStartTime());
+		pscInspection.setInspectionDate_lte(dataMetrics.getEndTime());
+		pscInspection.setType("INITIAL");
+		pscInspection.setPort("Zhangjiagang");
+		dataList.addAll(findPscDataMetrics(pscInspection));
 		//设置报表
 		return dataList;
 	}
-
+	private List<DataMetrics> findPscDataMetrics(PscInspection pscInspection){
+		List<PscInspection> pscList = pscInspectionService.findList(pscInspection);
+		List<DataMetrics> dataList;
+		// 使用Map统计每个inspectionAgency的数量
+		Map<String, Integer> agencyCountMap = new HashMap<>();
+		Map<String, Integer> detainedCountMap = new HashMap<>();
+		Map<String, Integer> defectCountMap = new HashMap<>();
+		for(PscInspection psc : pscList) {
+			String portName = psc.getPort();
+			String detained = psc.getDetention();
+			int deficienciesNum = Integer.parseInt(psc.getDeficiencies());
+			agencyCountMap.put("张家港海事局", agencyCountMap.getOrDefault("张家港海事局", 0) + 1);
+			if("Y".equals(detained)){
+				detainedCountMap.put("张家港海事局",detainedCountMap.getOrDefault("张家港海事局",0) +1);
+			}
+			defectCountMap.put("张家港海事局", defectCountMap.getOrDefault("张家港海事局", 0) + deficienciesNum);
+		}
+		dataList = loadDataMetrics(agencyCountMap,"PSC检查");
+		dataList.addAll(loadDataMetrics(detainedCountMap, "PSC滞留"));
+		dataList.addAll(loadDataMetrics(defectCountMap,"PSC缺陷数量"));
+		return dataList;
+	}
 	private List<DataMetrics> findDataMetricsList(ShipInspection shipInspection){
 		List<ShipInspection> fscList = shipInspectionService.findDistinctList(shipInspection);
 		List<DataMetrics> dataList;
