@@ -65,38 +65,67 @@ public class DataMetricsService extends CrudService<DataMetricsDao, DataMetrics>
 		shipInspection.setInspectionDate_gte(dataMetrics.getStartTime());
 		shipInspection.setInspectionDate_lte(dataMetrics.getEndTime());
 		shipInspection.setInspectionType("初查");
+		shipInspection.setShipType("海船");
 		String[] agency = {"张家港海事局","港区海事处","锦丰海事处","保税区海事处（筹）"};
 		shipInspection.setInspectionAgency_in(agency);
+		List<DataMetrics> dataList = findDataMetricsList(shipInspection);
+		shipInspection.setShipType("内河船");
+		dataList.addAll(findDataMetricsList(shipInspection));
+		//设置报表
+		return dataList;
+	}
+
+	private List<DataMetrics> findDataMetricsList(ShipInspection shipInspection){
 		List<ShipInspection> fscList = shipInspectionService.findDistinctList(shipInspection);
-		List<DataMetrics> dataList = new ArrayList<>();
+		List<DataMetrics> dataList;
 		// 使用Map统计每个inspectionAgency的数量
 		Map<String, Integer> agencyCountMap = new HashMap<>();
+		Map<String, Integer> detainedCountMap = new HashMap<>();
+		Map<String, Integer> defectCountMap = new HashMap<>();
 		for(ShipInspection fsc : fscList){
 			String agencyName = fsc.getInspectionAgency();
+			String detained = fsc.getDetained();
+			int defectCount = Math.toIntExact(fsc.getDefectCount());
 			if("张家港海事局".equals(agencyName) || "保税区海事处（筹）".equals(agencyName)){
 				agencyCountMap.put("保税区海巡执法大队", agencyCountMap.getOrDefault("保税区海巡执法大队", 0) + 1);
+				if("是".equals(detained)){
+					detainedCountMap.put("保税区海巡执法大队", detainedCountMap.getOrDefault("保税区海巡执法大队", 0) + 1);
+				}
+				defectCountMap.put("保税区海巡执法大队", defectCountMap.getOrDefault("保税区海巡执法大队", 0) + defectCount);
+
 			}else{
 				agencyCountMap.put(agencyName, agencyCountMap.getOrDefault(agencyName, 0) + 1);
+				if("是".equals(detained)){
+					detainedCountMap.put(agencyName, detainedCountMap.getOrDefault(agencyName, 0) + 1);
+				}
+				defectCountMap.put(agencyName, defectCountMap.getOrDefault(agencyName, 0) + defectCount);
 
 			}
 		}
+		dataList = loadDataMetrics(agencyCountMap,shipInspection.getShipType()+"FSC检查");
+		dataList.addAll(loadDataMetrics(detainedCountMap, shipInspection.getShipType()+"FSC滞留"));
+		dataList.addAll(loadDataMetrics(defectCountMap,shipInspection.getShipType()+"FSC缺陷数量"));
+		//设置报表
+		return dataList;
+	}
+	private List<DataMetrics> loadDataMetrics(Map<String, Integer> agencyCountMap,String dataItemName) {
+		List<DataMetrics> dataList = new ArrayList<>();
+
 		for (Map.Entry<String, Integer> entry : agencyCountMap.entrySet()) {
 			DataMetrics dataMetric = new DataMetrics();
 			DataSharingInventory sharing = new DataSharingInventory();
-			sharing.setDataItemName("FSC检查");
+			sharing.setDataItemName(dataItemName);
 			DataSharingInventory dataSharing = dataSharingInventoryService.findList(sharing).get(0);
 			dataMetric.setDataSharing(dataSharing);
-			dataMetric.setCurrentValue((double)entry.getValue());
+			dataMetric.setCurrentValue((double) entry.getValue());
 			Office o1 = new Office();
 			o1.setOfficeName(entry.getKey());
 			Office office = officeService.findList(o1).get(0);
 			dataMetric.setDepartmentId(office);
 			dataList.add(dataMetric);
 		}
-		//设置报表
 		return dataList;
 	}
-	
 	/**
 	 * 保存数据（插入或更新）
 	 * @param dataMetrics
