@@ -1,4 +1,4 @@
-<% layout('/layouts/default.html', {title: '数据共享清单管理', libs: ['validate']}){ %>
+<% layout('/layouts/default.html', {title: '数据共享清单管理', libs: ['validate','dataGrid']}){ %>
 <div class="main-content">
 	<div class="box box-main">
 		<div class="box-header with-border">
@@ -119,6 +119,13 @@
 						</div>
 					</div>
 				</div>
+				<div class="form-unit">${text('数据指标表')}</div>
+				<div class="form-unit-wrap table-form">
+					<table id="dataMetricsWeeklyDataGrid"></table>
+					<% if (hasPermi('datamanage:dataSharingInventory:edit')){ %>
+						<a href="#" id="dataMetricsWeeklyDataGridAddRowBtn" class="btn btn-primary btn-sm mt10 mb10"><i class="fa fa-plus"></i> ${text('增行')}</a>
+					<% } %>
+				</div>
 			</div>
 			<div class="box-footer">
 				<div class="row">
@@ -134,6 +141,84 @@
 	</div>
 </div>
 <% } %>
+<script>
+//# // 初始化数据指标表DataGrid对象
+$('#dataMetricsWeeklyDataGrid').dataGrid({
+
+	data: "#{toJson(dataSharingInventory.dataMetricsWeeklyList)}",
+	datatype: 'local', // 设置本地数据
+	autoGridHeight: function(){return 'auto'}, // 设置自动高度
+	
+	//# // 设置数据表格列
+	columnModel: [
+		{header:'状态', name:'status', editable:true, hidden:true},
+		{header:'主键', name:'id', editable:true, hidden:true},
+		{header:'${text("数据项ID")}', name:'dataSharingInventory.id', editable:true, hidden:true},
+		{header:'${text("部门ID")}', name:'office', width:150,
+			formatter: function(val, obj, row, act){
+				return js.val(row, 'office.officeCode')+'|'+js.val(row, 'office.officeName');
+			}, editable: true, edittype: "custom", editoptions: {
+				custom_element: function(val, editOptions) {
+					return js.template('treeselectTpl', {
+						id: 'office_'+editOptions.id, title: '机构选择', 
+						name: 'office.id.officeCode', value: val.split('|')[0], 
+						labelName: 'office.officeName', labelValue: val.split('|')[1],
+						url: '${ctx}/sys/office/treeData', cssClass: ' required'
+					});
+				}
+			}
+		},
+		{header:'${text("开始时间")}', name:'startTime', width:150, 
+			formatter:'date', formatoptions:{srcformat:'Y-m-d H:i:s',newformat:'Y-m-d H:i:s'},
+			editable:true, edittype:'text', editoptions:{'class':'form-control laydate required', 'readonly':'true',
+				dataInit: function(element){
+					laydate.render({elem:element, type:'datetime', format:'yyyy-MM-dd HH:mm'});
+				}
+			}
+		},
+		{header:'${text("结束时间")}', name:'endTime', width:150, 
+			formatter:'date', formatoptions:{srcformat:'Y-m-d H:i:s',newformat:'Y-m-d H:i:s'},
+			editable:true, edittype:'text', editoptions:{'class':'form-control laydate required', 'readonly':'true',
+				dataInit: function(element){
+					laydate.render({elem:element, type:'datetime', format:'yyyy-MM-dd HH:mm'});
+				}
+			}
+		},
+		{header:'${text("本期数值")}', name:'currentValue', width:150, editable:true, edittype:'text', editoptions:{'maxlength':'8', 'class':'form-control required number'}},
+		{header:'${text("备注信息")}', name:'remarks', width:150, editable:true, edittype:'textarea', editoptions:{'maxlength':'500', 'class':'form-control', 'rows':'1'}},
+		{header:'${text("操作")}', name:'actions', width:80, align:'center', formatter: function(val, obj, row, act){
+			var actions = [];
+			if (val == 'new'){
+				actions.push('<a href="#" onclick="js.confirm(\'${text("你确认要删除这条数据吗？")}\', function(){$(\'#dataMetricsWeeklyDataGrid\').dataGrid(\'delRowData\',\''+obj.rowId+'\')});return false;"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			}else{
+				actions.push('<a href="#" onclick="js.confirm(\'${text("你确认要删除这条数据吗？")}\', function(){$(\'#dataMetricsWeeklyDataGrid\').dataGrid(\'setRowData\',\''+obj.rowId+'\',null,{display:\'none\'});$(\'#'+obj.rowId+'_status\').val(\''+Global.STATUS_DELETE+'\');});return false;"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			}
+			return actions.join('');
+		}, editoptions: {defaultValue: 'new'}}
+	],
+	
+	//# // 编辑表格参数
+	editGrid: true,				// 是否是编辑表格
+	editGridInitRowNum: 1,		// 编辑表格的初始化新增行数
+	editGridAddRowBtn: $('#dataMetricsWeeklyDataGridAddRowBtn'),	// 子表增行按钮
+	editGridAddRowBtnToHeader: true,	// 子表增行按钮是否显示到表头上
+	editGridAddRowInitData: {id: '', status: Global.STATUS_NORMAL},	// 新增行的时候初始化的数据
+
+	//# // 编辑表格的提交数据参数
+	editGridInputFormListName: 'dataMetricsWeeklyList', // 提交的数据列表名
+	editGridInputFormListAttrs: 'status,id,dataSharingInventory.id,office.id.officeCode,startTime,endTime,currentValue,createBy,createDate,updateBy,updateDate,remarks,', // 提交数据列表的属性字段
+	
+	//# // 加载成功后执行事件
+	ajaxSuccess: function(data){
+		
+	}
+});
+</script>
+<script id="treeselectTpl" type="text/template">//<!--<div>
+<#form:treeselect id="{{d.id}}" title="{{d.title}}" name="{{d.name}}" value="{{d.value}}"
+	labelName="{{d.labelName}}" labelValue="{{d.labelValue}}" url="{{d.url}}"
+	class="{{d.cssClass}}" btnClass="btn-sm" allowClear="true"/>
+</div>//--></script>
 <script>
 $("#inputForm").validate({
 	submitHandler: function(form){

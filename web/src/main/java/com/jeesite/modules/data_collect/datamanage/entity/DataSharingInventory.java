@@ -1,9 +1,12 @@
 package com.jeesite.modules.data_collect.datamanage.entity;
 
+import javax.validation.Valid;
 import com.jeesite.modules.sys.entity.Office;
 import com.jeesite.common.mybatis.annotation.JoinTable;
 import com.jeesite.common.mybatis.annotation.JoinTable.Type;
 import javax.validation.constraints.Size;
+import java.util.List;
+import com.jeesite.common.collect.ListUtils;
 
 import com.jeesite.common.entity.DataEntity;
 import com.jeesite.common.mybatis.annotation.Column;
@@ -16,7 +19,7 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
 /**
  * 数据共享清单Entity
  * @author Dylan Wang
- * @version 2024-06-07
+ * @version 2024-06-21
  */
 @Table(name="data_sharing_inventory", alias="a", label="数据共享清单信息", columns={
 		@Column(name="id", attrName="id", label="编号", isPK=true),
@@ -55,6 +58,7 @@ public class DataSharingInventory extends DataEntity<DataSharingInventory> {
 	private String dataGranularity;		// 数据粒度
 	private String dataCollectionMethod;		// 数据采集方式
 	private String dataDefinition;		// 数据定义
+	private List<DataMetricsWeekly> dataMetricsWeeklyList = ListUtils.newArrayList();		// 子表列表
 
 	@ExcelFields({
 		@ExcelField(title="归口管理部门", attrName="managementDepartment.officeCode", align=Align.CENTER, sort=20),
@@ -163,6 +167,15 @@ public class DataSharingInventory extends DataEntity<DataSharingInventory> {
 
 	public void setDataDefinition(String dataDefinition) {
 		this.dataDefinition = dataDefinition;
+	}
+	
+	@Valid
+	public List<DataMetricsWeekly> getDataMetricsWeeklyList() {
+		return dataMetricsWeeklyList;
+	}
+
+	public void setDataMetricsWeeklyList(List<DataMetricsWeekly> dataMetricsWeeklyList) {
+		this.dataMetricsWeeklyList = dataMetricsWeeklyList;
 	}
 	
 }

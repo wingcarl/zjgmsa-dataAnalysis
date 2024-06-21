@@ -23,12 +23,13 @@ import com.jeesite.common.utils.excel.annotation.ExcelField.Type;
 import org.springframework.web.multipart.MultipartFile;
 import com.jeesite.common.web.BaseController;
 import com.jeesite.modules.data_collect.datamanage.entity.DataSharingInventory;
+import com.jeesite.modules.data_collect.datamanage.entity.DataMetricsWeekly;
 import com.jeesite.modules.data_collect.datamanage.service.DataSharingInventoryService;
 
 /**
  * 数据共享清单Controller
  * @author Dylan Wang
- * @version 2024-06-07
+ * @version 2024-06-21
  */
 @Controller
 @RequestMapping(value = "${adminPath}/datamanage/dataSharingInventory")
@@ -64,6 +65,18 @@ public class DataSharingInventoryController extends BaseController {
 	public Page<DataSharingInventory> listData(DataSharingInventory dataSharingInventory, HttpServletRequest request, HttpServletResponse response) {
 		dataSharingInventory.setPage(new Page<>(request, response));
 		Page<DataSharingInventory> page = dataSharingInventoryService.findPage(dataSharingInventory);
+		return page;
+	}
+	
+	/**
+	 * 查询子表数据
+	 */
+	@RequiresPermissions("datamanage:dataSharingInventory:view")
+	@RequestMapping(value = "dataMetricsWeeklyListData")
+	@ResponseBody
+	public Page<DataMetricsWeekly> subListData(DataMetricsWeekly dataMetricsWeekly, HttpServletRequest request, HttpServletResponse response) {
+		dataMetricsWeekly.setPage(new Page<>(request, response));
+		Page<DataMetricsWeekly> page = dataSharingInventoryService.findSubPage(dataMetricsWeekly);
 		return page;
 	}
 

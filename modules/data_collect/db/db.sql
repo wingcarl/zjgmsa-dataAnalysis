@@ -122,3 +122,56 @@ CREATE TABLE data_metrics (
                               PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '数据指标表' ROW_FORMAT = Dynamic;
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+CREATE TABLE ship_report (
+                            `id` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '编号',
+
+                            report_id VARCHAR(64) COMMENT '报告编号',
+                            ship_name_cn VARCHAR(32) COMMENT '中文船名',
+                            ship_identification_number VARCHAR(64) COMMENT '船舶识别号',
+                            gross_tonnage DECIMAL(10, 2) COMMENT '总吨',
+                            deadweight_tonnage DECIMAL(10, 2) COMMENT '载重吨',
+                            main_engine_power DECIMAL(10, 2) COMMENT '主机功率',
+                            ship_type VARCHAR(32) COMMENT '船舶种类',
+                            port_of_registry VARCHAR(32) COMMENT '船籍港',
+                            ship_length DECIMAL(10, 2) COMMENT '船舶长度',
+                            ship_width DECIMAL(10, 2) COMMENT '船舶宽度',
+                            in_out_port VARCHAR(16) COMMENT '进出港',
+                            sea_river_ship VARCHAR(16) COMMENT '海/河船',
+                            reporting_agency VARCHAR(32) COMMENT '报告机构',
+                            estimated_arrival_departure_time DATETIME COMMENT '预抵离时间',
+                            report_time DATETIME COMMENT '报告时间',
+                            port VARCHAR(32) COMMENT '港口',
+                            berth VARCHAR(64) COMMENT '泊位',
+                            up_down_port VARCHAR(32) COMMENT '上下港',
+                            voyage_daily_report VARCHAR(32) COMMENT '航次日报',
+                            voyage_count INT COMMENT '航次数量',
+                            actual_cargo_volume DECIMAL(10, 2) COMMENT '实载货量',
+                            loading_unloading_cargo_volume DECIMAL(10, 2) COMMENT '装卸货量',
+                            actual_vehicle_count INT COMMENT '实载车辆',
+                            loading_unloading_vehicle_count INT COMMENT '装卸车辆',
+                            actual_passenger_count INT COMMENT '实载客量',
+                            up_down_passenger_count INT COMMENT '上下客量',
+                            cargo_type VARCHAR(64) COMMENT '货物种类',
+                            cargo_name VARCHAR(64) COMMENT '品名',
+                            mmsi VARCHAR(24) COMMENT 'MMSI',
+                            draft_fore DECIMAL(10, 2) COMMENT '前吃水',
+                            draft_aft DECIMAL(10, 2) COMMENT '后吃水',
+                            ship_owner VARCHAR(64) COMMENT '船舶所有人',
+                            applicant VARCHAR(32) COMMENT '申请人',
+                            applicant_contact VARCHAR(32) COMMENT '申请人联系方式',
+                            is_hazardous_cargo VARCHAR(10) COMMENT '是否危险货物',
+                            hazardous_cargo_quantity DECIMAL(10, 2) COMMENT '危险货物数量',
+                            barge_count INT COMMENT '驳船数量',
+                            local_barge_operations_count INT COMMENT '本港加/解驳船数量',
+                            actual_container_volume DECIMAL(10, 2) COMMENT '实载集装箱运量',
+                            local_container_operations_volume DECIMAL(10, 2) COMMENT '本港装/卸集装箱运量',
+                            `create_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '创建者',
+                            `create_date` datetime NOT NULL COMMENT '创建时间',
+                            `update_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '更新者',
+                            `update_date` datetime NOT NULL COMMENT '更新时间',
+                            `remarks` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注信息',
+                            PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '船舶报告表' ROW_FORMAT = Dynamic;
+SET FOREIGN_KEY_CHECKS = 1;

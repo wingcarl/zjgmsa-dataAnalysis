@@ -1,6 +1,7 @@
 package com.jeesite.modules.data_collect.datamanage.service;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +10,8 @@ import com.jeesite.common.service.CrudService;
 import com.jeesite.modules.data_collect.datamanage.entity.DataSharingInventory;
 import com.jeesite.modules.data_collect.datamanage.dao.DataSharingInventoryDao;
 import com.jeesite.common.service.ServiceException;
+import com.jeesite.modules.data_collect.datamanage.entity.DataMetricsWeekly;
+import com.jeesite.modules.data_collect.datamanage.dao.DataMetricsWeeklyDao;
 import com.jeesite.common.config.Global;
 import com.jeesite.common.validator.ValidatorUtils;
 import com.jeesite.common.utils.excel.ExcelImport;
@@ -19,10 +22,13 @@ import javax.validation.ConstraintViolationException;
 /**
  * 数据共享清单Service
  * @author Dylan Wang
- * @version 2024-06-07
+ * @version 2024-06-21
  */
 @Service
 public class DataSharingInventoryService extends CrudService<DataSharingInventoryDao, DataSharingInventory> {
+	
+	@Autowired
+	private DataMetricsWeeklyDao dataMetricsWeeklyDao;
 	
 	/**
 	 * 获取单条数据
@@ -31,7 +37,13 @@ public class DataSharingInventoryService extends CrudService<DataSharingInventor
 	 */
 	@Override
 	public DataSharingInventory get(DataSharingInventory dataSharingInventory) {
-		return super.get(dataSharingInventory);
+		DataSharingInventory entity = super.get(dataSharingInventory);
+		if (entity != null){
+			DataMetricsWeekly dataMetricsWeekly = new DataMetricsWeekly(entity);
+			dataMetricsWeekly.setStatus(DataMetricsWeekly.STATUS_NORMAL);
+			entity.setDataMetricsWeeklyList(dataMetricsWeeklyDao.findList(dataMetricsWeekly));
+		}
+		return entity;
 	}
 	
 	/**
@@ -56,6 +68,18 @@ public class DataSharingInventoryService extends CrudService<DataSharingInventor
 	}
 	
 	/**
+	 * 查询子表分页数据
+	 * @param dataMetricsWeekly
+	 * @param dataMetricsWeekly page 分页对象
+	 * @return
+	 */
+	public Page<DataMetricsWeekly> findSubPage(DataMetricsWeekly dataMetricsWeekly) {
+		Page<DataMetricsWeekly> page = dataMetricsWeekly.getPage();
+		page.setList(dataMetricsWeeklyDao.findList(dataMetricsWeekly));
+		return page;
+	}
+	
+	/**
 	 * 保存数据（插入或更新）
 	 * @param dataSharingInventory
 	 */
@@ -63,6 +87,19 @@ public class DataSharingInventoryService extends CrudService<DataSharingInventor
 	@Transactional
 	public void save(DataSharingInventory dataSharingInventory) {
 		super.save(dataSharingInventory);
+		// 保存 DataSharingInventory子表
+		for (DataMetricsWeekly dataMetricsWeekly : dataSharingInventory.getDataMetricsWeeklyList()){
+			if (!DataMetricsWeekly.STATUS_DELETE.equals(dataMetricsWeekly.getStatus())){
+				dataMetricsWeekly.setDataSharingInventory(dataSharingInventory);
+				if (dataMetricsWeekly.getIsNewRecord()){
+					dataMetricsWeeklyDao.insert(dataMetricsWeekly);
+				}else{
+					dataMetricsWeeklyDao.update(dataMetricsWeekly);
+				}
+			}else{
+				dataMetricsWeeklyDao.delete(dataMetricsWeekly);
+			}
+		}
 	}
 
 	/**
@@ -132,6 +169,9 @@ public class DataSharingInventoryService extends CrudService<DataSharingInventor
 	@Transactional
 	public void delete(DataSharingInventory dataSharingInventory) {
 		super.delete(dataSharingInventory);
+		DataMetricsWeekly dataMetricsWeekly = new DataMetricsWeekly();
+		dataMetricsWeekly.setDataSharingInventory(dataSharingInventory);
+		dataMetricsWeeklyDao.deleteByEntity(dataMetricsWeekly);
 	}
 	
 }
