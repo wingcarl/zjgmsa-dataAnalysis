@@ -4,6 +4,7 @@ import java.util.Date;
 import com.jeesite.common.mybatis.annotation.JoinTable;
 import com.jeesite.common.mybatis.annotation.JoinTable.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.jeesite.common.utils.excel.fieldtype.OfficeType;
 import com.jeesite.modules.sys.entity.Office;
 
 import com.jeesite.common.entity.DataEntity;
@@ -103,7 +104,7 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 
 	@ExcelFields({
 		@ExcelField(title="日期", attrName="reportDate", align=Align.CENTER, sort=20, dataFormat="yyyy-MM-dd"),
-		@ExcelField(title="部门", attrName="departmentId.officeCode", align=Align.CENTER, sort=30),
+		@ExcelField(title="部门", attrName="departmentId", align=Align.CENTER, sort=30,fieldType= OfficeType.class),
 		@ExcelField(title="海船安检艘次", attrName="seaShipInspectionCount", align=Align.CENTER, sort=40),
 		@ExcelField(title="海船缺陷数量", attrName="seaShipDefectCount", align=Align.CENTER, sort=50),
 		@ExcelField(title="海船滞留艘次", attrName="seaShipDetentionCount", align=Align.CENTER, sort=60),
@@ -143,7 +144,7 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 		super(id);
 	}
 	
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	public Date getReportDate() {
 		return reportDate;
 	}

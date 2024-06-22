@@ -56,38 +56,7 @@ $('#dataGrid').dataGrid({
 			return '<a href="${ctx}/weekly/weeklyReport/form?id='+row.id+'" class="btnList" data-title="${text("编辑周工作数据表")}">'+(val||row.id)+'</a>';
 		}},
 		{header:'${text("部门")}', name:'departmentId.officeName', index:'a.department_id', width:150, align:"center"},
-		{header:'${text("海船安检艘次")}', name:'seaShipInspectionCount', index:'a.sea_ship_inspection_count', width:150, align:"center"},
-		{header:'${text("海船缺陷数量")}', name:'seaShipDefectCount', index:'a.sea_ship_defect_count', width:150, align:"center"},
-		{header:'${text("海船滞留艘次")}', name:'seaShipDetentionCount', index:'a.sea_ship_detention_count', width:150, align:"center"},
-		{header:'${text("内河船安检艘次")}', name:'riverShipInspectionCount', index:'a.river_ship_inspection_count', width:150, align:"center"},
-		{header:'${text("内河船缺陷数量")}', name:'riverShipDefectCount', index:'a.river_ship_defect_count', width:150, align:"center"},
-		{header:'${text("内河船滞留数量")}', name:'riverShipDetentionCount', index:'a.river_ship_detention_count', width:150, align:"center"},
-		{header:'${text("PSC艘次")}', name:'pscInspectionCount', index:'a.psc_inspection_count', width:150, align:"center"},
-		{header:'${text("PSC缺陷数量")}', name:'pscDefectCount', index:'a.psc_defect_count', width:150, align:"center"},
-		{header:'${text("PSC滞留艘次")}', name:'pscDetentionCount', index:'a.psc_detention_count', width:150, align:"center"},
-		{header:'${text("散装液体危险货物作业现场监督检查")}', name:'bulkLiquidHazardousCargoSupervision', index:'a.bulk_liquid_hazardous_cargo_supervision', width:150, align:"center"},
-		{header:'${text("燃油快速抽样检测")}', name:'fuelQuickSamplingInspection', index:'a.fuel_quick_sampling_inspection', width:150, align:"center"},
-		{header:'${text("立案调查数据")}', name:'investigationCases', index:'a.investigation_cases', width:150, align:"center"},
-		{header:'${text("海巡艇巡航发现异常")}', name:'patrolBoatAbnormalDiscovery', index:'a.patrol_boat_abnormal_discovery', width:150, align:"center"},
-		{header:'${text("海巡艇巡航立案调查")}', name:'patrolBoatInvestigationCases', index:'a.patrol_boat_investigation_cases', width:150, align:"center"},
-		{header:'${text("无人机巡航发现异常")}', name:'droneAbnormalDiscovery', index:'a.drone_abnormal_discovery', width:150, align:"center"},
-		{header:'${text("无人机巡航立案调查")}', name:'droneInvestigationCases', index:'a.drone_investigation_cases', width:150, align:"center"},
-		{header:'${text("电子巡航发现异常")}', name:'electronicPatrolAbnormalDiscovery', index:'a.electronic_patrol_abnormal_discovery', width:150, align:"center"},
-		{header:'${text("电子巡航立案调查")}', name:'electronicPatrolInvestigationCases', index:'a.electronic_patrol_investigation_cases', width:150, align:"center"},
-		{header:'${text("受限船进")}', name:'restrictedShipIn', index:'a.restricted_ship_in', width:150, align:"center"},
-		{header:'${text("受限船出")}', name:'restrictedShipOut', index:'a.restricted_ship_out', width:150, align:"center"},
-		{header:'${text("cape船进")}', name:'capeShipIn', index:'a.cape_ship_in', width:150, align:"center"},
-		{header:'${text("cape船出")}', name:'capeShipOut', index:'a.cape_ship_out', width:150, align:"center"},
-		{header:'${text("险情数量")}', name:'dangerCount', index:'a.danger_count', width:150, align:"center"},
-		{header:'${text("水工数量")}', name:'hydraulicConstructionCount', index:'a.hydraulic_construction_count', width:150, align:"center"},
-		{header:'${text("受限船核准数量")}', name:'restrictedShipApprovalCount', index:'a.restricted_ship_approval_count', width:150, align:"center"},
-		{header:'${text("排查风险隐患数量")}', name:'riskHazardIdentificationCount', index:'a.risk_hazard_identification_count', width:150, align:"center"},
-		{header:'${text("进出港报告艘次")}', name:'portEntryExitReportCount', index:'a.port_entry_exit_report_count', width:150, align:"center"},
-		{header:'${text("处罚决定数量")}', name:'penaltyDecisionCount', index:'a.penalty_decision_count', width:150, align:"center"},
-		{header:'${text("处罚金额")}', name:'penaltyAmount', index:'a.penalty_amount', width:150, align:"right", formatter: function(val, obj, row, act){
-			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
-		}},
-		{header:'${text("违法计分")}', name:'illegalScore', index:'a.illegal_score', width:150, align:"center"},
+
 		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
 			var actions = [];
 			//# if(hasPermi('weekly:weeklyReport:edit')){
@@ -99,7 +68,7 @@ $('#dataGrid').dataGrid({
 	],
 	//# // 加载成功后执行事件
 	ajaxSuccess: function(data){
-		
+		$('#dataGrid').dataGrid('mergeCell', 'reportDate');
 	}
 });
 </script><script>
