@@ -1,0 +1,159 @@
+<% layout('/layouts/default.html', {title: '周工作数据表管理', libs: ['dataGrid']}){ %>
+<div class="main-content">
+	<div class="box box-main">
+		<div class="box-header">
+			<div class="box-title">
+				<i class="fa icon-notebook"></i> ${text('周工作数据表管理')}
+			</div>
+			<div class="box-tools pull-right">
+				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
+				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
+				<% if(hasPermi('weekly:weeklyReport:edit')){ %>
+						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
+					<a href="${ctx}/weekly/weeklyReport/form" class="btn btn-default btnTool" title="${text('新增周工作数据表')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<% } %>
+				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
+			</div>
+		</div>
+		<div class="box-body">
+			<#form:form id="searchForm" model="${weeklyReport}" action="${ctx}/weekly/weeklyReport/listData" method="post" class="form-inline hide"
+					data-page-no="${parameter.pageNo}" data-page-size="${parameter.pageSize}" data-order-by="${parameter.orderBy}">
+				<div class="form-group">
+					<label class="control-label">${text('日期')}：</label>
+					<div class="control-inline">
+						<#form:input path="reportDate_gte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd" data-done="reportDate_lte.click()"/>
+						&nbsp;-&nbsp;
+						<#form:input path="reportDate_lte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('部门')}：</label>
+					<div class="control-inline width-120" >
+						<#form:treeselect id="departmentId" title="${text('机构选择')}"
+							path="departmentId.officeCode" labelPath="departmentId.officeName" 
+							url="${ctx}/sys/office/treeData" allowClear="true"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-search"></i> ${text('查询')}</button>
+					<button type="reset" class="btn btn-default btn-sm isQuick"><i class="glyphicon glyphicon-repeat"></i> ${text('重置')}</button>
+				</div>
+			</#form:form>
+			<table id="dataGrid"></table>
+			<div id="dataGridPage"></div>
+		</div>
+	</div>
+</div>
+<% } %>
+<script>
+//# // 初始化DataGrid对象
+$('#dataGrid').dataGrid({
+	searchForm: $('#searchForm'),
+	columnModel: [
+		{header:'${text("日期")}', name:'reportDate', index:'a.report_date', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
+			return '<a href="${ctx}/weekly/weeklyReport/form?id='+row.id+'" class="btnList" data-title="${text("编辑周工作数据表")}">'+(val||row.id)+'</a>';
+		}},
+		{header:'${text("部门")}', name:'departmentId.officeName', index:'a.department_id', width:150, align:"center"},
+		{header:'${text("海船安检艘次")}', name:'seaShipInspectionCount', index:'a.sea_ship_inspection_count', width:150, align:"center"},
+		{header:'${text("海船缺陷数量")}', name:'seaShipDefectCount', index:'a.sea_ship_defect_count', width:150, align:"center"},
+		{header:'${text("海船滞留艘次")}', name:'seaShipDetentionCount', index:'a.sea_ship_detention_count', width:150, align:"center"},
+		{header:'${text("内河船安检艘次")}', name:'riverShipInspectionCount', index:'a.river_ship_inspection_count', width:150, align:"center"},
+		{header:'${text("内河船缺陷数量")}', name:'riverShipDefectCount', index:'a.river_ship_defect_count', width:150, align:"center"},
+		{header:'${text("内河船滞留数量")}', name:'riverShipDetentionCount', index:'a.river_ship_detention_count', width:150, align:"center"},
+		{header:'${text("PSC艘次")}', name:'pscInspectionCount', index:'a.psc_inspection_count', width:150, align:"center"},
+		{header:'${text("PSC缺陷数量")}', name:'pscDefectCount', index:'a.psc_defect_count', width:150, align:"center"},
+		{header:'${text("PSC滞留艘次")}', name:'pscDetentionCount', index:'a.psc_detention_count', width:150, align:"center"},
+		{header:'${text("散装液体危险货物作业现场监督检查")}', name:'bulkLiquidHazardousCargoSupervision', index:'a.bulk_liquid_hazardous_cargo_supervision', width:150, align:"center"},
+		{header:'${text("燃油快速抽样检测")}', name:'fuelQuickSamplingInspection', index:'a.fuel_quick_sampling_inspection', width:150, align:"center"},
+		{header:'${text("立案调查数据")}', name:'investigationCases', index:'a.investigation_cases', width:150, align:"center"},
+		{header:'${text("海巡艇巡航发现异常")}', name:'patrolBoatAbnormalDiscovery', index:'a.patrol_boat_abnormal_discovery', width:150, align:"center"},
+		{header:'${text("海巡艇巡航立案调查")}', name:'patrolBoatInvestigationCases', index:'a.patrol_boat_investigation_cases', width:150, align:"center"},
+		{header:'${text("无人机巡航发现异常")}', name:'droneAbnormalDiscovery', index:'a.drone_abnormal_discovery', width:150, align:"center"},
+		{header:'${text("无人机巡航立案调查")}', name:'droneInvestigationCases', index:'a.drone_investigation_cases', width:150, align:"center"},
+		{header:'${text("电子巡航发现异常")}', name:'electronicPatrolAbnormalDiscovery', index:'a.electronic_patrol_abnormal_discovery', width:150, align:"center"},
+		{header:'${text("电子巡航立案调查")}', name:'electronicPatrolInvestigationCases', index:'a.electronic_patrol_investigation_cases', width:150, align:"center"},
+		{header:'${text("受限船进")}', name:'restrictedShipIn', index:'a.restricted_ship_in', width:150, align:"center"},
+		{header:'${text("受限船出")}', name:'restrictedShipOut', index:'a.restricted_ship_out', width:150, align:"center"},
+		{header:'${text("cape船进")}', name:'capeShipIn', index:'a.cape_ship_in', width:150, align:"center"},
+		{header:'${text("cape船出")}', name:'capeShipOut', index:'a.cape_ship_out', width:150, align:"center"},
+		{header:'${text("险情数量")}', name:'dangerCount', index:'a.danger_count', width:150, align:"center"},
+		{header:'${text("水工数量")}', name:'hydraulicConstructionCount', index:'a.hydraulic_construction_count', width:150, align:"center"},
+		{header:'${text("受限船核准数量")}', name:'restrictedShipApprovalCount', index:'a.restricted_ship_approval_count', width:150, align:"center"},
+		{header:'${text("排查风险隐患数量")}', name:'riskHazardIdentificationCount', index:'a.risk_hazard_identification_count', width:150, align:"center"},
+		{header:'${text("进出港报告艘次")}', name:'portEntryExitReportCount', index:'a.port_entry_exit_report_count', width:150, align:"center"},
+		{header:'${text("处罚决定数量")}', name:'penaltyDecisionCount', index:'a.penalty_decision_count', width:150, align:"center"},
+		{header:'${text("处罚金额")}', name:'penaltyAmount', index:'a.penalty_amount', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("违法计分")}', name:'illegalScore', index:'a.illegal_score', width:150, align:"center"},
+		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
+			var actions = [];
+			//# if(hasPermi('weekly:weeklyReport:edit')){
+				actions.push('<a href="${ctx}/weekly/weeklyReport/form?id='+row.id+'" class="btnList" title="${text("编辑周工作数据表")}"><i class="fa fa-pencil"></i></a>&nbsp;');
+				actions.push('<a href="${ctx}/weekly/weeklyReport/delete?id='+row.id+'" class="btnList" title="${text("删除周工作数据表")}" data-confirm="${text("确认要删除该周工作数据表吗？")}"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			//# }
+			return actions.join('');
+		}}
+	],
+	//# // 加载成功后执行事件
+	ajaxSuccess: function(data){
+		
+	}
+});
+</script><script>
+$('#btnExport').click(function(){
+	js.ajaxSubmitForm($('#searchForm'), {
+		url: '${ctx}/weekly/weeklyReport/exportData',
+		clearParams: 'pageNo,pageSize',
+		downloadFile: true
+	});
+});
+$('#btnImport').click(function(){
+	js.layer.open({
+		type: 1,
+		area: ['400px'],
+		title: '${text("导入周工作数据表")}',
+		resize: false,
+		scrollbar: true,
+		content: js.template('importTpl'),
+		btn: ['<i class="fa fa-check"></i> ${text("导入")}',
+			'<i class="fa fa-remove"></i> ${text("关闭")}'],
+		btn1: function(index, layero){
+			var form = {
+				inputForm: layero.find('#inputForm'),
+				file: layero.find('#file').val()
+			};
+		    if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
+		    	js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
+		        return false;
+		    }
+			js.ajaxSubmitForm(form.inputForm, function(data){
+				js.showMessage(data.message);
+				if(data.result == Global.TRUE){
+					js.layer.closeAll();
+				}
+				page();
+			}, "json");
+			return true;
+		}
+	});
+});
+</script>
+<script id="importTpl" type="text/template">//<!--
+<form id="inputForm" action="${ctx}/weekly/weeklyReport/importData" method="post" enctype="multipart/form-data"
+	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
+	<div class="row">
+		<div class="col-xs-12 col-xs-offset-1">
+			<input type="file" id="file" name="file" class="form-file"/>
+			<div class="mt10 pt5" style="color:red">
+				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
+			</div>
+			<div class="mt10 pt5">
+				<a href="${ctx}/weekly/weeklyReport/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>
+			</div>
+		</div>
+	</div>
+</form>
+//--></script>
