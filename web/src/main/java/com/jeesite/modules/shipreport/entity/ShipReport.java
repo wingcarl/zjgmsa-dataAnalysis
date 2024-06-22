@@ -10,6 +10,9 @@ import com.jeesite.common.entity.DataEntity;
 import com.jeesite.common.mybatis.annotation.Column;
 import com.jeesite.common.mybatis.annotation.Table;
 import com.jeesite.common.mybatis.mapper.query.QueryType;
+import com.jeesite.common.utils.excel.annotation.ExcelField;
+import com.jeesite.common.utils.excel.annotation.ExcelField.Align;
+import com.jeesite.common.utils.excel.annotation.ExcelFields;
 
 /**
  * 船舶报告表Entity
@@ -109,6 +112,48 @@ public class ShipReport extends DataEntity<ShipReport> {
 	private Double actualContainerVolume;		// 实载集装箱运量
 	private Double localContainerOperationsVolume;		// 本港装/卸集装箱运量
 
+	@ExcelFields({
+		@ExcelField(title="报告编号", attrName="reportId", align=Align.CENTER, sort=20),
+		@ExcelField(title="中文船名", attrName="shipNameCn", align=Align.CENTER, sort=30),
+		@ExcelField(title="船舶识别号", attrName="shipIdentificationNumber", align=Align.CENTER, sort=40),
+		@ExcelField(title="总吨", attrName="grossTonnage", align=Align.CENTER, sort=50),
+		@ExcelField(title="载重吨", attrName="deadweightTonnage", align=Align.CENTER, sort=60),
+		@ExcelField(title="主机功率", attrName="mainEnginePower", align=Align.CENTER, sort=70),
+		@ExcelField(title="船舶种类", attrName="shipType", align=Align.CENTER, sort=80),
+		@ExcelField(title="船籍港", attrName="portOfRegistry", align=Align.CENTER, sort=90),
+		@ExcelField(title="船舶长度", attrName="shipLength", align=Align.CENTER, sort=100),
+		@ExcelField(title="船舶宽度", attrName="shipWidth", align=Align.CENTER, sort=110),
+		@ExcelField(title="进出港", attrName="inOutPort", align=Align.CENTER, sort=120),
+		@ExcelField(title="海/河船", attrName="seaRiverShip", align=Align.CENTER, sort=130),
+		@ExcelField(title="报告机构", attrName="reportingAgency", align=Align.CENTER, sort=140),
+		@ExcelField(title="预抵离时间", attrName="estimatedArrivalDepartureTime", align=Align.CENTER, sort=150, dataFormat="yyyy-MM-dd hh:mm"),
+		@ExcelField(title="报告时间", attrName="reportTime", align=Align.CENTER, sort=160, dataFormat="yyyy-MM-dd hh:mm"),
+		@ExcelField(title="港口", attrName="port", align=Align.CENTER, sort=170),
+		@ExcelField(title="泊位", attrName="berth", align=Align.CENTER, sort=180),
+		@ExcelField(title="上下港", attrName="upDownPort", align=Align.CENTER, sort=190),
+		@ExcelField(title="航次日报", attrName="voyageDailyReport", align=Align.CENTER, sort=200),
+		@ExcelField(title="航次数量", attrName="voyageCount", align=Align.CENTER, sort=210),
+		@ExcelField(title="实载货量", attrName="actualCargoVolume", align=Align.CENTER, sort=220),
+		@ExcelField(title="装卸货量", attrName="loadingUnloadingCargoVolume", align=Align.CENTER, sort=230),
+		@ExcelField(title="实载车辆", attrName="actualVehicleCount", align=Align.CENTER, sort=240),
+		@ExcelField(title="装卸车辆", attrName="loadingUnloadingVehicleCount", align=Align.CENTER, sort=250),
+		@ExcelField(title="实载客量", attrName="actualPassengerCount", align=Align.CENTER, sort=260),
+		@ExcelField(title="上下客量", attrName="upDownPassengerCount", align=Align.CENTER, sort=270),
+		@ExcelField(title="货物种类", attrName="cargoType", align=Align.CENTER, sort=280),
+		@ExcelField(title="品名", attrName="cargoName", align=Align.CENTER, sort=290),
+		@ExcelField(title="MMSI", attrName="mmsi", align=Align.CENTER, sort=300),
+		@ExcelField(title="前吃水", attrName="draftFore", align=Align.CENTER, sort=310),
+		@ExcelField(title="后吃水", attrName="draftAft", align=Align.CENTER, sort=320),
+		@ExcelField(title="船舶所有人", attrName="shipOwner", align=Align.CENTER, sort=330),
+		@ExcelField(title="申请人", attrName="applicant", align=Align.CENTER, sort=340),
+		@ExcelField(title="申请人联系方式", attrName="applicantContact", align=Align.CENTER, sort=350),
+		@ExcelField(title="是否危险货物", attrName="isHazardousCargo", align=Align.CENTER, sort=360),
+		@ExcelField(title="危险货物数量", attrName="hazardousCargoQuantity", align=Align.CENTER, sort=370),
+		@ExcelField(title="驳船数量", attrName="bargeCount", align=Align.CENTER, sort=380),
+		@ExcelField(title="本港加/解驳船数量", attrName="localBargeOperationsCount", align=Align.CENTER, sort=390),
+		@ExcelField(title="实载集装箱运量", attrName="actualContainerVolume", align=Align.CENTER, sort=400),
+		@ExcelField(title="本港装/卸集装箱运量", attrName="localContainerOperationsVolume", align=Align.CENTER, sort=410),
+	})
 	public ShipReport() {
 		this(null);
 	}
@@ -348,7 +393,7 @@ public class ShipReport extends DataEntity<ShipReport> {
 		this.cargoType = cargoType;
 	}
 	
-	@Size(min=0, max=64, message="品名长度不能超过 64 个字符")
+	@Size(min=0, max=128, message="品名长度不能超过 64 个字符")
 	public String getCargoName() {
 		return cargoName;
 	}

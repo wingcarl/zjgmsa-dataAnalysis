@@ -175,3 +175,49 @@ CREATE TABLE ship_report (
                             PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '船舶报告表' ROW_FORMAT = Dynamic;
 SET FOREIGN_KEY_CHECKS = 1;
+
+    /**
+    周工作数据表
+     */
+CREATE TABLE weekly_report (
+                                   `id` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '编号',
+                                   department_id VARCHAR(64) COMMENT '部门',
+                                   sea_ship_inspection_count INT COMMENT '海船安检艘次',
+                                   sea_ship_defect_count INT COMMENT '海船缺陷数量',
+                                   sea_ship_detention_count INT COMMENT '海船滞留艘次',
+                                   river_ship_inspection_count INT COMMENT '内河船安检艘次',
+                                   river_ship_defect_count INT COMMENT '内河船缺陷数量',
+                                   river_ship_detention_count INT COMMENT '内河船滞留数量',
+                                   psc_inspection_count INT COMMENT 'PSC艘次',
+                                   psc_defect_count INT COMMENT 'PSC缺陷数量',
+                                   psc_detention_count INT COMMENT 'PSC滞留艘次',
+                                   bulk_liquid_hazardous_cargo_supervision INT COMMENT '散装液体危险货物作业现场监督检查',
+                                   fuel_quick_sampling_inspection INT COMMENT '燃油快速抽样检测',
+                                   investigation_cases INT COMMENT '立案调查数据',
+                                   patrol_boat_abnormal_discovery INT COMMENT '海巡艇巡航发现异常',
+                                   patrol_boat_investigation_cases INT COMMENT '海巡艇巡航立案调查',
+                                   drone_abnormal_discovery INT COMMENT '无人机巡航发现异常',
+                                   drone_investigation_cases INT COMMENT '无人机巡航立案调查',
+                                   electronic_patrol_abnormal_discovery INT COMMENT '电子巡航发现异常',
+                                   electronic_patrol_investigation_cases INT COMMENT '电子巡航立案调查',
+                                   report_date DATE COMMENT '日期',
+                                   restricted_ship_in INT COMMENT '受限船进',
+                                   restricted_ship_out INT COMMENT '受限船出',
+                                   cape_ship_in INT COMMENT 'cape船进',
+                                   cape_ship_out INT COMMENT 'cape船出',
+                                   danger_count INT COMMENT '险情数量',
+                                   hydraulic_construction_count INT COMMENT '水工数量',
+                                   restricted_ship_approval_count INT COMMENT '受限船核准数量',
+                                   risk_hazard_identification_count INT COMMENT '排查风险隐患数量',
+                                   port_entry_exit_report_count INT COMMENT '进出港报告艘次',
+                                   penalty_decision_count INT COMMENT '处罚决定数量',
+                                   penalty_amount DECIMAL(10, 2) COMMENT '处罚金额',
+                                   illegal_score INT COMMENT '违法计分',
+                                       `create_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '创建者',
+                                   `create_date` datetime NOT NULL COMMENT '创建时间',
+                                   `update_by` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '更新者',
+                                   `update_date` datetime NOT NULL COMMENT '更新时间',
+                                   `remarks` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注信息',
+                                   PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT '周工作数据表' ROW_FORMAT = Dynamic;
+SET FOREIGN_KEY_CHECKS = 1;
