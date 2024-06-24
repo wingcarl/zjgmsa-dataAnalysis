@@ -54,7 +54,12 @@ public class WeeklyReportController extends BaseController {
 		model.addAttribute("weeklyReport", weeklyReport);
 		return "data_collect/weekly/weeklyReportList";
 	}
-	
+
+	@RequiresPermissions("weekly:weeklyReport:view")
+	@RequestMapping(value = {"dash"})
+	public String dashboard(){
+		return "data_collect/weekly/weeklyDashboard";
+	}
 	/**
 	 * 查询列表数据
 	 */
