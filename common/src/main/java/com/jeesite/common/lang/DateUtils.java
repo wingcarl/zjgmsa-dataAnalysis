@@ -8,6 +8,8 @@ import org.apache.commons.lang3.time.FastDateFormat;
 
 import java.lang.management.ManagementFactory;
 import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -31,7 +33,9 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
 	public static String formatDate(Date date) {
 		return formatDate(date, "yyyy-MM-dd");
 	}
-	
+	public static Date asDate(LocalDate localDate) {
+		return localDate == null ? null : Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
 	/**
 	 * 得到日期字符串 默认格式（yyyy-MM-dd） pattern可以为："yyyy-MM-dd" "HH:mm:ss" "E"
 	 */

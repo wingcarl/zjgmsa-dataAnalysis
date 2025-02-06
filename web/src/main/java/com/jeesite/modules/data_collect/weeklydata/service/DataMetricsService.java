@@ -70,7 +70,7 @@ public class DataMetricsService extends CrudService<DataMetricsDao, DataMetrics>
 		shipInspection.setInspectionDate_lte(dataMetrics.getEndTime());
 		shipInspection.setInspectionType("初查");
 		shipInspection.setShipType("海船");
-		String[] agency = {"张家港海事局","港区海事处","锦丰海事处","保税区海事处（筹）"};
+		String[] agency = {"张家港海事局","港区海事处","锦丰海事处","保税区海事处(筹)"};
 		shipInspection.setInspectionAgency_in(agency);
 		List<DataMetrics> dataList = findDataMetricsList(shipInspection);
 		shipInspection.setShipType("内河船");
@@ -118,7 +118,7 @@ public class DataMetricsService extends CrudService<DataMetricsDao, DataMetrics>
 			String agencyName = fsc.getInspectionAgency();
 			String detained = fsc.getDetained();
 			int defectCount = Math.toIntExact(fsc.getDefectCount());
-			if("张家港海事局".equals(agencyName) || "保税区海事处（筹）".equals(agencyName)){
+			if("张家港海事局".equals(agencyName) || "保税区海事处(筹)".equals(agencyName)){
 				agencyCountMap.put("保税区海巡执法大队", agencyCountMap.getOrDefault("保税区海巡执法大队", 0) + 1);
 				if("是".equals(detained)){
 					detainedCountMap.put("保税区海巡执法大队", detainedCountMap.getOrDefault("保税区海巡执法大队", 0) + 1);

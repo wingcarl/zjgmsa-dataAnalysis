@@ -1,6 +1,8 @@
 package com.jeesite.modules.data_collect.weekly.web;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -9,10 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import com.jeesite.common.config.Global;
 import com.jeesite.common.collect.ListUtils;
@@ -145,5 +144,377 @@ public class WeeklyReportController extends BaseController {
 		weeklyReportService.delete(weeklyReport);
 		return renderResult(Global.TRUE, text("删除周工作数据表成功！"));
 	}
-	
+
+	/**
+	 * 跳转到图表页面
+	 * @return
+	 */
+	@RequestMapping(value = "chart")
+	public String chart(){
+		return "data_collect/weekly/weeklyReportChart";
+	}
+
+
+	/**
+	 * 获取Echarts图表数据
+	 * @return
+	 */
+	@RequestMapping(value = "chartData")
+	@ResponseBody
+	public Map<String, Object> getChartData() {
+		List<WeeklyReport> weeklyReports = weeklyReportService.findList(new WeeklyReport());
+
+		// 将数据分组
+		Map<String, List<WeeklyReport>> groupedData = new HashMap<>();
+		for(WeeklyReport report : weeklyReports){
+			String departmentName = report.getDepartmentId().getOfficeName();
+			if(!groupedData.containsKey(departmentName)){
+				groupedData.put(departmentName,new ArrayList<>());
+			}
+			groupedData.get(departmentName).add(report);
+		}
+
+		//准备echarts需要的数据格式
+		List<String> categories = new ArrayList<>();
+		List<Long> seaShipInspectionCounts = new ArrayList<>();
+		List<Long> seaShipDefectCounts = new ArrayList<>();
+		List<Long> seaShipDetentionCounts = new ArrayList<>();
+
+		for(Map.Entry<String,List<WeeklyReport>> entry : groupedData.entrySet()){
+			String departmentName = entry.getKey();
+			List<WeeklyReport> list = entry.getValue();
+			long totalInspectionCount = 0;
+			long totalDefectCount = 0;
+			long totalDetentionCount = 0;
+			for (WeeklyReport report : list){
+				totalInspectionCount += report.getSeaShipInspectionCount() == null ? 0 : report.getSeaShipInspectionCount();
+				totalDefectCount += report.getSeaShipDefectCount() == null ? 0 : report.getSeaShipDefectCount();
+				totalDetentionCount += report.getSeaShipDetentionCount() == null ? 0 : report.getSeaShipDetentionCount();
+			}
+			categories.add(departmentName);
+			seaShipInspectionCounts.add(totalInspectionCount);
+			seaShipDefectCounts.add(totalDefectCount);
+			seaShipDetentionCounts.add(totalDetentionCount);
+		}
+
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("categories", categories);
+		result.put("seaShipInspectionCounts", seaShipInspectionCounts);
+		result.put("seaShipDefectCounts", seaShipDefectCounts);
+		result.put("seaShipDetentionCounts", seaShipDetentionCounts);
+		return result;
+	}
+
+	/**
+	 * 获取Echarts图表数据
+	 * @return
+	 */
+	@GetMapping("chartDataWithDate")
+	@ResponseBody
+	public Map<String, Object> getChartDataWithDate(String currentWeekStartDate, String lastWeekStartDate) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+
+		// 查询本周的数据
+		WeeklyReport weeklyReportCurrent = new WeeklyReport();
+		LocalDate currentStartLocalDate = LocalDate.parse(currentWeekStartDate, formatter);
+		weeklyReportCurrent.setReportDate_gte(DateUtils.asDate(currentStartLocalDate));
+		weeklyReportCurrent.setReportDate_lte(DateUtils.asDate(currentStartLocalDate.plusDays(6)));
+		List<WeeklyReport> currentWeekReports = weeklyReportService.findList(weeklyReportCurrent);
+
+		// 查询上周的数据
+		WeeklyReport weeklyReportLast = new WeeklyReport();
+		LocalDate lastStartLocalDate = LocalDate.parse(lastWeekStartDate, formatter);
+		weeklyReportLast.setReportDate_gte(DateUtils.asDate(lastStartLocalDate));
+		weeklyReportLast.setReportDate_lte(DateUtils.asDate(lastStartLocalDate.plusDays(6)));
+		List<WeeklyReport> lastWeekReports = weeklyReportService.findList(weeklyReportLast);
+
+		// 获取指标板数据
+		Map<String, Object> indicatorData = getIndicatorData(currentWeekReports, lastWeekReports);
+
+		// 将数据分组
+		Map<String, List<WeeklyReport>> groupedCurrentData = new HashMap<>();
+		for(WeeklyReport report : currentWeekReports){
+			String departmentName = report.getDepartmentId().getOfficeName();
+			if(!groupedCurrentData.containsKey(departmentName)){
+				groupedCurrentData.put(departmentName,new ArrayList<>());
+			}
+			groupedCurrentData.get(departmentName).add(report);
+		}
+
+		Map<String, List<WeeklyReport>> groupedLastData = new HashMap<>();
+		for(WeeklyReport report : lastWeekReports){
+			String departmentName = report.getDepartmentId().getOfficeName();
+			if(!groupedLastData.containsKey(departmentName)){
+				groupedLastData.put(departmentName,new ArrayList<>());
+			}
+			groupedLastData.get(departmentName).add(report);
+		}
+
+
+		//准备echarts需要的数据格式
+		List<String> categories = new ArrayList<>();
+		Map<String,Object> seaShipInspectionCounts = new HashMap<>();
+		Map<String,Object> seaShipDefectCounts = new HashMap<>();
+		Map<String,Object> seaShipDetentionCounts = new HashMap<>();
+		Map<String,Object> riverShipInspectionCounts = new HashMap<>();
+		Map<String,Object> riverShipDefectCounts = new HashMap<>();
+		Map<String,Object> riverShipDetentionCounts = new HashMap<>();
+
+
+		List<Object> currentSeaShipInspectionCountsList = new ArrayList<>();
+		List<Object> lastSeaShipInspectionCountsList = new ArrayList<>();
+		List<Object> currentSeaShipDefectCountsList = new ArrayList<>();
+		List<Object> lastSeaShipDefectCountsList = new ArrayList<>();
+		List<Object> currentSeaShipDetentionCountsList = new ArrayList<>();
+		List<Object> lastSeaShipDetentionCountsList = new ArrayList<>();
+
+		List<Object> currentRiverShipInspectionCountsList = new ArrayList<>();
+		List<Object> lastRiverShipInspectionCountsList = new ArrayList<>();
+		List<Object> currentRiverShipDefectCountsList = new ArrayList<>();
+		List<Object> lastRiverShipDefectCountsList = new ArrayList<>();
+		List<Object> currentRiverShipDetentionCountsList = new ArrayList<>();
+		List<Object> lastRiverShipDetentionCountsList = new ArrayList<>();
+
+
+
+
+		for(Map.Entry<String,List<WeeklyReport>> currentEntry : groupedCurrentData.entrySet()){
+			String departmentName = currentEntry.getKey();
+			categories.add(departmentName);
+			List<WeeklyReport> currentList = currentEntry.getValue();
+			long currentTotalInspectionCount = 0;
+			long currentTotalDefectCount = 0;
+			long currentTotalDetentionCount = 0;
+			long currentTotalRiverInspectionCount = 0;
+			long currentTotalRiverDefectCount = 0;
+			long currentTotalRiverDetentionCount = 0;
+			for (WeeklyReport report : currentList){
+				currentTotalInspectionCount += report.getSeaShipInspectionCount() == null ? 0 : report.getSeaShipInspectionCount();
+				currentTotalDefectCount += report.getSeaShipDefectCount() == null ? 0 : report.getSeaShipDefectCount();
+				currentTotalDetentionCount += report.getSeaShipDetentionCount() == null ? 0 : report.getSeaShipDetentionCount();
+				currentTotalRiverInspectionCount += report.getRiverShipInspectionCount() == null ? 0 : report.getRiverShipInspectionCount();
+				currentTotalRiverDefectCount += report.getRiverShipDefectCount() == null ? 0 : report.getRiverShipDefectCount();
+				currentTotalRiverDetentionCount += report.getRiverShipDetentionCount() == null ? 0 : report.getRiverShipDetentionCount();
+			}
+
+
+			//查找上周是否有数据
+			long lastTotalInspectionCount = 0;
+			long lastTotalDefectCount = 0;
+			long lastTotalDetentionCount = 0;
+			long lastTotalRiverInspectionCount = 0;
+			long lastTotalRiverDefectCount = 0;
+			long lastTotalRiverDetentionCount = 0;
+			if(groupedLastData.containsKey(departmentName)){
+				List<WeeklyReport> lastList =  groupedLastData.get(departmentName);
+				for (WeeklyReport report : lastList){
+					lastTotalInspectionCount += report.getSeaShipInspectionCount() == null ? 0 : report.getSeaShipInspectionCount();
+					lastTotalDefectCount += report.getSeaShipDefectCount() == null ? 0 : report.getSeaShipDefectCount();
+					lastTotalDetentionCount += report.getSeaShipDetentionCount() == null ? 0 : report.getSeaShipDetentionCount();
+					lastTotalRiverInspectionCount += report.getRiverShipInspectionCount() == null ? 0 : report.getRiverShipInspectionCount();
+					lastTotalRiverDefectCount += report.getRiverShipDefectCount() == null ? 0 : report.getRiverShipDefectCount();
+					lastTotalRiverDetentionCount += report.getRiverShipDetentionCount() == null ? 0 : report.getRiverShipDetentionCount();
+				}
+			}
+
+			// 计算变化率并添加到本周数据中
+			double inspectionChangeRate = 0;
+			if(lastTotalInspectionCount !=0){
+				inspectionChangeRate =   (double)Math.round(( (double) (currentTotalInspectionCount - lastTotalInspectionCount)/ lastTotalInspectionCount) * 10000 ) / 100 ;
+			}
+
+			final long finalCurrentTotalInspectionCount = currentTotalInspectionCount;
+			final double finalInspectionChangeRate = inspectionChangeRate;
+			currentSeaShipInspectionCountsList.add(new  HashMap<String, Object>(){{
+				put("value",finalCurrentTotalInspectionCount);
+				put("changeRate",finalInspectionChangeRate);
+			}});
+			lastSeaShipInspectionCountsList.add(lastTotalInspectionCount);
+
+
+			double defectChangeRate = 0;
+			if(lastTotalDefectCount !=0){
+				defectChangeRate = (double)Math.round(( (double) (currentTotalDefectCount - lastTotalDefectCount)/ lastTotalDefectCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalDefectCount = currentTotalDefectCount;
+			final double finalDefectChangeRate = defectChangeRate;
+			currentSeaShipDefectCountsList.add(new  HashMap<String, Object>(){{
+				put("value",finalCurrentTotalDefectCount);
+				put("changeRate",finalDefectChangeRate);
+			}});
+			lastSeaShipDefectCountsList.add(lastTotalDefectCount);
+
+
+			double detentionChangeRate = 0;
+			if(lastTotalDetentionCount!=0){
+				detentionChangeRate =  (double)Math.round(( (double) (currentTotalDetentionCount - lastTotalDetentionCount)/ lastTotalDetentionCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalDetentionCount = currentTotalDetentionCount;
+			final double finalDetentionChangeRate = detentionChangeRate;
+			currentSeaShipDetentionCountsList.add(new HashMap<String, Object>(){{
+				put("value",finalCurrentTotalDetentionCount);
+				put("changeRate",finalDetentionChangeRate);
+			}});
+			lastSeaShipDetentionCountsList.add(lastTotalDetentionCount);
+
+			double riverInspectionChangeRate = 0;
+			if(lastTotalRiverInspectionCount !=0){
+				riverInspectionChangeRate =   (double)Math.round(( (double) (currentTotalRiverInspectionCount - lastTotalRiverInspectionCount)/ lastTotalRiverInspectionCount) * 10000 ) / 100 ;
+			}
+
+			final long finalCurrentTotalRiverInspectionCount = currentTotalRiverInspectionCount;
+			final double finalRiverInspectionChangeRate = riverInspectionChangeRate;
+			currentRiverShipInspectionCountsList.add(new  HashMap<String, Object>(){{
+				put("value",finalCurrentTotalRiverInspectionCount);
+				put("changeRate",finalRiverInspectionChangeRate);
+			}});
+			lastRiverShipInspectionCountsList.add(lastTotalRiverInspectionCount);
+
+
+
+			double riverDefectChangeRate = 0;
+			if(lastTotalRiverDefectCount !=0){
+				riverDefectChangeRate = (double)Math.round(( (double) (currentTotalRiverDefectCount - lastTotalRiverDefectCount)/ lastTotalRiverDefectCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalRiverDefectCount = currentTotalRiverDefectCount;
+			final double finalRiverDefectChangeRate = riverDefectChangeRate;
+			currentRiverShipDefectCountsList.add(new  HashMap<String, Object>(){{
+				put("value",finalCurrentTotalRiverDefectCount);
+				put("changeRate",finalRiverDefectChangeRate);
+			}});
+			lastRiverShipDefectCountsList.add(lastTotalRiverDefectCount);
+
+
+			double riverDetentionChangeRate = 0;
+			if(lastTotalRiverDetentionCount!=0){
+				riverDetentionChangeRate =  (double)Math.round(( (double) (currentTotalRiverDetentionCount - lastTotalRiverDetentionCount)/ lastTotalRiverDetentionCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalRiverDetentionCount = currentTotalRiverDetentionCount;
+			final double finalRiverDetentionChangeRate = riverDetentionChangeRate;
+			currentRiverShipDetentionCountsList.add(new HashMap<String, Object>(){{
+				put("value",finalCurrentTotalRiverDetentionCount);
+				put("changeRate",finalRiverDetentionChangeRate);
+			}});
+			lastRiverShipDetentionCountsList.add(lastTotalRiverDetentionCount);
+
+
+		}
+
+
+		seaShipInspectionCounts.put("current",currentSeaShipInspectionCountsList);
+		seaShipInspectionCounts.put("last",lastSeaShipInspectionCountsList);
+		seaShipDefectCounts.put("current",currentSeaShipDefectCountsList);
+		seaShipDefectCounts.put("last",lastSeaShipDefectCountsList);
+		seaShipDetentionCounts.put("current",currentSeaShipDetentionCountsList);
+		seaShipDetentionCounts.put("last",lastSeaShipDetentionCountsList);
+
+
+		riverShipInspectionCounts.put("current",currentRiverShipInspectionCountsList);
+		riverShipInspectionCounts.put("last",lastRiverShipInspectionCountsList);
+		riverShipDefectCounts.put("current",currentRiverShipDefectCountsList);
+		riverShipDefectCounts.put("last",lastRiverShipDefectCountsList);
+		riverShipDetentionCounts.put("current",currentRiverShipDetentionCountsList);
+		riverShipDetentionCounts.put("last",lastRiverShipDetentionCountsList);
+
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("categories", categories);
+		result.put("seaShipInspectionCounts", seaShipInspectionCounts);
+		result.put("seaShipDefectCounts", seaShipDefectCounts);
+		result.put("seaShipDetentionCounts", seaShipDetentionCounts);
+
+		result.put("riverShipInspectionCounts", riverShipInspectionCounts);
+		result.put("riverShipDefectCounts", riverShipDefectCounts);
+		result.put("riverShipDetentionCounts", riverShipDetentionCounts);
+		result.put("indicatorData", indicatorData);
+		return result;
+	}
+
+	private Map<String, Object> getIndicatorData(List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
+		Map<String, Object> result = new HashMap<>();
+
+		// 计算本周总数
+		long currentSeaShipInspectionCount = currentWeekReports.stream().mapToLong(report -> report.getSeaShipInspectionCount() == null ? 0 : report.getSeaShipInspectionCount()).sum();
+		long currentSeaShipDefectCount = currentWeekReports.stream().mapToLong(report -> report.getSeaShipDefectCount() == null ? 0 : report.getSeaShipDefectCount()).sum();
+		long currentSeaShipDetentionCount = currentWeekReports.stream().mapToLong(report -> report.getSeaShipDetentionCount() == null ? 0 : report.getSeaShipDetentionCount()).sum();
+		long currentRiverShipInspectionCount = currentWeekReports.stream().mapToLong(report -> report.getRiverShipInspectionCount() == null ? 0 : report.getRiverShipInspectionCount()).sum();
+		long currentRiverShipDefectCount = currentWeekReports.stream().mapToLong(report -> report.getRiverShipDefectCount() == null ? 0 : report.getRiverShipDefectCount()).sum();
+		long currentRiverShipDetentionCount = currentWeekReports.stream().mapToLong(report -> report.getRiverShipDetentionCount() == null ? 0 : report.getRiverShipDetentionCount()).sum();
+		long currentPscInspectionCount = currentWeekReports.stream().mapToLong(report -> report.getPscInspectionCount() == null ? 0 : report.getPscInspectionCount()).sum();
+		long currentPscDefectCount = currentWeekReports.stream().mapToLong(report -> report.getPscDefectCount() == null ? 0 : report.getPscDefectCount()).sum();
+		long currentPscDetentionCount = currentWeekReports.stream().mapToLong(report -> report.getPscDetentionCount() == null ? 0 : report.getPscDetentionCount()).sum();
+
+		// 计算上周总数
+		long lastSeaShipInspectionCount = lastWeekReports.stream().mapToLong(report -> report.getSeaShipInspectionCount() == null ? 0 : report.getSeaShipInspectionCount()).sum();
+		long lastSeaShipDefectCount = lastWeekReports.stream().mapToLong(report -> report.getSeaShipDefectCount() == null ? 0 : report.getSeaShipDefectCount()).sum();
+		long lastSeaShipDetentionCount = lastWeekReports.stream().mapToLong(report -> report.getSeaShipDetentionCount() == null ? 0 : report.getSeaShipDetentionCount()).sum();
+		long lastRiverShipInspectionCount = lastWeekReports.stream().mapToLong(report -> report.getRiverShipInspectionCount() == null ? 0 : report.getRiverShipInspectionCount()).sum();
+		long lastRiverShipDefectCount = lastWeekReports.stream().mapToLong(report -> report.getRiverShipDefectCount() == null ? 0 : report.getRiverShipDefectCount()).sum();
+		long lastRiverShipDetentionCount = lastWeekReports.stream().mapToLong(report -> report.getRiverShipDetentionCount() == null ? 0 : report.getRiverShipDetentionCount()).sum();
+		long lastPscInspectionCount = lastWeekReports.stream().mapToLong(report -> report.getPscInspectionCount() == null ? 0 : report.getPscInspectionCount()).sum();
+		long lastPscDefectCount = lastWeekReports.stream().mapToLong(report -> report.getPscDefectCount() == null ? 0 : report.getPscDefectCount()).sum();
+		long lastPscDetentionCount = lastWeekReports.stream().mapToLong(report -> report.getPscDetentionCount() == null ? 0 : report.getPscDetentionCount()).sum();
+
+
+		// 计算变化率
+		double seaShipInspectionRate = calculateChangeRate(currentSeaShipInspectionCount, lastSeaShipInspectionCount);
+		double seaShipDefectRate = calculateChangeRate(currentSeaShipDefectCount, lastSeaShipDefectCount);
+		double seaShipDetentionRate = calculateChangeRate(currentSeaShipDetentionCount, lastSeaShipDetentionCount);
+		double riverShipInspectionRate = calculateChangeRate(currentRiverShipInspectionCount, lastRiverShipInspectionCount);
+		double riverShipDefectRate = calculateChangeRate(currentRiverShipDefectCount, lastRiverShipDefectCount);
+		double riverShipDetentionRate = calculateChangeRate(currentRiverShipDetentionCount, lastRiverShipDetentionCount);
+		double pscInspectionRate = calculateChangeRate(currentPscInspectionCount, lastPscInspectionCount);
+		double pscDefectRate = calculateChangeRate(currentPscDefectCount, lastPscDefectCount);
+		double pscDetentionRate = calculateChangeRate(currentPscDetentionCount, lastPscDetentionCount);
+
+		result.put("seaShipInspection", new HashMap<String,Object>(){{
+			put("value",currentSeaShipInspectionCount);
+			put("rate",seaShipInspectionRate);
+		}});
+		result.put("seaShipDefect", new HashMap<String,Object>(){{
+			put("value",currentSeaShipDefectCount);
+			put("rate",seaShipDefectRate);
+		}});
+		result.put("seaShipDetention", new HashMap<String,Object>(){{
+			put("value",currentSeaShipDetentionCount);
+			put("rate",seaShipDetentionRate);
+		}});
+
+		result.put("riverShipInspection",new HashMap<String,Object>(){{
+			put("value",currentRiverShipInspectionCount);
+			put("rate",riverShipInspectionRate);
+		}});
+		result.put("riverShipDefect",new HashMap<String,Object>(){{
+			put("value",currentRiverShipDefectCount);
+			put("rate",riverShipDefectRate);
+		}});
+		result.put("riverShipDetention",new HashMap<String,Object>(){{
+			put("value",currentRiverShipDetentionCount);
+			put("rate",riverShipDetentionRate);
+		}});
+
+
+		result.put("pscInspection",new HashMap<String,Object>(){{
+			put("value",currentPscInspectionCount);
+			put("rate",pscInspectionRate);
+		}});
+		result.put("pscDefect",new HashMap<String,Object>(){{
+			put("value",currentPscDefectCount);
+			put("rate",pscDefectRate);
+		}});
+		result.put("pscDetention",new HashMap<String,Object>(){{
+			put("value",currentPscDetentionCount);
+			put("rate",pscDetentionRate);
+		}});
+		return result;
+	}
+
+	private double calculateChangeRate(long current, long last) {
+		if (last == 0) {
+			return 0; // 或者你可以返回其他表示没有变化的数值
+		}
+		return (double) Math.round(((double) (current - last) / last) * 10000) / 100;
+	}
+
 }
