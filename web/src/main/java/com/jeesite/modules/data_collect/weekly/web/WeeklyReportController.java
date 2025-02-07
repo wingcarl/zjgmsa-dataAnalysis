@@ -213,7 +213,8 @@ public class WeeklyReportController extends BaseController {
 		weeklyReportService.fetchData(currentStartLocalDate);
 		// 查询本周的数据
 		WeeklyReport weeklyReportCurrent = new WeeklyReport();
-		return null;
+		Map<String,Object> re = getChartDataWithDate(currentWeekStartDate,lastWeekStartDate);
+		return re;
 	}
 	/**
 	 * 获取Echarts图表数据

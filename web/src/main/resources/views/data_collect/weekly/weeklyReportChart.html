@@ -151,7 +151,7 @@
             <div class="data-card">
                 <div class="label">现场监督异常数量</div>
                 <div class="value" id="on-site-abnormal-value">0</div>
-                <div class="change-rate" id="on-site-abnoraml-rate">0%</div>
+                <div class="change-rate" id="on-site-abnormal-rate">0%</div>
             </div>
         </div>
     </div>
@@ -214,12 +214,12 @@
         function fetchData(){
             // 获取当前选择的日期
             var selectedDate = dateInput.val();
+            var currentDate = new Date(selectedDate); // 复制 selectedDate 避免修改原值
+            var currentDayOfWeek = currentDate.getDay(); // 获取星期几
 
-            // 计算本周和上周的开始日期
-            var currentDate = new Date(selectedDate);
-            var currentDayOfWeek = currentDate.getDay();
+            // 计算上周五的日期
             var currentWeekStartDate = new Date(currentDate);
-            currentWeekStartDate.setDate(currentDate.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1));
+            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
 
             var lastWeekStartDate = new Date(currentWeekStartDate);
             lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
@@ -237,6 +237,7 @@
                 dataType: 'json',
                 data: params,
                 success: function(data) {
+                    alert('数据拉取成功');
                     renderDataCards(data);
                     renderCharts(data);
                     renderRiverCharts(data); // 新增：渲染内河船图表
@@ -254,9 +255,9 @@
             // 计算本周和上周的开始日期
             var currentDate = new Date(selectedDate);
             var currentDayOfWeek = currentDate.getDay();
+            // 计算上周五的日期
             var currentWeekStartDate = new Date(currentDate);
-            currentWeekStartDate.setDate(currentDate.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1));
-
+            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
             var lastWeekStartDate = new Date(currentWeekStartDate);
             lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
 
@@ -273,6 +274,7 @@
                 dataType: 'json',
                 data: params,
                 success: function(data) {
+                    console.log(data);
                     renderDataCards(data);
                     renderCharts(data);
                     renderRiverCharts(data); // 新增：渲染内河船图表
@@ -300,7 +302,7 @@
             updateDataCard("psc-detention-value", data.indicatorData.pscDetention.value,data.indicatorData.pscDetention.rate,"psc-detention-rate");
 
             updateDataCard("on-site-value",data.indicatorData.onSiteCount.value,data.indicatorData.onSiteCount.rate,"on-site-rate");
-            updateDataCard("on-site-value",data.indicatorData.onSiteAbnormalCount.value,data.indicatorData.onSiteAbnormalCount.rate,"on-site-rate");
+            updateDataCard("on-site-abnormal-value",data.indicatorData.onSiteAbnormalCount.value,data.indicatorData.onSiteAbnormalCount.rate,"on-site-abnorma-rate");
 
         }
 

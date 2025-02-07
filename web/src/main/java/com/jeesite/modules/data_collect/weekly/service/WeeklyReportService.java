@@ -202,8 +202,6 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 			// 获取海船数据
 			ShipInspectionQueryResults seaResults = getShipInspectionData("海船", startDate, endDate, agencyName);
 
-			//获取PSC数据
-			ShipInspectionQueryResults pscResults = getPscInsepctionData(startDate,endDate,agencyName);
 			//获取现场监督数据
 			ShipInspectionQueryResults onsiteResults = getOnsiteInsepctionData(startDate,endDate,agencyName);
 			// 创建 WeeklyReport 对象
@@ -215,15 +213,21 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 			weeklyReport.setRiverShipInspectionCount(riverResults.inspectionCount);
 			weeklyReport.setRiverShipDetentionCount(riverResults.detentionCount);
 			weeklyReport.setRiverShipDefectCount(riverResults.defectCount);
+			ShipInspectionQueryResults pscResults = null;
 
+			if("张家港海事局".equals(agencyName)){
+				//获取PSC数据
+				pscResults = getPscInsepctionData(startDate,endDate,agencyName);
+				//设置PSC数据
+				weeklyReport.setPscInspectionCount(pscResults.inspectionCount);
+				weeklyReport.setPscDefectCount(pscResults.defectCount);
+				weeklyReport.setPscDetentionCount(pscResults.detentionCount);
+			}
 			// 设置海船数据
 			weeklyReport.setSeaShipInspectionCount(seaResults.inspectionCount);
 			weeklyReport.setSeaShipDetentionCount(seaResults.detentionCount);
 			weeklyReport.setSeaShipDefectCount(seaResults.defectCount);
-			//设置PSC数据
-			weeklyReport.setPscInspectionCount(pscResults.inspectionCount);
-			weeklyReport.setPscDefectCount(pscResults.defectCount);
-			weeklyReport.setPscDetentionCount(pscResults.detentionCount);
+
 			//设置现场监督数据
 			weeklyReport.setOnSiteCount(onsiteResults.inspectionCount);
 			weeklyReport.setOnSiteAbnormalCount(onsiteResults.detentionCount);
@@ -238,9 +242,9 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 				existingReport.setSeaShipInspectionCount(seaResults.inspectionCount);
 				existingReport.setSeaShipDetentionCount(seaResults.detentionCount);
 				existingReport.setSeaShipDefectCount(seaResults.defectCount);
-				existingReport.setPscDefectCount(pscResults.defectCount);
-				existingReport.setPscInspectionCount(pscResults.inspectionCount);
-				existingReport.setPscDetentionCount(pscResults.detentionCount);
+				existingReport.setPscDefectCount(pscResults==null?0:pscResults.defectCount);
+				existingReport.setPscInspectionCount(pscResults==null?0: pscResults.inspectionCount);
+				existingReport.setPscDetentionCount(pscResults==null?0:pscResults.detentionCount);
 				existingReport.setOnSiteCount(onsiteResults.inspectionCount);
 				existingReport.setOnSiteAbnormalCount(onsiteResults.detentionCount);
 				// 设置更新者信息
@@ -266,7 +270,7 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		ShipOnSiteInspection query = new ShipOnSiteInspection();
 		query.setInspectionDate_gte(startDate);
 		query.setInspectionDate_lte(endDate);
-		query.setInspectionType("初查");
+		query.setInitialOrRecheck("初查");
 		query.setInspectionAgency(agencyName);
 		// 查询所有符合条件的检查记录
 		List<ShipOnSiteInspection> inspections = onsiteInspectionService.findDistinctList(query);
@@ -289,7 +293,7 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		PscInspection query = new PscInspection();
 		query.setInspectionDate_gte(startDate);
 		query.setInspectionDate_lte(endDate);
-		query.setPort(agencyName);
+		query.setPort("Zhangjiagang");
 		query.setType("INITIAL");
 
 		List<PscInspection> pscList = pscInspectionService.findList(query);
