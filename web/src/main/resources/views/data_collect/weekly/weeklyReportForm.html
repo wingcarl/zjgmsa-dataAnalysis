@@ -306,6 +306,24 @@
 							</div>
 						</div>
 					</div>
+					<div class="col-xs-4">
+						<div class="form-group">
+							<label class="control-label col-sm-4" title="">
+								<span class="required hide">*</span> ${text('船舶现场监督检查次数')}：<i class="fa icon-question hide"></i></label>
+							<div class="col-sm-8">
+								<#form:input path="onSiteCount" maxlength="9" class="form-control digits"/>
+							</div>
+						</div>
+					</div>
+					<div class="col-xs-4">
+					<div class="form-group">
+						<label class="control-label col-sm-4" title="">
+							<span class="required hide">*</span> ${text('船舶现场监督检查异常次数')}：<i class="fa icon-question hide"></i></label>
+						<div class="col-sm-8">
+							<#form:input path="onSiteAbnormalCount" maxlength="9" class="form-control digits"/>
+						</div>
+					</div>
+				</div>
 				</div>
 				<div class="row">
 					<div class="col-xs-12">

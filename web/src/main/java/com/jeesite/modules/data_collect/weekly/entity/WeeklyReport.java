@@ -54,6 +54,8 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
 		@Column(name="penalty_decision_count", attrName="penaltyDecisionCount", label="处罚决定数量", isQuery=false, isUpdateForce=true),
 		@Column(name="penalty_amount", attrName="penaltyAmount", label="处罚金额", isQuery=false, isUpdateForce=true),
 		@Column(name="illegal_score", attrName="illegalScore", label="违法计分", isQuery=false, isUpdateForce=true),
+		@Column(name="on_site_count", attrName="onSiteCount", label="船舶现场监督检查次数", isQuery=false, isUpdateForce=true),
+		@Column(name="on_site_abnormal_count", attrName="onSiteAbnormalCount", label="船舶现场监督检查发现异常数量", isQuery=false, isUpdateForce=true),
 		@Column(name="create_by", attrName="createBy", label="创建者", isUpdate=false, isQuery=false),
 		@Column(name="create_date", attrName="createDate", label="创建时间", isUpdate=false, isQuery=false),
 		@Column(name="update_by", attrName="updateBy", label="更新者", isQuery=false),
@@ -101,7 +103,8 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 	private Long penaltyDecisionCount;		// 处罚决定数量
 	private Double penaltyAmount;		// 处罚金额
 	private Long illegalScore;		// 违法计分
-
+	private Long onSiteCount;
+	private Long onSiteAbnormalCount;
 	@ExcelFields({
 		@ExcelField(title="日期", attrName="reportDate", align=Align.CENTER, sort=20, dataFormat="yyyy-MM-dd"),
 		@ExcelField(title="部门", attrName="departmentId", align=Align.CENTER, sort=30,fieldType= OfficeType.class),
@@ -135,6 +138,9 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 		@ExcelField(title="处罚决定数量", attrName="penaltyDecisionCount", align=Align.CENTER, sort=310),
 		@ExcelField(title="处罚金额", attrName="penaltyAmount", align=Align.CENTER, sort=320),
 		@ExcelField(title="违法计分", attrName="illegalScore", align=Align.CENTER, sort=330),
+			@ExcelField(title="船舶现场监督检查数量", attrName="onSiteCount", align=Align.CENTER, sort=330),
+			@ExcelField(title="船舶现场监督检查发现异常数量", attrName="onSiteAbnormalCount", align=Align.CENTER, sort=330),
+
 	})
 	public WeeklyReport() {
 		this(null);
@@ -416,5 +422,20 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 	public void setReportDate_lte(Date reportDate) {
 		sqlMap.getWhere().and("report_date", QueryType.LTE, reportDate);
 	}
-	
+
+	public Long getOnSiteCount() {
+		return onSiteCount;
+	}
+
+	public void setOnSiteCount(Long onSiteCount) {
+		this.onSiteCount = onSiteCount;
+	}
+
+	public Long getOnSiteAbnormalCount() {
+		return onSiteAbnormalCount;
+	}
+
+	public void setOnSiteAbnormalCount(Long onSiteAbnormalCount) {
+		this.onSiteAbnormalCount = onSiteAbnormalCount;
+	}
 }

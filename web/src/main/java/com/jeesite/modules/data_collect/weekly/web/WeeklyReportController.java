@@ -205,7 +205,16 @@ public class WeeklyReportController extends BaseController {
 		result.put("seaShipDetentionCounts", seaShipDetentionCounts);
 		return result;
 	}
-
+	@GetMapping("fetchData")
+	@ResponseBody
+	public Map<String, Object> getFetchData(String currentWeekStartDate, String lastWeekStartDate) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+		LocalDate currentStartLocalDate = LocalDate.parse(currentWeekStartDate, formatter);
+		weeklyReportService.fetchData(currentStartLocalDate);
+		// 查询本周的数据
+		WeeklyReport weeklyReportCurrent = new WeeklyReport();
+		return null;
+	}
 	/**
 	 * 获取Echarts图表数据
 	 * @return
@@ -444,6 +453,8 @@ public class WeeklyReportController extends BaseController {
 		long currentPscInspectionCount = currentWeekReports.stream().mapToLong(report -> report.getPscInspectionCount() == null ? 0 : report.getPscInspectionCount()).sum();
 		long currentPscDefectCount = currentWeekReports.stream().mapToLong(report -> report.getPscDefectCount() == null ? 0 : report.getPscDefectCount()).sum();
 		long currentPscDetentionCount = currentWeekReports.stream().mapToLong(report -> report.getPscDetentionCount() == null ? 0 : report.getPscDetentionCount()).sum();
+		long currentOnSiteCount = currentWeekReports.stream().mapToLong(report -> report.getOnSiteCount()== null ? 0 : report.getOnSiteCount()).sum();
+		long currentOnSiteAbnormalCount = currentWeekReports.stream().mapToLong(report -> report.getOnSiteAbnormalCount()== null ? 0 : report.getOnSiteAbnormalCount()).sum();
 
 		// 计算上周总数
 		long lastSeaShipInspectionCount = lastWeekReports.stream().mapToLong(report -> report.getSeaShipInspectionCount() == null ? 0 : report.getSeaShipInspectionCount()).sum();
@@ -455,6 +466,8 @@ public class WeeklyReportController extends BaseController {
 		long lastPscInspectionCount = lastWeekReports.stream().mapToLong(report -> report.getPscInspectionCount() == null ? 0 : report.getPscInspectionCount()).sum();
 		long lastPscDefectCount = lastWeekReports.stream().mapToLong(report -> report.getPscDefectCount() == null ? 0 : report.getPscDefectCount()).sum();
 		long lastPscDetentionCount = lastWeekReports.stream().mapToLong(report -> report.getPscDetentionCount() == null ? 0 : report.getPscDetentionCount()).sum();
+		long lastOnSiteCount = lastWeekReports.stream().mapToLong(report -> report.getOnSiteCount()== null ? 0 : report.getOnSiteCount()).sum();
+		long lastOnSiteAbnormalCount = lastWeekReports.stream().mapToLong(report -> report.getOnSiteAbnormalCount()== null ? 0 : report.getOnSiteAbnormalCount()).sum();
 
 
 		// 计算变化率
@@ -467,7 +480,8 @@ public class WeeklyReportController extends BaseController {
 		double pscInspectionRate = calculateChangeRate(currentPscInspectionCount, lastPscInspectionCount);
 		double pscDefectRate = calculateChangeRate(currentPscDefectCount, lastPscDefectCount);
 		double pscDetentionRate = calculateChangeRate(currentPscDetentionCount, lastPscDetentionCount);
-
+		double onSiteRate = calculateChangeRate(currentOnSiteCount,lastOnSiteCount);
+		double onSiteAbnormalRate = calculateChangeRate(currentOnSiteAbnormalCount,lastOnSiteAbnormalCount);
 		result.put("seaShipInspection", new HashMap<String,Object>(){{
 			put("value",currentSeaShipInspectionCount);
 			put("rate",seaShipInspectionRate);
@@ -506,6 +520,14 @@ public class WeeklyReportController extends BaseController {
 		result.put("pscDetention",new HashMap<String,Object>(){{
 			put("value",currentPscDetentionCount);
 			put("rate",pscDetentionRate);
+		}});
+		result.put("onSiteCount",new HashMap<String,Object>(){{
+			put("value",currentOnSiteCount);
+			put("rate",onSiteRate);
+		}});
+		result.put("onSiteAbnormalCount",new HashMap<String,Object>(){{
+			put("value",currentOnSiteAbnormalCount);
+			put("rate",onSiteAbnormalRate);
 		}});
 		return result;
 	}

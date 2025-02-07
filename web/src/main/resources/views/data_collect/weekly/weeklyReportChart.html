@@ -73,6 +73,7 @@
     <div class="custom-date-input">
         <label for="reportDate" style="margin-right: 10px; line-height: 38px;">选择日期：</label>
         <input type="date" id="reportDate" class="form-control" style="width: auto;">
+        <button type="button" id="fetchDataButton" class="btn btn-primary">拉取数据</button>
     </div>
     <div class="row">
         <!-- 指标板 -->
@@ -139,6 +140,20 @@
                 <div class="change-rate" id="psc-detention-rate">0%</div>
             </div>
         </div>
+        <div class="col-md-2">
+            <div class="data-card">
+                <div class="label">船舶现场监督数量</div>
+                <div class="value" id="on-site-value">0</div>
+                <div class="change-rate" id="on-site-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="data-card">
+                <div class="label">现场监督异常数量</div>
+                <div class="value" id="on-site-abnormal-value">0</div>
+                <div class="change-rate" id="on-site-abnoraml-rate">0%</div>
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="col-md-4">
@@ -181,7 +196,7 @@
 
         // 获取日期选择器
         var dateInput = $('#reportDate');
-
+        var fetchDataButton = $('#fetchDataButton');
         // 设置默认日期为今天
         dateInput.val(new Date().toISOString().slice(0, 10));
         // 初始化图表
@@ -192,8 +207,46 @@
             fetchDataAndRenderCharts();
         });
 
+        // 拉取数据按钮点击事件
+        fetchDataButton.on('click', function() {
+            fetchData();
+        });
+        function fetchData(){
+            // 获取当前选择的日期
+            var selectedDate = dateInput.val();
 
+            // 计算本周和上周的开始日期
+            var currentDate = new Date(selectedDate);
+            var currentDayOfWeek = currentDate.getDay();
+            var currentWeekStartDate = new Date(currentDate);
+            currentWeekStartDate.setDate(currentDate.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1));
 
+            var lastWeekStartDate = new Date(currentWeekStartDate);
+            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+
+            // 构建请求参数
+            var params = {
+                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
+                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
+            }
+
+            // 发送 AJAX 请求获取数据
+            $.ajax({
+                url: 'fetchData',
+                type: 'GET',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderDataCards(data);
+                    renderCharts(data);
+                    renderRiverCharts(data); // 新增：渲染内河船图表
+                },
+                error: function(error){
+                    console.error('Error fetching chart data:', error);
+                    alert('获取数据失败，请查看控制台错误信息。');
+                }
+            });
+        }
         function fetchDataAndRenderCharts(){
             // 获取当前选择的日期
             var selectedDate = dateInput.val();
@@ -245,6 +298,9 @@
             updateDataCard("psc-inspection-value", data.indicatorData.pscInspection.value, data.indicatorData.pscInspection.rate,"psc-inspection-rate");
             updateDataCard("psc-defect-value", data.indicatorData.pscDefect.value,data.indicatorData.pscDefect.rate,"psc-defect-rate");
             updateDataCard("psc-detention-value", data.indicatorData.pscDetention.value,data.indicatorData.pscDetention.rate,"psc-detention-rate");
+
+            updateDataCard("on-site-value",data.indicatorData.onSiteCount.value,data.indicatorData.onSiteCount.rate,"on-site-rate");
+            updateDataCard("on-site-value",data.indicatorData.onSiteAbnormalCount.value,data.indicatorData.onSiteAbnormalCount.rate,"on-site-rate");
 
         }
 

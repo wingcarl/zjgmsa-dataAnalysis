@@ -1,6 +1,17 @@
 package com.jeesite.modules.data_collect.weekly.service;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.jeesite.common.lang.DateUtils;
+import com.jeesite.modules.data_collect.psc.service.PscInspectionService;
+import com.jeesite.modules.data_collect.ship.entity.ShipInspection;
+import com.jeesite.modules.data_collect.ship.service.ShipInspectionService;
+import com.jeesite.modules.sys.entity.Office;
+import com.jeesite.modules.sys.service.OfficeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +34,12 @@ import javax.validation.ConstraintViolationException;
  */
 @Service
 public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyReport> {
-	
+	@Autowired
+	ShipInspectionService shipInspectionService;
+	@Autowired
+	PscInspectionService pscInspectionService;
+	@Autowired
+	OfficeService officeService;
 	/**
 	 * 获取单条数据
 	 * @param weeklyReport
@@ -133,5 +149,130 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 	public void delete(WeeklyReport weeklyReport) {
 		super.delete(weeklyReport);
 	}
-	
+	public static Map<String,String> agencyMap = new HashMap<>() ;
+	static {
+		agencyMap.put("张家港海事局","SDJN");
+		agencyMap.put("港区海事处","SDJN01");
+		agencyMap.put("锦丰海事处","SDJN02");
+		agencyMap.put("保税区海事处(筹)","SDJN03");
+		//agencyMap.put("海巡执法支队","SDJN04");
+	}
+	// 查询是否存在相同部门和日期的 WeeklyReport 数据
+	private WeeklyReport findExistingReport(java.util.Date startDate, java.util.Date endDate, Office office) {
+		WeeklyReport query = new WeeklyReport();
+		query.setReportDate_gte(startDate);
+		query.setReportDate_lte(endDate);
+		query.setDepartmentId(office);
+
+		List<WeeklyReport> existingReports = findList(query); // 使用 dao 查询
+
+		if (existingReports != null && !existingReports.isEmpty()) {
+			return existingReports.get(0); // 返回第一个结果
+		}
+
+		return null; // 如果不存在，返回 null
+	}
+	@Transactional
+	public void fetchData(LocalDate currentStartLocalDate) {
+		// 查询日期范围
+		java.util.Date startDate = DateUtils.asDate(currentStartLocalDate);
+		java.util.Date endDate = DateUtils.asDate(currentStartLocalDate.plusDays(6));
+
+		// 遍历不同的机构
+		for (Map.Entry<String, String> agencyEntry : agencyMap.entrySet()) {
+			String agencyName = agencyEntry.getKey();
+			String agencyCode = agencyEntry.getValue();
+
+			// 查找部门
+			Office office = officeService.get(agencyCode);
+			if (office == null) {
+				logger.warn("找不到部门，代码: {}, 名称: {}", agencyCode, agencyName);
+				continue; // 如果找不到对应的部门，跳过保存操作
+			}
+
+			// 获取内河船数据
+			ShipInspectionQueryResults riverResults = getShipInspectionData("内河船", startDate, endDate, agencyName);
+
+			// 获取海船数据
+			ShipInspectionQueryResults seaResults = getShipInspectionData("海船", startDate, endDate, agencyName);
+
+			// 创建 WeeklyReport 对象
+			WeeklyReport weeklyReport = new WeeklyReport();
+			weeklyReport.setDepartmentId(office);
+			weeklyReport.setReportDate(startDate);
+
+			// 设置内河船舶数据
+			weeklyReport.setRiverShipInspectionCount(riverResults.inspectionCount);
+			weeklyReport.setRiverShipDetentionCount(riverResults.detentionCount);
+			weeklyReport.setRiverShipDefectCount(riverResults.defectCount);
+
+			// 设置海船数据
+			weeklyReport.setSeaShipInspectionCount(seaResults.inspectionCount);
+			weeklyReport.setSeaShipDetentionCount(seaResults.detentionCount);
+			weeklyReport.setSeaShipDefectCount(seaResults.defectCount);
+
+			// 查询是否存在相同部门和日期的 WeeklyReport 数据
+			WeeklyReport existingReport = findExistingReport(startDate, endDate, office);
+
+			if (existingReport != null) {
+				// 如果存在，则更新数据
+				existingReport.setRiverShipInspectionCount(riverResults.inspectionCount);
+				existingReport.setRiverShipDetentionCount(riverResults.detentionCount);
+				existingReport.setRiverShipDefectCount(riverResults.defectCount);
+				existingReport.setSeaShipInspectionCount(seaResults.inspectionCount);
+				existingReport.setSeaShipDetentionCount(seaResults.detentionCount);
+				existingReport.setSeaShipDefectCount(seaResults.defectCount);
+				// 设置更新者信息
+				existingReport.preUpdate();
+				update(existingReport); // 调用更新方法
+			} else {
+				// 如果不存在，则保存数据
+				// 设置创建者信息
+				weeklyReport.preInsert();
+				weeklyReport.setIsNewRecord(true);
+				save(weeklyReport); // 调用保存方法
+			}
+		}
+	}
+
+	// 内部类用于存储查询结果
+	private static class ShipInspectionQueryResults {
+		long inspectionCount;
+		long detentionCount;
+		long defectCount;
+	}
+
+	// 获取船舶检查数据
+	private ShipInspectionQueryResults getShipInspectionData(String shipType, java.util.Date startDate, java.util.Date endDate, String agencyName) {
+		// 准备查询条件
+		ShipInspection query = new ShipInspection();
+		query.setInspectionDate_gte(startDate);
+		query.setInspectionDate_lte(endDate);
+		query.setShipType(shipType);
+		query.setInspectionAgency(agencyName);
+
+		// 查询所有符合条件的检查记录
+		List<ShipInspection> inspections = shipInspectionService.findDistinctList(query);
+
+		// 统计总检查数
+		long inspectionCount = inspections.size();
+
+		// 统计滞留数
+		long detentionCount = inspections.stream()
+				.filter(inspection -> "是".equals(inspection.getDetained()))
+				.count();
+
+		// 统计缺陷总数
+		long defectCount = inspections.stream()
+				.mapToLong(ShipInspection::getDefectCount)
+				.sum();
+
+		// 封装结果
+		ShipInspectionQueryResults results = new ShipInspectionQueryResults();
+		results.inspectionCount = inspectionCount;
+		results.detentionCount = detentionCount;
+		results.defectCount = defectCount;
+
+		return results;
+	}
 }
