@@ -183,19 +183,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
     $(document).ready(function() {
-        function updateTitle(startDate, endDate) {
-            var formattedStartDate = formatDate(startDate);
-            var formattedEndDate = formatDate(endDate);
-            var titleText = `张家港海事局船舶监督数据看板 (${formattedStartDate} - ${formattedEndDate})`;
-            $('.main-title').text(titleText);
-        }
 
-        function formatDate(date) {
-            var year = date.getFullYear();
-            var month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
-            var day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
         // 初始化 ECharts 实例
         var inspectionChart = echarts.init(document.getElementById('inspection-chart'));
         var defectChart = echarts.init(document.getElementById('defect-chart'));
@@ -279,8 +267,19 @@
                 currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
                 lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
             }
+            // 计算结束日期
+            var currentWeekEndDate = new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+
+
+
+            var formattedStartDate = currentWeekStartDate.toISOString().slice(0, 10);
+            var formattedEndDate = currentWeekEndDate.toISOString().slice(0, 10);
+
             // 更新标题
-            updateTitle(currentWeekStartDate, new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000)); // Calculate end date
+            var titleText = "张家港海事局船舶监督数据看板 ("+formattedStartDate+"-"+ formattedEndDate+")";
+
+
+            $('.main-title').text(titleText);
             // 发送 AJAX 请求获取数据
             $.ajax({
                 url: 'chartDataWithDate',
