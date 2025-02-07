@@ -1,11 +1,13 @@
 package com.jeesite.modules.data_collect.weekly.service;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.jeesite.common.lang.DateUtils;
+import com.jeesite.modules.data_collect.psc.entity.PscInspection;
 import com.jeesite.modules.data_collect.psc.service.PscInspectionService;
 import com.jeesite.modules.data_collect.ship.entity.ShipInspection;
 import com.jeesite.modules.data_collect.ship.service.ShipInspectionService;
@@ -196,6 +198,8 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 			// 获取海船数据
 			ShipInspectionQueryResults seaResults = getShipInspectionData("海船", startDate, endDate, agencyName);
 
+			//获取PSC数据
+			ShipInspectionQueryResults pscResults = getPscInsepctionData(startDate,endDate,agencyName);
 			// 创建 WeeklyReport 对象
 			WeeklyReport weeklyReport = new WeeklyReport();
 			weeklyReport.setDepartmentId(office);
@@ -210,7 +214,10 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 			weeklyReport.setSeaShipInspectionCount(seaResults.inspectionCount);
 			weeklyReport.setSeaShipDetentionCount(seaResults.detentionCount);
 			weeklyReport.setSeaShipDefectCount(seaResults.defectCount);
-
+			//设置PSC数据
+			weeklyReport.setPscInspectionCount(pscResults.inspectionCount);
+			weeklyReport.setPscDefectCount(pscResults.defectCount);
+			weeklyReport.setPscDetentionCount(pscResults.detentionCount);
 			// 查询是否存在相同部门和日期的 WeeklyReport 数据
 			WeeklyReport existingReport = findExistingReport(startDate, endDate, office);
 
@@ -222,6 +229,9 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 				existingReport.setSeaShipInspectionCount(seaResults.inspectionCount);
 				existingReport.setSeaShipDetentionCount(seaResults.detentionCount);
 				existingReport.setSeaShipDefectCount(seaResults.defectCount);
+				existingReport.setPscDefectCount(pscResults.defectCount);
+				existingReport.setPscInspectionCount(pscResults.inspectionCount);
+				existingReport.setPscDetentionCount(pscResults.detentionCount);
 				// 设置更新者信息
 				existingReport.preUpdate();
 				update(existingReport); // 调用更新方法
@@ -233,6 +243,45 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 				save(weeklyReport); // 调用保存方法
 			}
 		}
+	}
+
+	private ShipInspectionQueryResults getPscInsepctionData(Date startDate, Date endDate, String agencyName) {
+		PscInspection query = new PscInspection();
+		query.setInspectionDate_gte(startDate);
+		query.setInspectionDate_lte(endDate);
+		query.setPort(agencyName);
+		query.setType("INITIAL");
+
+		List<PscInspection> pscList = pscInspectionService.findList(query);
+
+		// 统计总检查数
+		long inspectionCount = pscList.size();
+
+		// 统计滞留数
+		long detentionCount = pscList.stream()
+				.filter(inspection -> "Y".equals(inspection.getDetention()))
+				.count();
+
+		// 统计缺陷总数
+		long defectCount = pscList.stream()
+				.map(PscInspection::getDeficiencies)
+				.mapToLong(deficiencies -> {
+					try {
+						return Long.parseLong(deficiencies); // 使用 Long.parseLong() 转换
+					} catch (NumberFormatException e) {
+						// 处理转换异常
+						logger.warn("无法将缺陷数量转换为 Long 类型: {}", deficiencies, e);
+						return 0L; // 如果转换失败，返回 0
+					}
+				})
+				.sum();
+
+		// 封装结果
+		ShipInspectionQueryResults results = new ShipInspectionQueryResults();
+		results.inspectionCount = inspectionCount;
+		results.detentionCount = detentionCount;
+		results.defectCount = defectCount;
+		return results;
 	}
 
 	// 内部类用于存储查询结果
@@ -249,6 +298,7 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		query.setInspectionDate_gte(startDate);
 		query.setInspectionDate_lte(endDate);
 		query.setShipType(shipType);
+		query.setInspectionType("初查");
 		query.setInspectionAgency(agencyName);
 
 		// 查询所有符合条件的检查记录
