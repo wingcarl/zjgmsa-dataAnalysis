@@ -1,6 +1,9 @@
 package com.jeesite.modules.data_collect.shiponsite.service;
 
 import java.util.List;
+
+import com.jeesite.modules.data_collect.ship.dao.ShipInspectionDao;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +26,14 @@ import javax.validation.ConstraintViolationException;
  */
 @Service
 public class ShipOnSiteInspectionService extends CrudService<ShipOnSiteInspectionDao, ShipOnSiteInspection> {
-	
-	/**
+
+	@Autowired
+	ShipOnSiteInspectionDao shipOnsiteInspectionDao;
+    public  List<ShipOnSiteInspection> findDistinctList(ShipOnSiteInspection query) {
+    	return shipOnsiteInspectionDao.findDistinctList(query);
+	}
+
+    /**
 	 * 获取单条数据
 	 * @param shipOnSiteInspection
 	 * @return

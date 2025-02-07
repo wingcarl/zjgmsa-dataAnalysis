@@ -11,5 +11,13 @@
 		</where>
 		ORDER BY ${sqlMap.order.toSql()}
 	</select> -->
-	
+	<select id="findDistinctList" resultType="ShipOnSiteInspection">
+		SELECT ${sqlMap.column.toSql()}
+		FROM ${sqlMap.table.toSql()}
+		<where>
+			${sqlMap.where.toSql()}
+		</where>
+		group by ship_id,inspection_date,inspection_agency
+		ORDER BY ${sqlMap.order.toSql()}
+	</select>
 </mapper>
