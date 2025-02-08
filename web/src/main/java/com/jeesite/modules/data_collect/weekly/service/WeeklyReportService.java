@@ -7,8 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.jeesite.common.lang.DateUtils;
+import com.jeesite.modules.data_collect.dynamic.entity.DynamicEnforcementData;
+import com.jeesite.modules.data_collect.dynamic.service.DynamicEnforcementDataService;
 import com.jeesite.modules.data_collect.psc.entity.PscInspection;
 import com.jeesite.modules.data_collect.psc.service.PscInspectionService;
+import com.jeesite.modules.data_collect.punish.entity.PunishJudge;
+import com.jeesite.modules.data_collect.punish.service.PunishJudgeService;
 import com.jeesite.modules.data_collect.ship.entity.ShipInspection;
 import com.jeesite.modules.data_collect.ship.service.ShipInspectionService;
 import com.jeesite.modules.data_collect.shiponsite.entity.ShipOnSiteInspection;
@@ -44,6 +48,10 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 	PscInspectionService pscInspectionService;
 	@Autowired
 	ShipOnSiteInspectionService onsiteInspectionService;
+	@Autowired
+	PunishJudgeService punishJudgeService;
+	@Autowired
+	DynamicEnforcementDataService dynamicEnforcementDataService;
 	@Autowired
 	OfficeService officeService;
 	/**
@@ -163,6 +171,14 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		agencyMap.put("保税区海事处(筹)","SDJN03");
 		//agencyMap.put("海巡执法支队","SDJN04");
 	}
+	public static Map<String,String> penatyAgencyMap = new HashMap<>() ;
+	static {
+		//penatyAgencyMap.put("张家港海事局","SDJN");
+		penatyAgencyMap.put("张家港港区海事处","SDJN01");
+		penatyAgencyMap.put("张家港锦丰海事处","SDJN02");
+		penatyAgencyMap.put("张家港港区海事处保税区海巡执法大队","SDJN03");
+		penatyAgencyMap.put("海巡执法支队","SDJN04");
+	}
 	// 查询是否存在相同部门和日期的 WeeklyReport 数据
 	private WeeklyReport findExistingReport(java.util.Date startDate, java.util.Date endDate, Office office) {
 		WeeklyReport query = new WeeklyReport();
@@ -178,12 +194,45 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 
 		return null; // 如果不存在，返回 null
 	}
+
 	@Transactional
 	public void fetchData(LocalDate currentStartLocalDate) {
 		// 查询日期范围
+		WeeklyReport weeklyReport = new WeeklyReport();
+
 		java.util.Date startDate = DateUtils.asDate(currentStartLocalDate);
 		java.util.Date endDate = DateUtils.asDate(currentStartLocalDate.plusDays(6));
+		for (Map.Entry<String, String> agencyEntry : penatyAgencyMap.entrySet()) {
+			String agencyName = agencyEntry.getKey();
+			String agencyCode = agencyEntry.getValue();
+			// 查找部门
+			Office office = officeService.get(agencyCode);
+			if (office == null) {
+				logger.warn("找不到部门，代码: {}, 名称: {}", agencyCode, agencyName);
+				continue; // 如果找不到对应的部门，跳过保存操作
+			}
+			PenatyQueryResults penaltyResults = getPenatyData(startDate,endDate,agencyName);
+			weeklyReport.setDepartmentId(office);
+			weeklyReport.setReportDate(startDate);
+			weeklyReport.setPenaltyDecisionCount(penaltyResults.penatyCount);
+			weeklyReport.setPenaltyAmount(penaltyResults.penatyMoneyCount);
+			// 查询是否存在相同部门和日期的 WeeklyReport 数据
+			WeeklyReport existingReport = findExistingReport(startDate, endDate, office);
 
+			if (existingReport != null) {
+				// 如果存在，则更新数据
+				existingReport.setPenaltyDecisionCount(penaltyResults.penatyCount);
+				existingReport.setPenaltyAmount(penaltyResults.penatyMoneyCount);
+				existingReport.preUpdate();
+				update(existingReport); // 调用更新方法
+			}else {
+				// 如果不存在，则保存数据
+				// 设置创建者信息
+				weeklyReport.preInsert();
+				weeklyReport.setIsNewRecord(true);
+				save(weeklyReport); // 调用保存方法
+			}
+		}
 		// 遍历不同的机构
 		for (Map.Entry<String, String> agencyEntry : agencyMap.entrySet()) {
 			String agencyName = agencyEntry.getKey();
@@ -198,14 +247,11 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 
 			// 获取内河船数据
 			ShipInspectionQueryResults riverResults = getShipInspectionData("内河船", startDate, endDate, agencyName);
-
 			// 获取海船数据
 			ShipInspectionQueryResults seaResults = getShipInspectionData("海船", startDate, endDate, agencyName);
-
 			//获取现场监督数据
 			ShipInspectionQueryResults onsiteResults = getOnsiteInsepctionData(startDate,endDate,agencyName);
 			// 创建 WeeklyReport 对象
-			WeeklyReport weeklyReport = new WeeklyReport();
 			weeklyReport.setDepartmentId(office);
 			weeklyReport.setReportDate(startDate);
 
@@ -259,11 +305,35 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 			}
 		}
 	}
+
+	private PenatyQueryResults getPenatyData(Date startDate, Date endDate, String agencyName) {
+		PunishJudge query = new PunishJudge();
+		query.setPenaltyDecisionTime_lte(startDate);
+		query.setPenaltyDecisionTime_gte(endDate);
+		query.setPenaltyAgency(agencyName);
+
+		List<PunishJudge> penatyList = punishJudgeService.findList(query);
+
+		PenatyQueryResults results = new PenatyQueryResults();
+		results.penatyCount = penatyList.size();
+		results.penatyMoneyCount = penatyList.stream().map(PunishJudge::getPenaltyAmount).mapToDouble(
+				penaltyAmount-> {
+						return penaltyAmount;
+				}).sum();
+
+		return results;
+	}
+
 	// 内部类用于存储查询结果
 	private static class ShipInspectionQueryResults {
 		long inspectionCount;
 		long detentionCount;
 		long defectCount;
+	}
+	private static class PenatyQueryResults {
+		long penatyCount;
+		double penatyMoneyCount;
+		long penatyPointCount;
 	}
 	private ShipInspectionQueryResults getOnsiteInsepctionData(Date startDate, Date endDate, String agencyName) {
 		// 准备查询条件
