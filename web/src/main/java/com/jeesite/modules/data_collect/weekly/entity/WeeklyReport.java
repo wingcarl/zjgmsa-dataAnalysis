@@ -56,6 +56,9 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
 		@Column(name="illegal_score", attrName="illegalScore", label="违法计分", isQuery=false, isUpdateForce=true),
 		@Column(name="on_site_count", attrName="onSiteCount", label="船舶现场监督检查次数", isQuery=false, isUpdateForce=true),
 		@Column(name="on_site_abnormal_count", attrName="onSiteAbnormalCount", label="船舶现场监督检查发现异常数量", isQuery=false, isUpdateForce=true),
+		@Column(name="penaty_report_count", attrName="reportIllegalCount", label="进出港处罚数量", isQuery=false, isUpdateForce=true),
+		@Column(name="penaty_wireless_count", attrName="wirelessIllegalCount", label="无线电处罚数量", isQuery=false, isUpdateForce=true),
+		@Column(name="penaty_pollute_count", attrName="polluteIllegalCount", label="危防类处罚数量", isQuery=false, isUpdateForce=true),
 		@Column(name="create_by", attrName="createBy", label="创建者", isUpdate=false, isQuery=false),
 		@Column(name="create_date", attrName="createDate", label="创建时间", isUpdate=false, isQuery=false),
 		@Column(name="update_by", attrName="updateBy", label="更新者", isQuery=false),
@@ -105,6 +108,9 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 	private Long illegalScore;		// 违法计分
 	private Long onSiteCount;
 	private Long onSiteAbnormalCount;
+	private Long reportIllegalCount; //进出港处罚数量
+	private Long wirelessIllegalCount; //无线电处罚数量
+	private Long polluteIllegalCount; //防污染处罚数量
 	@ExcelFields({
 		@ExcelField(title="日期", attrName="reportDate", align=Align.CENTER, sort=20, dataFormat="yyyy-MM-dd"),
 		@ExcelField(title="部门", attrName="departmentId", align=Align.CENTER, sort=30,fieldType= OfficeType.class),
@@ -138,6 +144,9 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 		@ExcelField(title="处罚决定数量", attrName="penaltyDecisionCount", align=Align.CENTER, sort=310),
 		@ExcelField(title="处罚金额", attrName="penaltyAmount", align=Align.CENTER, sort=320),
 		@ExcelField(title="违法计分", attrName="illegalScore", align=Align.CENTER, sort=330),
+			@ExcelField(title="无线电处罚", attrName="wirelessIllegalCount", align=Align.CENTER, sort=330),
+			@ExcelField(title="进出港处罚", attrName="reportIllegalCount", align=Align.CENTER, sort=330),
+			@ExcelField(title="危防处罚", attrName="polluteIllegalCount", align=Align.CENTER, sort=330),
 			@ExcelField(title="船舶现场监督检查数量", attrName="onSiteCount", align=Align.CENTER, sort=330),
 			@ExcelField(title="船舶现场监督检查发现异常数量", attrName="onSiteAbnormalCount", align=Align.CENTER, sort=330),
 
@@ -437,5 +446,29 @@ public class WeeklyReport extends DataEntity<WeeklyReport> {
 
 	public void setOnSiteAbnormalCount(Long onSiteAbnormalCount) {
 		this.onSiteAbnormalCount = onSiteAbnormalCount;
+	}
+
+	public Long getReportIllegalCount() {
+		return reportIllegalCount;
+	}
+
+	public void setReportIllegalCount(Long reportIllegalCount) {
+		this.reportIllegalCount = reportIllegalCount;
+	}
+
+	public Long getWirelessIllegalCount() {
+		return wirelessIllegalCount;
+	}
+
+	public void setWirelessIllegalCount(Long wirelessIllegalCount) {
+		this.wirelessIllegalCount = wirelessIllegalCount;
+	}
+
+	public Long getPolluteIllegalCount() {
+		return polluteIllegalCount;
+	}
+
+	public void setPolluteIllegalCount(Long polluteIllegalCount) {
+		this.polluteIllegalCount = polluteIllegalCount;
 	}
 }

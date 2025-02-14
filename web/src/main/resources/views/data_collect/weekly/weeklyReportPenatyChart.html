@@ -96,11 +96,43 @@
                 <div class="change-rate" id="illegal-score-rate">0%</div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label">进出港处罚</div>
+                <div class="value" id="illegal-report-value">0</div>
+                <div class="change-rate" id="illegal-report-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label">无线电处罚</div>
+                <div class="value" id="illegal-wireless-value">0</div>
+                <div class="change-rate" id="illegal-wireless-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label">防污染处罚</div>
+                <div class="value" id="illegal-pollute-value">0</div>
+                <div class="change-rate" id="illegal-pollute-rate">0%</div>
+            </div>
+        </div>
     </div>
 
     <div class="row">
         <div class="col-md-12">
             <div id="punish-agency-chart" class="chart-container"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div id="report-illegal-chart" class="chart-container"></div>
+        </div>
+        <div class="col-md-4">
+            <div id="wireless-illegal-chart" class="chart-container"></div>
+        </div>
+        <div class="col-md-4">
+            <div id="pollute-illegal-chart" class="chart-container"></div>
         </div>
     </div>
 </div>
@@ -110,10 +142,13 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
-    $(document).ready(function() {
+        $(document).ready(function() {
 
         // 初始化 ECharts 实例
         var punishAgencyChart = echarts.init(document.getElementById('punish-agency-chart'));
+        var reportIllegalChart = echarts.init(document.getElementById('report-illegal-chart'));
+        var wirelessIllegalChart = echarts.init(document.getElementById('wireless-illegal-chart'));
+        var polluteIllegalChart = echarts.init(document.getElementById('pollute-illegal-chart'));
 
         // 获取日期选择器
         var dateInput = $('#reportDate');
@@ -126,108 +161,242 @@
 
         // 日期改变事件
         dateInput.on('change', function() {
-            fetchDataAndRenderCharts();
-        });
+        fetchDataAndRenderCharts();
+    });
 
         function fetchDataAndRenderCharts() {
-            // 获取当前选择的日期
-            var selectedDate = dateInput.val();
+        // 获取当前选择的日期
+        var selectedDate = dateInput.val();
 
-            // 计算本周和上周的开始日期
-            var currentDate = new Date(selectedDate);
-            var currentDayOfWeek = currentDate.getDay();
-            var currentWeekStartDate = new Date(currentDate);
-            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
+        // 计算本周和上周的开始日期
+        var currentDate = new Date(selectedDate);
+        var currentDayOfWeek = currentDate.getDay();
+        var currentWeekStartDate = new Date(currentDate);
+        currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
 
-            var lastWeekStartDate = new Date(currentWeekStartDate);
-            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+        var lastWeekStartDate = new Date(currentWeekStartDate);
+        lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
 
-            // 构建请求参数
-            var params = {
-                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
-            }
+        // 构建请求参数
+        var params = {
+        currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
+        lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
+    }
 
-            // 发送 AJAX 请求获取数据
-            $.ajax({
-                url: 'weeklyChartDataWithDate', // 修改了URL
-                type: 'GET',
-                dataType: 'json',
-                data: params,
-                success: function(data) {
-                    renderDataCards(data);
-                    renderPunishAgencyChart(data);
-                },
-                error: function(error) {
-                    console.error('Error fetching chart data:', error);
-                    alert('获取数据失败，请查看控制台错误信息。');
-                }
-            });
-        }
+        // 发送 AJAX 请求获取数据
+        $.ajax({
+        url: 'weeklyChartDataWithDate', // 修改了URL
+        type: 'GET',
+        dataType: 'json',
+        data: params,
+        success: function(data) {
+        renderDataCards(data);
+        renderPunishAgencyChart(data);
+        renderReportIllegalChart(data);
+        renderWirelessIllegalChart(data);
+        renderPolluteIllegalChart(data);
+    },
+        error: function(error) {
+        console.error('Error fetching chart data:', error);
+        alert('获取数据失败，请查看控制台错误信息。');
+    }
+    });
+    }
 
         function renderDataCards(data) {
-            // 更新指标板
-            updateDataCard("penalty-decision-count-value", data.indicatorData.penaltyDecisionCount.value, data.indicatorData.penaltyDecisionCount.rate, "penalty-decision-count-rate");
-            updateDataCard("penalty-amount-value", data.indicatorData.penaltyAmount.value, data.indicatorData.penaltyAmount.rate, "penalty-amount-rate");
-            updateDataCard("illegal-score-value", data.indicatorData.illegalScore.value, data.indicatorData.illegalScore.rate, "illegal-score-rate");
-        }
+        // 更新指标板
+        updateDataCard("penalty-decision-count-value", data.indicatorData.penaltyDecisionCount.value, data.indicatorData.penaltyDecisionCount.rate, "penalty-decision-count-rate");
+        updateDataCard("penalty-amount-value", data.indicatorData.penaltyAmount.value, data.indicatorData.penaltyAmount.rate, "penalty-amount-rate");
+        updateDataCard("illegal-score-value", data.indicatorData.illegalScore.value, data.indicatorData.illegalScore.rate, "illegal-score-rate");
+        updateDataCard("illegal-report-value", data.indicatorData.illegalReport.value, data.indicatorData.illegalReport.rate, "illegal-report-rate");
+        updateDataCard("illegal-wireless-value", data.indicatorData.illegalWireless.value, data.indicatorData.illegalWireless.rate, "illegal-wireless-rate");
+        updateDataCard("illegal-pollute-value", data.indicatorData.illegalPollute.value, data.indicatorData.illegalPollute.rate, "illegal-pollute-rate");
+
+    }
 
         function updateDataCard(elementId, total, changeRate, changeRateId) {
-            var rate = (changeRate > 0 ? "+" : "") + changeRate.toFixed(2) + "%";
-            var changeRateElement = $("#" + changeRateId);
-            if (changeRate > 0) {
-                changeRateElement.removeClass('negative neutral').addClass('positive');
-            } else if (changeRate < 0) {
-                changeRateElement.removeClass('positive neutral').addClass('negative');
-            } else {
-                changeRateElement.removeClass('positive negative').addClass('neutral');
-            }
-            $("#" + elementId).text(total);
-            $("#" + changeRateId).text(rate);
-        }
+        var rate = (changeRate > 0 ? "+" : "") + changeRate.toFixed(2) + "%";
+        var changeRateElement = $("#" + changeRateId);
+        if (changeRate > 0) {
+        changeRateElement.removeClass('negative neutral').addClass('positive');
+    } else if (changeRate < 0) {
+        changeRateElement.removeClass('positive neutral').addClass('negative');
+    } else {
+        changeRateElement.removeClass('positive negative').addClass('neutral');
+    }
+        $("#" + elementId).text(total);
+        $("#" + changeRateId).text(rate);
+    }
 
         function renderPunishAgencyChart(data) {
-            var chartOption = {
-                title: {
-                    text: '各处罚机构处罚决定数量'
-                },
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'shadow'
-                    }
-                },
-                legend: {
-                    data: ['上周', '本周']
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: data.categories
-                },
-                yAxis: {
-                    type: 'value'
-                },
-                series: [{
-                    name: '上周',
-                    type: 'bar',
-                    data: data.penaltyAgencyCounts.last
-                },
-                    {
-                        name: '本周',
-                        type: 'bar',
-                        data: data.penaltyAgencyCounts.current
-                    }
-                ]
-            };
-            punishAgencyChart.setOption(chartOption);
-        }
+        var chartOption = {
+        title: {
+        text: '各处罚机构处罚决定数量'
+    },
+        tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+        type: 'shadow'
+    }
+    },
+        legend: {
+        data: ['上周', '本周']
+    },
+        grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+        xAxis: {
+        type: 'category',
+        data: data.categories
+    },
+        yAxis: {
+        type: 'value'
+    },
+        series: [{
+        name: '上周',
+        type: 'bar',
+        data: data.penaltyAgencyCounts.last
+    },
+    {
+        name: '本周',
+        type: 'bar',
+        data: data.penaltyAgencyCounts.current
+    }
+        ]
+    };
+        punishAgencyChart.setOption(chartOption);
+    }
+
+        function renderReportIllegalChart(data) {
+        var chartOption = {
+        title: {
+        text: '各机构进出港处罚数量'
+    },
+        tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+        type: 'shadow'
+    }
+    },
+        legend: {
+        data: ['上周', '本周']
+    },
+        grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+        xAxis: {
+        type: 'category',
+        data: data.categories
+    },
+        yAxis: {
+        type: 'value'
+    },
+        series: [{
+        name: '上周',
+        type: 'bar',
+        data: data.reportIllegalCounts.last
+    },
+    {
+        name: '本周',
+        type: 'bar',
+        data: data.reportIllegalCounts.current
+    }
+        ]
+    };
+        reportIllegalChart.setOption(chartOption);
+    }
+
+        function renderWirelessIllegalChart(data) {
+        var chartOption = {
+        title: {
+        text: '各机构无线电处罚数量'
+    },
+        tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+        type: 'shadow'
+    }
+    },
+        legend: {
+        data: ['上周', '本周']
+    },
+        grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+        xAxis: {
+        type: 'category',
+        data: data.categories
+    },
+        yAxis: {
+        type: 'value'
+    },
+        series: [{
+        name: '上周',
+        type: 'bar',
+        data: data.wirelessIllegalCounts.last
+    },
+    {
+        name: '本周',
+        type: 'bar',
+        data: data.wirelessIllegalCounts.current
+    }
+        ]
+    };
+        wirelessIllegalChart.setOption(chartOption);
+    }
+
+        function renderPolluteIllegalChart(data) {
+        var chartOption = {
+        title: {
+        text: '各机构防污染处罚数量'
+    },
+        tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+        type: 'shadow'
+    }
+    },
+        legend: {
+        data: ['上周', '本周']
+    },
+        grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+    },
+        xAxis: {
+        type: 'category',
+        data: data.categories
+    },
+        yAxis: {
+        type: 'value'
+    },
+        series: [{
+        name: '上周',
+        type: 'bar',
+        data: data.polluteIllegalCounts.last
+    },
+    {
+        name: '本周',
+        type: 'bar',
+        data: data.polluteIllegalCounts.current
+    }
+        ]
+    };
+        polluteIllegalChart.setOption(chartOption);
+    }
     });
+
 </script>
 </body>
 

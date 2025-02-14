@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>张家港海事局动态执法数据看板</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <style>
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .data-card {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+
+        .data-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .data-card .change-rate {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .change-rate.positive {
+            color: green;
+        }
+
+        .change-rate.negative {
+            color: red;
+        }
+
+        .change-rate.neutral {
+            color: #212529;
+        }
+
+        .custom-date-input {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .custom-date-input input {
+            margin-left: 10px;
+        }
+    </style>
+    <!-- jQuery 和 ECharts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+
+<body>
+<div class="container-fluid">
+    <h2 class="main-title">张家港海事局动态执法数据看板</h2>
+
+    <div class="custom-date-input">
+        <label for="reportDate" style="margin-right: 10px; line-height: 38px;">选择日期：</label>
+        <input type="date" id="reportDate" class="form-control" style="width: auto;">
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label">处罚决定数量</div>
+                <div class="value" id="penalty-decision-count-value">0</div>
+                <div class="change-rate" id="penalty-decision-count-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label">处罚总金额</div>
+                <div class="value" id="penalty-amount-value">0</div>
+                <div class="change-rate" id="penalty-amount-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label">违法计分</div>
+                <div class="value" id="illegal-score-value">0</div>
+                <div class="change-rate" id="illegal-score-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="punish-agency-chart" class="chart-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+
+        // 初始化 ECharts 实例
+        var punishAgencyChart = echarts.init(document.getElementById('punish-agency-chart'));
+
+        // 获取日期选择器
+        var dateInput = $('#reportDate');
+
+        // 设置默认日期为今天
+        dateInput.val(new Date().toISOString().slice(0, 10));
+
+        // 初始化图表
+        fetchDataAndRenderCharts();
+
+        // 日期改变事件
+        dateInput.on('change', function() {
+            fetchDataAndRenderCharts();
+        });
+
+        function fetchDataAndRenderCharts() {
+            // 获取当前选择的日期
+            var selectedDate = dateInput.val();
+
+            // 计算本周和上周的开始日期
+            var currentDate = new Date(selectedDate);
+            var currentDayOfWeek = currentDate.getDay();
+            var currentWeekStartDate = new Date(currentDate);
+            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
+
+            var lastWeekStartDate = new Date(currentWeekStartDate);
+            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+
+            // 构建请求参数
+            var params = {
+                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
+                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
+            }
+
+            // 发送 AJAX 请求获取数据
+            $.ajax({
+                url: 'weeklyChartDataWithDate', // 修改了URL
+                type: 'GET',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderDataCards(data);
+                    renderPunishAgencyChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching chart data:', error);
+                    alert('获取数据失败，请查看控制台错误信息。');
+                }
+            });
+        }
+
+        function renderDataCards(data) {
+            // 更新指标板
+            updateDataCard("penalty-decision-count-value", data.indicatorData.penaltyDecisionCount.value, data.indicatorData.penaltyDecisionCount.rate, "penalty-decision-count-rate");
+            updateDataCard("penalty-amount-value", data.indicatorData.penaltyAmount.value, data.indicatorData.penaltyAmount.rate, "penalty-amount-rate");
+            updateDataCard("illegal-score-value", data.indicatorData.illegalScore.value, data.indicatorData.illegalScore.rate, "illegal-score-rate");
+        }
+
+        function updateDataCard(elementId, total, changeRate, changeRateId) {
+            var rate = (changeRate > 0 ? "+" : "") + changeRate.toFixed(2) + "%";
+            var changeRateElement = $("#" + changeRateId);
+            if (changeRate > 0) {
+                changeRateElement.removeClass('negative neutral').addClass('positive');
+            } else if (changeRate < 0) {
+                changeRateElement.removeClass('positive neutral').addClass('negative');
+            } else {
+                changeRateElement.removeClass('positive negative').addClass('neutral');
+            }
+            $("#" + elementId).text(total);
+            $("#" + changeRateId).text(rate);
+        }
+
+        function renderPunishAgencyChart(data) {
+            var chartOption = {
+                title: {
+                    text: '各处罚机构处罚决定数量'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['上周', '本周']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.categories
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    name: '上周',
+                    type: 'bar',
+                    data: data.penaltyAgencyCounts.last
+                },
+                    {
+                        name: '本周',
+                        type: 'bar',
+                        data: data.penaltyAgencyCounts.current
+                    }
+                ]
+            };
+            punishAgencyChart.setOption(chartOption);
+        }
+    });
+</script>
+</body>
+
+</html>

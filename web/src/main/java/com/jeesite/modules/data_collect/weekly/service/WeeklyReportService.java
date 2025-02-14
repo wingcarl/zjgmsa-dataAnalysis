@@ -198,7 +198,7 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 	@Transactional
 	public void fetchData(LocalDate currentStartLocalDate) {
 		// 查询日期范围
-		WeeklyReport weeklyReport = new WeeklyReport();
+		WeeklyReport weeklyReport ;
 
 		java.util.Date startDate = DateUtils.asDate(currentStartLocalDate);
 		java.util.Date endDate = DateUtils.asDate(currentStartLocalDate.plusDays(6));
@@ -212,10 +212,14 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 				continue; // 如果找不到对应的部门，跳过保存操作
 			}
 			PenatyQueryResults penaltyResults = getPenatyData(startDate,endDate,agencyName);
+			weeklyReport = new WeeklyReport();
 			weeklyReport.setDepartmentId(office);
 			weeklyReport.setReportDate(startDate);
 			weeklyReport.setPenaltyDecisionCount(penaltyResults.penatyCount);
 			weeklyReport.setPenaltyAmount(penaltyResults.penatyMoneyCount);
+			weeklyReport.setReportIllegalCount(penaltyResults.penatyReportCount);
+			weeklyReport.setWirelessIllegalCount(penaltyResults.penatyWirelessCount);
+			weeklyReport.setPolluteIllegalCount(penaltyResults.penatyPolluteCount);
 			// 查询是否存在相同部门和日期的 WeeklyReport 数据
 			WeeklyReport existingReport = findExistingReport(startDate, endDate, office);
 
@@ -223,6 +227,9 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 				// 如果存在，则更新数据
 				existingReport.setPenaltyDecisionCount(penaltyResults.penatyCount);
 				existingReport.setPenaltyAmount(penaltyResults.penatyMoneyCount);
+				existingReport.setReportIllegalCount(penaltyResults.penatyReportCount);
+				existingReport.setWirelessIllegalCount(penaltyResults.penatyWirelessCount);
+				existingReport.setPolluteIllegalCount(penaltyResults.penatyPolluteCount);
 				existingReport.preUpdate();
 				update(existingReport); // 调用更新方法
 			}else {
@@ -251,6 +258,7 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 			ShipInspectionQueryResults seaResults = getShipInspectionData("海船", startDate, endDate, agencyName);
 			//获取现场监督数据
 			ShipInspectionQueryResults onsiteResults = getOnsiteInsepctionData(startDate,endDate,agencyName);
+			weeklyReport = new WeeklyReport();
 			// 创建 WeeklyReport 对象
 			weeklyReport.setDepartmentId(office);
 			weeklyReport.setReportDate(startDate);
@@ -308,8 +316,8 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 
 	private PenatyQueryResults getPenatyData(Date startDate, Date endDate, String agencyName) {
 		PunishJudge query = new PunishJudge();
-		query.setPenaltyDecisionTime_lte(startDate);
-		query.setPenaltyDecisionTime_gte(endDate);
+		query.setPenaltyDecisionTime_gte(startDate);
+		query.setPenaltyDecisionTime_lte(endDate);
 		query.setPenaltyAgency(agencyName);
 
 		List<PunishJudge> penatyList = punishJudgeService.findList(query);
@@ -320,7 +328,41 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 				penaltyAmount-> {
 						return penaltyAmount;
 				}).sum();
+		// 初始化计数器
+		long reportCount = 0;
+		long wirelessCount = 0;
+		long polluteCount = 0;
 
+		for (PunishJudge punishJudge : penatyList) {
+			String caseReason = punishJudge.getCaseReason();
+			String managementCategory = punishJudge.getManagementCategory();
+
+			// 计算 penatyReportCount
+			if ("船舶进出内河港口，未按照规定向海事管理机构报告船舶进出港信息的".equals(caseReason)) {
+				reportCount++;
+			}
+
+			// 计算 penatyWirelessCount
+			if (caseReason != null && (
+					caseReason.contains("不按照无线电台执照规定的许可事项和要求设置、使用无线电台（站）") ||
+							caseReason.contains("不按照规定在船舶自动识别设备中输入准确信息") ||
+							caseReason.contains("未经许可擅自使用无线电频率，或者擅自设置、使用无线电台（站）的") ||
+							caseReason.contains("其他违反海上无线电通信规则的行为") ||
+							caseReason.contains("承担无线电通信任务的船员和岸基无线电台（站）的工作人员未保持海上交通安全通信频道的值守和畅通，或者使用海上交通安全通信频率交流与海上交通安全无关的内容") ||
+							caseReason.contains("不按照规定保持船舶自动识别系统处于正常工作状态") ||
+							caseReason.contains("未按照有关规定开启船舶自动识别、船舶航行数据记录、船舶远程识别与跟踪、通信等与航行安全、保安、船舶防污染相关的装置，并持续进行显示和记录"))) {
+				wirelessCount++;
+			}
+
+			// 计算 penatyPolluteCount
+			if ("危防管理".equals(managementCategory)) {
+				polluteCount++;
+			}
+		}
+
+		results.penatyReportCount = reportCount;
+		results.penatyWirelessCount = wirelessCount;
+		results.penatyPolluteCount = polluteCount;
 		return results;
 	}
 
@@ -334,6 +376,9 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		long penatyCount;
 		double penatyMoneyCount;
 		long penatyPointCount;
+		long penatyReportCount;
+		long penatyWirelessCount;
+		long penatyPolluteCount;
 	}
 	private ShipInspectionQueryResults getOnsiteInsepctionData(Date startDate, Date endDate, String agencyName) {
 		// 准备查询条件

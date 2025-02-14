@@ -176,6 +176,161 @@ public class PunishJudgeController extends BaseController {
 		Map<String, Object> chartData = getPunishAgencyChartData(currentWeekReports, lastWeekReports);
 		chartData.put("indicatorData", indicatorData); // 将指标板数据添加到 chartData
 
+		// 获取进出港、无线电、防污染处罚数量图表数据
+		Map<String, Object> reportIllegalChartData = getReportIllegalChartData(currentWeekReports, lastWeekReports);
+		chartData.put("reportIllegalCounts", reportIllegalChartData);
+		Map<String, Object> wirelessIllegalChartData = getWirelessIllegalChartData(currentWeekReports, lastWeekReports);
+		chartData.put("wirelessIllegalCounts", wirelessIllegalChartData);
+		Map<String, Object> polluteIllegalChartData = getPolluteIllegalChartData(currentWeekReports, lastWeekReports);
+		chartData.put("polluteIllegalCounts", polluteIllegalChartData);
+
+		return chartData;
+	}
+
+	// 获取 ReportIllegalChartData
+	private Map<String, Object> getReportIllegalChartData(List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
+		Map<String, Object> chartData = new HashMap<>();
+		List<String> categories = new ArrayList<>();
+		List<Long> currentCounts = new ArrayList<>();
+		List<Long> lastCounts = new ArrayList<>();
+
+		// Collect current week counts
+		Map<String, Long> currentAgencyCounts = new HashMap<>();
+		for (WeeklyReport report : currentWeekReports) {
+			String agency = report.getDepartmentId().getOfficeName();
+			currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) + (report.getReportIllegalCount() == null ? 0 : report.getReportIllegalCount()));
+		}
+
+		// Collect last week counts
+		Map<String, Long> lastAgencyCounts = new HashMap<>();
+		for (WeeklyReport report : lastWeekReports) {
+			String agency = report.getDepartmentId().getOfficeName();
+			lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) + (report.getReportIllegalCount() == null ? 0 : report.getReportIllegalCount()));
+		}
+
+		// Combine categories and data for chart (including agencies from both weeks)
+		for (String agency : currentAgencyCounts.keySet()) {
+			if (!categories.contains(agency)) {
+				categories.add(agency);
+			}
+		}
+		for (String agency : lastAgencyCounts.keySet()) {
+			if (!categories.contains(agency)) {
+				categories.add(agency);
+			}
+		}
+
+		// Populate data lists based on categories
+		for (String agency : categories) {
+			currentCounts.add(currentAgencyCounts.getOrDefault(agency, 0L));
+			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
+		}
+
+		// Add data to the chartData map
+		chartData.put("categories", categories);
+		Map<String, Object> reportIllegalCounts = new HashMap<>();
+		reportIllegalCounts.put("current", currentCounts);
+		reportIllegalCounts.put("last", lastCounts);
+		chartData.put("reportIllegalCounts", reportIllegalCounts);
+
+		return chartData;
+	}
+
+	// 获取 WirelessIllegalChartData
+	private Map<String, Object> getWirelessIllegalChartData(List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
+		Map<String, Object> chartData = new HashMap<>();
+		List<String> categories = new ArrayList<>();
+		List<Long> currentCounts = new ArrayList<>();
+		List<Long> lastCounts = new ArrayList<>();
+
+		// Collect current week counts
+		Map<String, Long> currentAgencyCounts = new HashMap<>();
+		for (WeeklyReport report : currentWeekReports) {
+			String agency = report.getDepartmentId().getOfficeName();
+			currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) + (report.getWirelessIllegalCount() == null ? 0 : report.getWirelessIllegalCount()));
+		}
+
+		// Collect last week counts
+		Map<String, Long> lastAgencyCounts = new HashMap<>();
+		for (WeeklyReport report : lastWeekReports) {
+			String agency = report.getDepartmentId().getOfficeName();
+			lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) + (report.getPolluteIllegalCount() == null ? 0 : report.getPolluteIllegalCount()));
+		}
+
+		// Combine categories and data for chart (including agencies from both weeks)
+		for (String agency : currentAgencyCounts.keySet()) {
+			if (!categories.contains(agency)) {
+				categories.add(agency);
+			}
+		}
+		for (String agency : lastAgencyCounts.keySet()) {
+			if (!categories.contains(agency)) {
+				categories.add(agency);
+			}
+		}
+
+		// Populate data lists based on categories
+		for (String agency : categories) {
+			currentCounts.add(currentAgencyCounts.getOrDefault(agency, 0L));
+			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
+		}
+
+		// Add data to the chartData map
+		chartData.put("categories", categories);
+		Map<String, Object> wirelessIllegalCounts = new HashMap<>();
+		wirelessIllegalCounts.put("current", currentCounts);
+		wirelessIllegalCounts.put("last", lastCounts);
+		chartData.put("wirelessIllegalCounts", wirelessIllegalCounts);
+
+		return chartData;
+	}
+
+	// 获取 PolluteIllegalChartData
+	private Map<String, Object> getPolluteIllegalChartData(List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
+		Map<String, Object> chartData = new HashMap<>();
+		List<String> categories = new ArrayList<>();
+		List<Long> currentCounts = new ArrayList<>();
+		List<Long> lastCounts = new ArrayList<>();
+
+		// Collect current week counts
+		Map<String, Long> currentAgencyCounts = new HashMap<>();
+		for (WeeklyReport report : currentWeekReports) {
+			String agency = report.getDepartmentId().getOfficeName();
+			currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) + (report.getPolluteIllegalCount() == null ? 0 : report.getPolluteIllegalCount()));
+		}
+
+		// Collect last week counts
+		Map<String, Long> lastAgencyCounts = new HashMap<>();
+		for (WeeklyReport report : lastWeekReports) {
+			String agency = report.getDepartmentId().getOfficeName();
+			lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) + (report.getPolluteIllegalCount() == null ? 0 : report.getPolluteIllegalCount()));
+		}
+
+		// Combine categories and data for chart (including agencies from both weeks)
+		for (String agency : currentAgencyCounts.keySet()) {
+			if (!categories.contains(agency)) {
+				categories.add(agency);
+			}
+		}
+		for (String agency : lastAgencyCounts.keySet()) {
+			if (!categories.contains(agency)) {
+				categories.add(agency);
+			}
+		}
+
+		// Populate data lists based on categories
+		for (String agency : categories) {
+			currentCounts.add(currentAgencyCounts.getOrDefault(agency, 0L));
+			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
+		}
+
+		// Add data to the chartData map
+		chartData.put("categories", categories);
+		Map<String, Object> polluteIllegalCounts = new HashMap<>();
+		polluteIllegalCounts.put("current", currentCounts);
+		polluteIllegalCounts.put("last", lastCounts);
+		chartData.put("polluteIllegalCounts", polluteIllegalCounts);
+
 		return chartData;
 	}
 
@@ -236,16 +391,25 @@ public class PunishJudgeController extends BaseController {
 		long currentPenaltyDecisionCount = currentWeekReports.stream().mapToLong(report -> report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()).sum();
 		double currentPenaltyAmount = currentWeekReports.stream().mapToDouble(report -> report.getPenaltyAmount() == null ? 0 : report.getPenaltyAmount()).sum();
 		long currentIllegalScore = currentWeekReports.stream().mapToLong(report -> report.getIllegalScore() == null ? 0 : report.getIllegalScore()).sum();
+		long currentReportIllegalCount = currentWeekReports.stream().mapToLong(report -> report.getReportIllegalCount()==null ? 0:report.getReportIllegalCount()).sum();
+		long currentWirelessIllegalCount = currentWeekReports.stream().mapToLong(report -> report.getWirelessIllegalCount()==null ? 0:report.getWirelessIllegalCount()).sum();
+		long currentPolluteIllegalCount = currentWeekReports.stream().mapToLong(report -> report.getPolluteIllegalCount()==null ? 0:report.getPolluteIllegalCount()).sum();
 
 		// 计算上周总数
 		long lastPenaltyDecisionCount = lastWeekReports.stream().mapToLong(report -> report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()).sum();
 		double lastPenaltyAmount = lastWeekReports.stream().mapToDouble(report -> report.getPenaltyAmount() == null ? 0 : report.getPenaltyAmount()).sum();
 		long lastIllegalScore = lastWeekReports.stream().mapToLong(report -> report.getIllegalScore() == null ? 0 : report.getIllegalScore()).sum();
+		long lastReportIllegalCount = lastWeekReports.stream().mapToLong(report -> report.getReportIllegalCount()==null ? 0:report.getReportIllegalCount()).sum();
+		long lastWirelessIllegalCount = lastWeekReports.stream().mapToLong(report -> report.getWirelessIllegalCount()==null ? 0:report.getWirelessIllegalCount()).sum();
+		long lastPolluteIllegalCount = lastWeekReports.stream().mapToLong(report -> report.getPolluteIllegalCount()==null ? 0:report.getPolluteIllegalCount()).sum();
 
 		// 计算变化率
 		double penaltyDecisionCountRate = calculateChangeRate(currentPenaltyDecisionCount, lastPenaltyDecisionCount);
 		double penaltyAmountRate = calculateChangeRate(currentPenaltyAmount, lastPenaltyAmount);
 		double illegalScoreRate = calculateChangeRate(currentIllegalScore, lastIllegalScore);
+		double reportIllegalRate = calculateChangeRate(currentReportIllegalCount,lastReportIllegalCount);
+		double wirelessIllegalRate = calculateChangeRate(currentWirelessIllegalCount,lastWirelessIllegalCount);
+		double polluteIllegalRate = calculateChangeRate(currentPolluteIllegalCount,lastPolluteIllegalCount);
 
 		result.put("penaltyDecisionCount", new HashMap<String, Object>() {{
 			put("value", currentPenaltyDecisionCount);
@@ -261,7 +425,18 @@ public class PunishJudgeController extends BaseController {
 			put("value", currentIllegalScore);
 			put("rate", illegalScoreRate);
 		}});
-
+		result.put("illegalReport",new HashMap<String,Object>(){{
+			put("value",currentReportIllegalCount);
+			put("rate",reportIllegalRate);
+		}});
+		result.put("illegalWireless",new HashMap<String,Object>(){{
+			put("value",currentWirelessIllegalCount);
+			put("rate",wirelessIllegalRate);
+		}});
+		result.put("illegalPollute",new HashMap<String,Object>(){{
+			put("value",currentPolluteIllegalCount);
+			put("rate",polluteIllegalRate);
+		}});
 		return result;
 	}
 

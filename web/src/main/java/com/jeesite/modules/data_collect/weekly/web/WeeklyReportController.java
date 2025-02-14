@@ -470,7 +470,6 @@ public class WeeklyReportController extends BaseController {
 		long lastOnSiteCount = lastWeekReports.stream().mapToLong(report -> report.getOnSiteCount()== null ? 0 : report.getOnSiteCount()).sum();
 		long lastOnSiteAbnormalCount = lastWeekReports.stream().mapToLong(report -> report.getOnSiteAbnormalCount()== null ? 0 : report.getOnSiteAbnormalCount()).sum();
 
-
 		// 计算变化率
 		double seaShipInspectionRate = calculateChangeRate(currentSeaShipInspectionCount, lastSeaShipInspectionCount);
 		double seaShipDefectRate = calculateChangeRate(currentSeaShipDefectCount, lastSeaShipDefectCount);
@@ -483,6 +482,7 @@ public class WeeklyReportController extends BaseController {
 		double pscDetentionRate = calculateChangeRate(currentPscDetentionCount, lastPscDetentionCount);
 		double onSiteRate = calculateChangeRate(currentOnSiteCount,lastOnSiteCount);
 		double onSiteAbnormalRate = calculateChangeRate(currentOnSiteAbnormalCount,lastOnSiteAbnormalCount);
+
 		result.put("seaShipInspection", new HashMap<String,Object>(){{
 			put("value",currentSeaShipInspectionCount);
 			put("rate",seaShipInspectionRate);
@@ -530,6 +530,7 @@ public class WeeklyReportController extends BaseController {
 			put("value",currentOnSiteAbnormalCount);
 			put("rate",onSiteAbnormalRate);
 		}});
+
 		return result;
 	}
 
