@@ -125,15 +125,20 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-12">
             <div id="report-illegal-chart" class="chart-container"></div>
         </div>
-        <div class="col-md-4">
+    </div>
+    <div class="row">
+        <div class="col-md-12">
             <div id="wireless-illegal-chart" class="chart-container"></div>
         </div>
-        <div class="col-md-4">
+    </div>
+    <div class="row">
+        <div class="col-md-12">
             <div id="pollute-illegal-chart" class="chart-container"></div>
         </div>
+    </div>
     </div>
 </div>
 
@@ -271,6 +276,7 @@
     }
 
         function renderReportIllegalChart(data) {
+        console.log(data);
         var chartOption = {
         title: {
         text: '各机构进出港处罚数量'
@@ -292,7 +298,7 @@
     },
         xAxis: {
         type: 'category',
-        data: data.categories
+        data: data.reportIllegalCounts.categories
     },
         yAxis: {
         type: 'value'
@@ -300,12 +306,12 @@
         series: [{
         name: '上周',
         type: 'bar',
-        data: data.reportIllegalCounts.last
+        data: data.reportIllegalCounts.reportIllegalCounts.last
     },
     {
         name: '本周',
         type: 'bar',
-        data: data.reportIllegalCounts.current
+        data: data.reportIllegalCounts.reportIllegalCounts.current
     }
         ]
     };
@@ -334,7 +340,7 @@
     },
         xAxis: {
         type: 'category',
-        data: data.categories
+        data: data.wirelessIllegalCounts.categories
     },
         yAxis: {
         type: 'value'
@@ -342,12 +348,12 @@
         series: [{
         name: '上周',
         type: 'bar',
-        data: data.wirelessIllegalCounts.last
+        data: data.wirelessIllegalCounts.wirelessIllegalCounts.last
     },
     {
         name: '本周',
         type: 'bar',
-        data: data.wirelessIllegalCounts.current
+        data: data.wirelessIllegalCounts.wirelessIllegalCounts.current
     }
         ]
     };
@@ -376,7 +382,7 @@
     },
         xAxis: {
         type: 'category',
-        data: data.categories
+        data: data.polluteIllegalCounts.categories
     },
         yAxis: {
         type: 'value'
@@ -384,12 +390,12 @@
         series: [{
         name: '上周',
         type: 'bar',
-        data: data.polluteIllegalCounts.last
+        data: data.polluteIllegalCounts.polluteIllegalCounts.last
     },
     {
         name: '本周',
         type: 'bar',
-        data: data.polluteIllegalCounts.current
+        data: data.polluteIllegalCounts.polluteIllegalCounts.current
     }
         ]
     };
