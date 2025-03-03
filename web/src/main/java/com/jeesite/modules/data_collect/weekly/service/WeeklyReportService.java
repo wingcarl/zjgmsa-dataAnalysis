@@ -1,10 +1,7 @@
 package com.jeesite.modules.data_collect.weekly.service;
 
 import java.time.LocalDate;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.jeesite.common.lang.DateUtils;
 import com.jeesite.modules.data_collect.dynamic.entity.DynamicEnforcementData;
@@ -179,6 +176,25 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		penatyAgencyMap.put("张家港港区海事处保税区海巡执法大队","SDJN03");
 		penatyAgencyMap.put("海巡执法支队","SDJN04");
 	}
+	public static Map<String,String> dynamicAgencyMap = new HashMap<>() ;
+	static {
+		dynamicAgencyMap.put("张家港海事局","SDJN");
+		dynamicAgencyMap.put("西港区快反处置中心","SDJN01");
+        dynamicAgencyMap.put("五号快反执法单元","SDJN01");
+        dynamicAgencyMap.put("六号快反执法单元","SDJN01");
+
+        dynamicAgencyMap.put("东港区快反处置中心","SDJN02");
+        dynamicAgencyMap.put("一号快反执法单元","SDJN02");
+        dynamicAgencyMap.put("二号快反执法单元","SDJN02");
+        dynamicAgencyMap.put("三号快反执法单元","SDJN02");
+
+        dynamicAgencyMap.put("保税区快反处置中心","SDJN03");
+        dynamicAgencyMap.put("四号快反执法单元","SDJN03");
+
+        dynamicAgencyMap.put("福姜沙快反处置中心","SDJN04");
+        dynamicAgencyMap.put("七号快反执法单元","SDJN04");
+
+    }
 	// 查询是否存在相同部门和日期的 WeeklyReport 数据
 	private WeeklyReport findExistingReport(java.util.Date startDate, java.util.Date endDate, Office office) {
 		WeeklyReport query = new WeeklyReport();
@@ -202,6 +218,74 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 
 		java.util.Date startDate = DateUtils.asDate(currentStartLocalDate);
 		java.util.Date endDate = DateUtils.asDate(currentStartLocalDate.plusDays(6));
+		Set<String> processedDynamicAgencies = new HashSet<>();
+		for (Map.Entry<String, String> dynamicAgencyEntry : dynamicAgencyMap.entrySet()) {
+			String agencyName = dynamicAgencyEntry.getKey();
+			String agencyCode = dynamicAgencyEntry.getValue();
+
+			// 查找部门
+			Office office = officeService.get(agencyCode);
+			if (office == null) {
+				logger.warn("找不到部门，代码: {}, 名称: {}", agencyCode, agencyName);
+				continue; // 如果找不到对应的部门，跳过保存操作
+			}
+			DynamicQueryResults dynamicResults= getDynamicData(startDate,endDate,agencyName);
+			weeklyReport = new WeeklyReport();
+			weeklyReport.setDepartmentId(office);
+			weeklyReport.setReportDate(startDate);
+			long patrolBoatAbnormalDiscovery;
+			long patrolBoatInvestigationCases;
+			long droneAbnormalDiscovery;
+			long droneInvestigationCases;
+			long electronicPatrolAbnormalDiscovery;
+			long electronicPatrolInvestigationCases;
+			long bulkLiquidHazardousCargoSupervision;
+			long fuelQuickSamplingInspection;
+			weeklyReport.setPatrolBoatAbnormalDiscovery(dynamicResults.patrolBoatAbnormalDiscovery);
+			weeklyReport.setPatrolBoatInvestigationCases(dynamicResults.patrolBoatInvestigationCases);
+			weeklyReport.setDroneAbnormalDiscovery(dynamicResults.droneAbnormalDiscovery);
+			weeklyReport.setDroneInvestigationCases(dynamicResults.droneInvestigationCases);
+			weeklyReport.setElectronicPatrolAbnormalDiscovery(dynamicResults.electronicPatrolAbnormalDiscovery);
+			weeklyReport.setElectronicPatrolInvestigationCases(dynamicResults.electronicPatrolInvestigationCases);
+			weeklyReport.setBulkLiquidHazardousCargoSupervision(dynamicResults.bulkLiquidHazardousCargoSupervision);
+			weeklyReport.setFuelQuickSamplingInspection(dynamicResults.fuelQuickSamplingInspection);
+			// 查询是否存在相同部门和日期的 WeeklyReport 数据
+			WeeklyReport existingReport = findExistingReport(startDate, endDate, office);
+			if (existingReport != null) {
+				if (processedDynamicAgencies.contains(agencyCode)) {
+					existingReport.setPatrolBoatAbnormalDiscovery(dynamicResults.patrolBoatAbnormalDiscovery+ (existingReport.getPatrolBoatAbnormalDiscovery()==null?0:existingReport.getPatrolBoatAbnormalDiscovery()));
+					existingReport.setPatrolBoatInvestigationCases(dynamicResults.patrolBoatInvestigationCases+ (existingReport.getPatrolBoatInvestigationCases()==null?0:existingReport.getPatrolBoatInvestigationCases()));
+					existingReport.setDroneAbnormalDiscovery(dynamicResults.droneAbnormalDiscovery+ (existingReport.getDroneAbnormalDiscovery()==null?0:existingReport.getDroneAbnormalDiscovery()));
+					existingReport.setDroneInvestigationCases(dynamicResults.droneInvestigationCases+ (existingReport.getDroneInvestigationCases()==null?0:existingReport.getDroneInvestigationCases()));
+					existingReport.setElectronicPatrolAbnormalDiscovery(dynamicResults.electronicPatrolAbnormalDiscovery+ (existingReport.getElectronicPatrolAbnormalDiscovery()==null?0:existingReport.getElectronicPatrolAbnormalDiscovery()));
+					existingReport.setElectronicPatrolInvestigationCases(dynamicResults.electronicPatrolInvestigationCases+ (existingReport.getElectronicPatrolInvestigationCases()==null?0:existingReport.getElectronicPatrolInvestigationCases()));
+					existingReport.setBulkLiquidHazardousCargoSupervision(dynamicResults.bulkLiquidHazardousCargoSupervision+ (existingReport.getBulkLiquidHazardousCargoSupervision()==null?0:existingReport.getBulkLiquidHazardousCargoSupervision()));
+					existingReport.setFuelQuickSamplingInspection(dynamicResults.fuelQuickSamplingInspection+ (existingReport.getFuelQuickSamplingInspection()==null?0:existingReport.getFuelQuickSamplingInspection()));
+					existingReport.preUpdate();
+					update(existingReport);
+				}else{
+					existingReport.setPatrolBoatAbnormalDiscovery(dynamicResults.patrolBoatAbnormalDiscovery);
+					existingReport.setPatrolBoatInvestigationCases(dynamicResults.patrolBoatInvestigationCases);
+					existingReport.setDroneAbnormalDiscovery(dynamicResults.droneAbnormalDiscovery);
+					existingReport.setDroneInvestigationCases(dynamicResults.droneInvestigationCases);
+					existingReport.setElectronicPatrolAbnormalDiscovery(dynamicResults.electronicPatrolAbnormalDiscovery);
+					existingReport.setElectronicPatrolInvestigationCases(dynamicResults.electronicPatrolInvestigationCases);
+					existingReport.setBulkLiquidHazardousCargoSupervision(dynamicResults.bulkLiquidHazardousCargoSupervision);
+					existingReport.setFuelQuickSamplingInspection(dynamicResults.fuelQuickSamplingInspection);
+					existingReport.preUpdate();
+					update(existingReport);
+					processedDynamicAgencies.add(agencyCode);
+				}
+
+			}else{
+				// 如果不存在，则保存数据
+				// 设置创建者信息
+				weeklyReport.preInsert();
+				weeklyReport.setIsNewRecord(true);
+				save(weeklyReport); // 调用保存方法
+			}
+
+			}
 		for (Map.Entry<String, String> agencyEntry : penatyAgencyMap.entrySet()) {
 			String agencyName = agencyEntry.getKey();
 			String agencyCode = agencyEntry.getValue();
@@ -314,6 +398,76 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		}
 	}
 
+    private DynamicQueryResults getDynamicData(Date startDate, Date endDate, String agencyName) {
+		DynamicEnforcementData query = new DynamicEnforcementData();
+		query.setInspectionTime_gte(startDate);
+		query.setInspectionTime_lte(endDate);
+		query.setInspectionUnit(agencyName);
+
+		List<DynamicEnforcementData> enforcementDataList = dynamicEnforcementDataService.findList(query);
+
+		DynamicQueryResults results = new DynamicQueryResults();
+		results.patrolBoatAbnormalDiscovery = 0L;
+		results.patrolBoatInvestigationCases = 0L;
+		results.droneAbnormalDiscovery = 0L;
+		results.droneInvestigationCases = 0L;
+		results.electronicPatrolAbnormalDiscovery = 0L;
+		results.electronicPatrolInvestigationCases = 0L;
+		results.bulkLiquidHazardousCargoSupervision = 0L;
+		results.fuelQuickSamplingInspection = 0L;
+
+		for (DynamicEnforcementData data : enforcementDataList) {
+			String cruiseTask = data.getCruiseTaskName();
+			String inspectionResult = data.getInspectionResult();
+			String majorItem = data.getMajorItemName();
+
+			// 判断是否为异常或立案调查
+			boolean isAbnormalOrCase = "异常".equals(inspectionResult) || "立案调查".equals(inspectionResult);
+			boolean isCase = "立案调查".equals(inspectionResult);
+
+			// 海巡艇巡航
+			if (cruiseTask != null && !cruiseTask.contains("电子巡航") && !cruiseTask.contains("无人机巡航")) {
+				if (isAbnormalOrCase) {
+					results.patrolBoatAbnormalDiscovery++;
+				}
+				if (isCase) {
+					results.patrolBoatInvestigationCases++;
+				}
+			}
+
+			// 无人机巡航
+			if (cruiseTask != null && cruiseTask.contains("无人机巡航")) {
+				if (isAbnormalOrCase) {
+					results.droneAbnormalDiscovery++;
+				}
+				if (isCase) {
+					results.droneInvestigationCases++;
+				}
+			}
+
+			// 电子巡航
+			if (cruiseTask != null && cruiseTask.contains("电子巡航")) {
+				if (isAbnormalOrCase) {
+					results.electronicPatrolAbnormalDiscovery++;
+				}
+				if (isCase) {
+					results.electronicPatrolInvestigationCases++;
+				}
+			}
+
+			// 散装液体危险货物作业现场监督检查
+			if (majorItem != null && majorItem.equals("船载散装液体危险货物/污染危害性货物现场监督检查")) {
+				results.bulkLiquidHazardousCargoSupervision++;
+			}
+
+			// 燃油快速抽样检测
+			if (majorItem != null && majorItem.equals("船舶燃油质量监督检查")) {
+				results.fuelQuickSamplingInspection++;
+			}
+		}
+
+		return results;
+    }
 	private PenatyQueryResults getPenatyData(Date startDate, Date endDate, String agencyName) {
 		PunishJudge query = new PunishJudge();
 		query.setPenaltyDecisionTime_gte(startDate);
@@ -380,6 +534,17 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		long penatyWirelessCount;
 		long penatyPolluteCount;
 	}
+
+    private static class DynamicQueryResults {
+		long patrolBoatAbnormalDiscovery;
+		long patrolBoatInvestigationCases;
+		long droneAbnormalDiscovery;
+		long droneInvestigationCases;
+		long electronicPatrolAbnormalDiscovery;
+		long electronicPatrolInvestigationCases;
+		long bulkLiquidHazardousCargoSupervision;
+		long fuelQuickSamplingInspection;
+    }
 	private ShipInspectionQueryResults getOnsiteInsepctionData(Date startDate, Date endDate, String agencyName) {
 		// 准备查询条件
 		ShipOnSiteInspection query = new ShipOnSiteInspection();

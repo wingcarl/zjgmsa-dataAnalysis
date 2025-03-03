@@ -1,18 +1,19 @@
 package com.jeesite.modules.data_collect.dynamic.web;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.jeesite.modules.data_collect.weekly.entity.WeeklyReport;
+import com.jeesite.modules.data_collect.weekly.service.WeeklyReportService;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import com.jeesite.common.config.Global;
 import com.jeesite.common.collect.ListUtils;
@@ -36,7 +37,8 @@ public class DynamicEnforcementDataController extends BaseController {
 
 	@Autowired
 	private DynamicEnforcementDataService dynamicEnforcementDataService;
-	
+	@Autowired
+	private WeeklyReportService weeklyReportService;
 	/**
 	 * 获取数据
 	 */
@@ -121,15 +123,14 @@ public class DynamicEnforcementDataController extends BaseController {
 	@ResponseBody
 	@RequiresPermissions("dynamic:dynamicEnforcementData:edit")
 	@PostMapping(value = "importData")
-	public String importData(MultipartFile file) {
+	public String importData(MultipartFile file, String importType) {
 		try {
-			String message = dynamicEnforcementDataService.importData(file);
+			String message = dynamicEnforcementDataService.importData(file, importType);
 			return renderResult(Global.TRUE, "posfull:"+message);
 		} catch (Exception ex) {
 			return renderResult(Global.FALSE, "posfull:"+ex.getMessage());
 		}
 	}
-	
 	/**
 	 * 删除数据
 	 */
@@ -139,6 +140,118 @@ public class DynamicEnforcementDataController extends BaseController {
 	public String delete(DynamicEnforcementData dynamicEnforcementData) {
 		dynamicEnforcementDataService.delete(dynamicEnforcementData);
 		return renderResult(Global.TRUE, text("删除动态执法数据成功！"));
+	}
+	@RequestMapping(value = "chart")
+	public String chart(){
+		return "data_collect/dynamic/dynamicChart";
+	}
+	@GetMapping("chartDataWithDate")
+	@ResponseBody
+	public Map<String, Object> getChartDataWithDate(String currentWeekStartDate, String lastWeekStartDate) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+
+		// 查询本周的数据
+		WeeklyReport weeklyReportCurrent = new WeeklyReport();
+		LocalDate currentStartLocalDate = LocalDate.parse(currentWeekStartDate, formatter);
+		weeklyReportCurrent.setReportDate_gte(DateUtils.asDate(currentStartLocalDate));
+		weeklyReportCurrent.setReportDate_lte(DateUtils.asDate(currentStartLocalDate.plusDays(6)));
+		List<WeeklyReport> currentWeekReports = weeklyReportService.findList(weeklyReportCurrent);
+
+		// 查询上周的数据
+		WeeklyReport weeklyReportLast = new WeeklyReport();
+		LocalDate lastStartLocalDate = LocalDate.parse(lastWeekStartDate, formatter);
+		weeklyReportLast.setReportDate_gte(DateUtils.asDate(lastStartLocalDate));
+		weeklyReportLast.setReportDate_lte(DateUtils.asDate(lastStartLocalDate.plusDays(6)));
+		List<WeeklyReport> lastWeekReports = weeklyReportService.findList(weeklyReportLast);
+
+		// 将数据分组
+		Map<String, Long> currentPatrolBoatAbnormalDiscovery = new HashMap<>();
+		Map<String, Long> currentPatrolBoatInvestigationCases = new HashMap<>();
+		Map<String, Long> currentDroneAbnormalDiscovery = new HashMap<>();
+		Map<String, Long> currentDroneInvestigationCases = new HashMap<>();
+		Map<String, Long> currentElectronicPatrolAbnormalDiscovery = new HashMap<>();
+		Map<String, Long> currentElectronicPatrolInvestigationCases = new HashMap<>();
+
+		Map<String, Long> lastPatrolBoatAbnormalDiscovery = new HashMap<>();
+		Map<String, Long> lastPatrolBoatInvestigationCases = new HashMap<>();
+		Map<String, Long> lastDroneAbnormalDiscovery = new HashMap<>();
+		Map<String, Long> lastDroneInvestigationCases = new HashMap<>();
+		Map<String, Long> lastElectronicPatrolAbnormalDiscovery = new HashMap<>();
+		Map<String, Long> lastElectronicPatrolInvestigationCases = new HashMap<>();
+
+
+		List<String> categories = new ArrayList<>();
+
+		processData(currentWeekReports, currentPatrolBoatAbnormalDiscovery, currentPatrolBoatInvestigationCases,
+				currentDroneAbnormalDiscovery, currentDroneInvestigationCases, currentElectronicPatrolAbnormalDiscovery,
+				currentElectronicPatrolInvestigationCases, categories);
+		processData(lastWeekReports, lastPatrolBoatAbnormalDiscovery, lastPatrolBoatInvestigationCases,
+				lastDroneAbnormalDiscovery, lastDroneInvestigationCases, lastElectronicPatrolAbnormalDiscovery,
+				lastElectronicPatrolInvestigationCases, categories);
+
+		// 处理图表数据
+		Map<String, Object> result = new HashMap<>();
+		result.put("categories", new ArrayList<>(new HashSet<>(categories)));
+
+		addChartData(result, "patrolBoatAbnormalDiscovery", currentPatrolBoatAbnormalDiscovery, lastPatrolBoatAbnormalDiscovery, categories);
+		addChartData(result, "patrolBoatInvestigationCases", currentPatrolBoatInvestigationCases, lastPatrolBoatInvestigationCases, categories);
+		addChartData(result, "droneAbnormalDiscovery", currentDroneAbnormalDiscovery, lastDroneAbnormalDiscovery, categories);
+		addChartData(result, "droneInvestigationCases", currentDroneInvestigationCases, lastDroneInvestigationCases, categories);
+		addChartData(result, "electronicPatrolAbnormalDiscovery", currentElectronicPatrolAbnormalDiscovery, lastElectronicPatrolAbnormalDiscovery, categories);
+		addChartData(result, "electronicPatrolInvestigationCases", currentElectronicPatrolInvestigationCases, lastElectronicPatrolInvestigationCases, categories);
+
+		return result;
+	}
+
+	private void processData(List<WeeklyReport> reports, Map<String, Long> patrolBoatAbnormalDiscovery,
+							 Map<String, Long> patrolBoatInvestigationCases, Map<String, Long> droneAbnormalDiscovery,
+							 Map<String, Long> droneInvestigationCases, Map<String, Long> electronicPatrolAbnormalDiscovery,
+							 Map<String, Long> electronicPatrolInvestigationCases, List<String> categories) {
+		for (WeeklyReport report : reports) {
+			String departmentName = report.getDepartmentId().getOfficeName();
+			categories.add(departmentName);
+
+			patrolBoatAbnormalDiscovery.put(departmentName, patrolBoatAbnormalDiscovery.getOrDefault(departmentName, 0L) +
+					(report.getPatrolBoatAbnormalDiscovery() == null ? 0 : report.getPatrolBoatAbnormalDiscovery()));
+			patrolBoatInvestigationCases.put(departmentName, patrolBoatInvestigationCases.getOrDefault(departmentName, 0L) +
+					(report.getPatrolBoatInvestigationCases() == null ? 0 : report.getPatrolBoatInvestigationCases()));
+			droneAbnormalDiscovery.put(departmentName, droneAbnormalDiscovery.getOrDefault(departmentName, 0L) +
+					(report.getDroneAbnormalDiscovery() == null ? 0 : report.getDroneAbnormalDiscovery()));
+			droneInvestigationCases.put(departmentName, droneInvestigationCases.getOrDefault(departmentName, 0L) +
+					(report.getDroneInvestigationCases() == null ? 0 : report.getDroneInvestigationCases()));
+			electronicPatrolAbnormalDiscovery.put(departmentName, electronicPatrolAbnormalDiscovery.getOrDefault(departmentName, 0L) +
+					(report.getElectronicPatrolAbnormalDiscovery() == null ? 0 : report.getElectronicPatrolAbnormalDiscovery()));
+			electronicPatrolInvestigationCases.put(departmentName, electronicPatrolInvestigationCases.getOrDefault(departmentName, 0L) +
+					(report.getElectronicPatrolInvestigationCases() == null ? 0 : report.getElectronicPatrolInvestigationCases()));
+		}
+	}
+
+	private void addChartData(Map<String, Object> result, String baseName, Map<String, Long> currentData,
+							  Map<String, Long> lastData, List<String> categories) {
+		List<Object> currentList = new ArrayList<>();
+		List<Object> lastList = new ArrayList<>();
+
+		Set<String> allCats = new HashSet<>(categories);
+		for (String cat : allCats) {
+			Long currentVal = currentData.getOrDefault(cat, 0L);
+			Long lastVal = lastData.getOrDefault(cat, 0L);
+
+			double changeRate = 0;
+			if (lastVal != 0) {
+				changeRate = (double) Math.round(((double) (currentVal - lastVal) / lastVal) * 10000) / 100;
+			}
+
+			final double finalChangeRate = changeRate;
+			final Long finalCurrentVal = currentVal;
+			currentList.add(new HashMap<String, Object>() {{
+				put("value", finalCurrentVal);
+				put("changeRate", finalChangeRate);
+			}});
+			lastList.add(lastVal);
+		}
+
+		result.put(baseName + "Current", currentList);
+		result.put(baseName + "Last", lastList);
 	}
 	
 }

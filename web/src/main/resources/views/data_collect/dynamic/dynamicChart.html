@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>张家港海事局动态执法数据看板</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f0f0f0; /* 淡灰色背景 */
+            color: #333; /* 深色文字 */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 26px;
+            margin: 20px 0;
+            color: #4285f4; /* 深蓝色标题 */
+            text-shadow: 0 0 8px #4285f4;
+        }
+
+        .custom-date-input {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .custom-date-input label {
+            color: #757575; /* 深灰色标签 */
+            margin-right: 10px;
+            line-height: 38px;
+        }
+
+        .custom-date-input input,
+        .custom-date-input .btn {
+            background-color: #fff; /* 白色输入框和按钮 */
+            border: 1px solid #ddd;
+            color: #333;
+        }
+
+        .custom-date-input .btn-primary {
+            background-color: #4285f4; /* 深蓝色按钮 */
+            border-color: #4285f4;
+            transition: background-color 0.3s ease;
+            color: #fff; /* 白色按钮文字 */
+        }
+
+        .custom-date-input .btn-primary:hover {
+            background-color: #3367d6; /* 按钮悬停效果 */
+            border-color: #3367d6;
+        }
+
+        .data-card {
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            padding: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .data-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .data-card .label {
+            font-size: 1em;
+            color: #757575;
+        }
+
+        .data-card .value {
+            font-size: 1.7em;
+            font-weight: bold;
+            color: #212121;
+            text-shadow: 0 0 5px #4285f4;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .justify-content-center {
+            justify-content: center;
+        }
+
+        @media (max-width: 767.98px) {
+            .main-title {
+                font-size: 22px;
+            }
+
+            .data-card {
+                padding: 10px;
+            }
+
+            .data-card .label {
+                font-size: 0.9em;
+            }
+
+            .data-card .value {
+                font-size: 1.6em;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+    <!-- jQuery 和 ECharts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="container-fluid">
+    <h2 class="main-title">张家港海事局动态执法数据看板</h2>
+    <div class="custom-date-input">
+        <label for="reportDate" style="margin-right: 10px; line-height: 38px;">选择日期：</label>
+        <input type="date" id="reportDate" class="form-control" style="width: auto;">
+        <button type="button" id="fetchDataButton" class="btn btn-primary">拉取数据</button>
+    </div>
+
+    <div class="row justify-content-center">
+        <!-- 图表 -->
+        <div class="col-12 col-md-6">
+            <div id="patrol-boat-abnormal-chart" class="chart-container"></div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div id="patrol-boat-investigation-chart" class="chart-container"></div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6">
+            <div id="electronic-patrol-abnormal-chart" class="chart-container"></div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div id="electronic-patrol-investigation-chart" class="chart-container"></div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6">
+            <div id="drone-patrol-abnormal-chart" class="chart-container"></div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div id="drone-patrol-investigation-chart" class="chart-container"></div>
+        </div>
+    </div>
+</div>
+<!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function() {
+
+        // 初始化 ECharts 实例
+        var patrolBoatAbnormalChart = echarts.init(document.getElementById('patrol-boat-abnormal-chart'));
+        var patrolBoatInvestigationChart = echarts.init(document.getElementById('patrol-boat-investigation-chart'));
+        var electronicPatrolAbnormalChart = echarts.init(document.getElementById('electronic-patrol-abnormal-chart'));
+        var electronicPatrolInvestigationChart = echarts.init(document.getElementById('electronic-patrol-investigation-chart'));
+        var dronePatrolAbnormalChart = echarts.init(document.getElementById('drone-patrol-abnormal-chart'));
+        var dronePatrolInvestigationChart = echarts.init(document.getElementById('drone-patrol-investigation-chart'));
+
+        // 获取日期选择器
+        var dateInput = $('#reportDate');
+        var fetchDataButton = $('#fetchDataButton');
+
+        // 设置默认日期为今天
+        dateInput.val(new Date().toISOString().slice(0, 10));
+
+        // 初始化图表
+        fetchDataAndRenderCharts();
+
+        // 日期改变事件
+        dateInput.on('change', function() {
+            fetchDataAndRenderCharts();
+        });
+
+        // 拉取数据按钮点击事件
+        fetchDataButton.on('click', function() {
+            fetchDataAndRenderCharts();
+        });
+
+        function fetchDataAndRenderCharts() {
+            // 获取当前选择的日期
+            var selectedDate = dateInput.val();
+
+            // 计算本周和上周的开始日期
+            var currentDate = new Date(selectedDate);
+            var currentDayOfWeek = currentDate.getDay();
+            var currentWeekStartDate = new Date(currentDate);
+            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
+
+            var lastWeekStartDate = new Date(currentWeekStartDate);
+            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+
+            // 构建请求参数
+            var params = {
+                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
+                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
+            }
+
+            // 更新标题
+            var currentWeekEndDate = new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+            var formattedStartDate = currentWeekStartDate.toISOString().slice(0, 10);
+            var formattedEndDate = currentWeekEndDate.toISOString().slice(0, 10);
+            var titleText = "张家港海事局动态执法数据看板 (" + formattedStartDate + "-" + formattedEndDate + ")";
+            $('.main-title').text(titleText);
+
+            // 发送 AJAX 请求获取数据
+            $.ajax({
+                url: 'chartDataWithDate', // 确保后端接口返回所需的数据结构
+                type: 'GET',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderCharts(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching chart data:', error);
+                    alert('获取数据失败，请查看控制台错误信息。');
+                }
+            });
+        }
+
+        function renderCharts(data) {
+            // 通用的图表配置
+            var baseOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var tooltipText = params[0].name;
+                        params.forEach(function(item) {
+                            tooltipText += "<br/>" + item.seriesName + ": " + item.value;
+                            if (item.data && item.data.changeRate !== undefined) {
+                                tooltipText += " (" + (item.data.changeRate > 0 ? "+" : "") + item.data.changeRate + "%)";
+                            }
+                        });
+                        return tooltipText;
+                    }
+                },
+                legend: {
+                    data: ['上周', '本周'],
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    axisLabel: {
+                        rotate: 45,
+                        interval: 0
+                    },
+                    data: data.categories
+                },
+                yAxis: {
+                    type: 'value'
+                },
+            };
+
+            // 图表配置函数
+            function createChartOption(titleText, dataKeyCurrent, dataKeyLast, chartColor) {
+                return Object.assign({}, baseOption, {
+                    title: {
+                        text: titleText
+                    },
+                    series: [{
+                        name: '上周',
+                        type: 'bar',
+                        data: data[dataKeyLast],
+                        itemStyle: {
+                            color: '#7CB342' // 更柔和的绿色
+                        }
+                    },
+                        {
+                            name: '本周',
+                            type: 'bar',
+                            data: data[dataKeyCurrent],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: function(params) {
+                                    if (params.data && params.data.changeRate !== undefined) {
+                                        return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
+                                    }
+                                    return params.value;
+                                }
+                            },
+                            itemStyle: {
+                                color: chartColor
+                            }
+                        }
+                    ]
+                });
+            }
+
+            // 应用配置
+            patrolBoatAbnormalChart.setOption(createChartOption('海巡艇巡航发现异常', 'patrolBoatAbnormalDiscoveryCurrent', 'patrolBoatAbnormalDiscoveryLast', '#64B5F6')); // 更柔和的蓝色
+            patrolBoatInvestigationChart.setOption(createChartOption('海巡艇巡航立案调查', 'patrolBoatInvestigationCasesCurrent', 'patrolBoatInvestigationCasesLast', '#81C784')); // 更柔和的绿色
+            electronicPatrolAbnormalChart.setOption(createChartOption('电子巡航发现异常', 'electronicPatrolAbnormalDiscoveryCurrent', 'electronicPatrolAbnormalDiscoveryLast', '#FFB74D')); // 更柔和的橙色
+            electronicPatrolInvestigationChart.setOption(createChartOption('电子巡航立案调查', 'electronicPatrolInvestigationCasesCurrent', 'electronicPatrolInvestigationCasesLast', '#E57373')); // 更柔和的红色
+            dronePatrolAbnormalChart.setOption(createChartOption('无人机巡航发现异常', 'droneAbnormalDiscoveryCurrent', 'droneAbnormalDiscoveryLast', '#BA68C8')); // 更柔和的紫色
+            dronePatrolInvestigationChart.setOption(createChartOption('无人机巡航立案调查', 'droneInvestigationCasesCurrent', 'droneInvestigationCasesLast', '#4DD0E1')); // 更柔和的青色
+        }
+    });
+</script>
+</body>
+
+</html>

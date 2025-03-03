@@ -9,8 +9,10 @@
 				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
 				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
 				<% if(hasPermi('dynamic:dynamicEnforcementData:edit')){ %>
-						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
-					<a href="${ctx}/dynamic/dynamicEnforcementData/form" class="btn btn-default btnTool" title="${text('新增动态执法数据')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
+				<a href="#" class="btn btn-default" id="btnImportAbnormal"><i class="glyphicon glyphicon-import"></i> 异常导入</a> <!-- 新增的异常导入按钮 -->
+				<a href="#" class="btn btn-default" id="btnImportCase"><i class="glyphicon glyphicon-import"></i> 立案调查导入</a> <!-- 新增的立案调查导入按钮 -->
+				<a href="${ctx}/dynamic/dynamicEnforcementData/form" class="btn btn-default btnTool" title="${text('新增动态执法数据')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
 				<% } %>
 				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
 			</div>
@@ -126,6 +128,47 @@ $('#btnExport').click(function(){
 		downloadFile: true
 	});
 });
+
+$('#btnImportAbnormal').click(function(){
+	showImportDialog('abnormal');
+});
+
+$('#btnImportCase').click(function(){
+	showImportDialog('case');
+});
+
+function showImportDialog(importType) {
+	js.layer.open({
+		type: 1,
+		area: ['400px'],
+		title: '${text("导入动态执法数据")}',
+		resize: false,
+		scrollbar: true,
+		content: js.template('importTpl'),
+		btn: ['<i class="fa fa-check"></i> ${text("导入")}',
+			'<i class="fa fa-remove"></i> ${text("关闭")}'],
+		btn1: function(index, layero){
+			var form = {
+				inputForm: layero.find('#inputForm'),
+				file: layero.find('#file').val(),
+				importType: importType // 传递导入类型
+			};
+			layero.find("#importType").val(importType);
+			if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
+				js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
+				return false;
+			}
+			js.ajaxSubmitForm(form.inputForm, function(data){
+				js.showMessage(data.message);
+				if(data.result == Global.TRUE){
+					js.layer.closeAll();
+				}
+				page();
+			}, "json");
+			return true;
+		}
+	});
+}
 $('#btnImport').click(function(){
 	js.layer.open({
 		type: 1,
@@ -155,21 +198,23 @@ $('#btnImport').click(function(){
 			return true;
 		}
 	});
+
 });
 </script>
 <script id="importTpl" type="text/template">//<!--
 <form id="inputForm" action="${ctx}/dynamic/dynamicEnforcementData/importData" method="post" enctype="multipart/form-data"
-	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
-	<div class="row">
-		<div class="col-xs-12 col-xs-offset-1">
-			<input type="file" id="file" name="file" class="form-file"/>
-			<div class="mt10 pt5" style="color:red">
-				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
-			</div>
-			<div class="mt10 pt5">
-				<a href="${ctx}/dynamic/dynamicEnforcementData/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>
-			</div>
+    class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
+    <input type="hidden" name="importType" id="importType">  <!-- 隐藏的 importType 字段 -->
+<div class="row">
+	<div class="col-xs-12 col-xs-offset-1">
+		<input type="file" id="file" name="file" class="form-file"/>
+		<div class="mt10 pt5" style="color:red">
+			${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
+		</div>
+		<div class="mt10 pt5">
+			<a href="${ctx}/dynamic/dynamicEnforcementData/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>
 		</div>
 	</div>
+</div>
 </form>
 //--></script>
