@@ -2,6 +2,7 @@ package com.jeesite.modules.data_collect.ship.service;
 
 import java.util.List;
 
+import com.jeesite.common.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,30 +76,41 @@ public class ShipInspectionService extends CrudService<ShipInspectionDao, ShipIn
 	 * @param file 导入的数据文件
 	 */
 	@Transactional
-	public String importData(MultipartFile file) {
-		if (file == null){
+	public String importData(MultipartFile file, String shipType) {
+		if (file == null) {
 			throw new ServiceException(text("请选择导入的数据文件！"));
 		}
-		int successNum = 0; int failureNum = 0;
+
+		int successNum = 0;
+		int failureNum = 0;
 		StringBuilder successMsg = new StringBuilder();
 		StringBuilder failureMsg = new StringBuilder();
-		try(ExcelImport ei = new ExcelImport(file, 2, 0)){
+
+		try (ExcelImport ei = new ExcelImport(file, 2, 0)) {
 			List<ShipInspection> list = ei.getDataList(ShipInspection.class);
+
 			for (ShipInspection shipInspection : list) {
-				try{
+				try {
 					ValidatorUtils.validateWithException(shipInspection);
+					if (StringUtils.isBlank(shipInspection.getShipId())){
+						failureNum++;
+						String msg = "<br/>" + failureNum + "、船舶识别号不能为空,导入失败。";
+						failureMsg.append(msg);
+						continue;
+					}
+					shipInspection.setShipType(shipType); // Set the ship type here!
 					this.save(shipInspection);
 					successNum++;
 					successMsg.append("<br/>" + successNum + "、编号 " + shipInspection.getId() + " 导入成功");
 				} catch (Exception e) {
 					failureNum++;
 					String msg = "<br/>" + failureNum + "、编号 " + shipInspection.getId() + " 导入失败：";
-					if (e instanceof ConstraintViolationException){
-						ConstraintViolationException cve = (ConstraintViolationException)e;
+					if (e instanceof ConstraintViolationException) {
+						ConstraintViolationException cve = (ConstraintViolationException) e;
 						for (ConstraintViolation<?> violation : cve.getConstraintViolations()) {
-							msg += Global.getText(violation.getMessage()) + " ("+violation.getPropertyPath()+")";
+							msg += Global.getText(violation.getMessage()) + " (" + violation.getPropertyPath() + ")";
 						}
-					}else{
+					} else {
 						msg += e.getMessage();
 					}
 					failureMsg.append(msg);
@@ -110,15 +122,18 @@ public class ShipInspectionService extends CrudService<ShipInspectionDao, ShipIn
 			failureMsg.append(e.getMessage());
 			return failureMsg.toString();
 		}
+
 		if (failureNum > 0) {
 			failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确，错误如下：");
 			throw new ServiceException(failureMsg.toString());
-		}else{
+		} else {
 			successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
 		}
+
 		return successMsg.toString();
 	}
-	
+
+
 	/**
 	 * 更新状态
 	 * @param shipInspection

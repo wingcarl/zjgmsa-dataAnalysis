@@ -9,8 +9,8 @@
 				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
 				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
 				<% if(hasPermi('ship:shipInspection:edit')){ %>
-						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
-					<a href="${ctx}/ship/shipInspection/form" class="btn btn-default btnTool" title="${text('新增海船安全检查信息表')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<a href="#" class="btn btn-default" id="btnImportSea"><i class="glyphicon glyphicon-import"></i> 导入海船</a>
+				<a href="#" class="btn btn-default" id="btnImportInland"><i class="glyphicon glyphicon-import"></i> 导入内河船</a>					<a href="${ctx}/ship/shipInspection/form" class="btn btn-default btnTool" title="${text('新增海船安全检查信息表')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
 				<% } %>
 				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
 			</div>
@@ -162,14 +162,22 @@ $('#btnExport').click(function(){
 		downloadFile: true
 	});
 });
-$('#btnImport').click(function(){
+$('#btnImportSea').click(function(){
+	openImportDialog('Sea Ship');
+});
+
+$('#btnImportInland').click(function(){
+	openImportDialog('Inland Ship');
+});
+
+function openImportDialog(shipType) {
 	js.layer.open({
 		type: 1,
 		area: ['400px'],
-		title: '${text("导入安全检查信息表")}',
+		title: '${text("导入安全检查信息表")} - ' + shipType,
 		resize: false,
 		scrollbar: true,
-		content: js.template('importTpl'),
+		content: js.template('importTpl', {shipType: shipType}),
 		btn: ['<i class="fa fa-check"></i> ${text("导入")}',
 			'<i class="fa fa-remove"></i> ${text("关闭")}'],
 		btn1: function(index, layero){
@@ -177,10 +185,10 @@ $('#btnImport').click(function(){
 				inputForm: layero.find('#inputForm'),
 				file: layero.find('#file').val()
 			};
-		    if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
-		    	js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
-		        return false;
-		    }
+			if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
+				js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
+				return false;
+			}
 			js.ajaxSubmitForm(form.inputForm, function(data){
 				js.showMessage(data.message);
 				if(data.result == Global.TRUE){
@@ -191,7 +199,7 @@ $('#btnImport').click(function(){
 			return true;
 		}
 	});
-});
+}
 </script>
 <script id="importTpl" type="text/template">//<!--
 <form id="inputForm" action="${ctx}/ship/shipInspection/importData" method="post" enctype="multipart/form-data"

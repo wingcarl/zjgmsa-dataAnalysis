@@ -121,14 +121,16 @@ public class ShipInspectionController extends BaseController {
 	@ResponseBody
 	@RequiresPermissions("ship:shipInspection:edit")
 	@PostMapping(value = "importData")
-	public String importData(MultipartFile file) {
+	public String importData(MultipartFile file, String shipType) {
 		try {
-			String message = shipInspectionService.importData(file);
+			String message = shipInspectionService.importData(file,shipType);
 			return renderResult(Global.TRUE, "posfull:"+message);
 		} catch (Exception ex) {
 			return renderResult(Global.FALSE, "posfull:"+ex.getMessage());
 		}
 	}
+
+
 	
 	/**
 	 * 删除数据
