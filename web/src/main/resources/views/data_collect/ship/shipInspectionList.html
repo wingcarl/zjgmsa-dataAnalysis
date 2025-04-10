@@ -163,11 +163,11 @@ $('#btnExport').click(function(){
 	});
 });
 $('#btnImportSea').click(function(){
-	openImportDialog('Sea Ship');
+	openImportDialog('海船');
 });
 
 $('#btnImportInland').click(function(){
-	openImportDialog('Inland Ship');
+	openImportDialog('内河船');
 });
 
 function openImportDialog(shipType) {
@@ -206,6 +206,7 @@ function openImportDialog(shipType) {
 	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
 	<div class="row">
 		<div class="col-xs-12 col-xs-offset-1">
+			<input type="hidden" name="shipType" value=" {{d.shipType}}"/>
 			<input type="file" id="file" name="file" class="form-file"/>
 			<div class="mt10 pt5" style="color:red">
 				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}

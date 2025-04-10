@@ -3,63 +3,280 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>张家港海事局船舶监督数据看板</title>
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <!-- Element UI 样式 (你可能不再需要，但我保留了，方便你使用) -->
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-    <!-- Custom CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
+    <!-- Font Awesome - 添加图标支持 -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Custom CSS - 科技风格设计 -->
     <style>
-        .chart-container {
-            height: 400px;
-            margin-top: 20px;
+        :root {
+            --primary-color: #0466c8;
+            --secondary-color: #0353a4;
+            --accent-color: #023e7d;
+            --text-color: #001845;
+            --highlight-color: #33a1fd;
+            --background-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --positive-color: #38b000;
+            --negative-color: #d90429;
+            --grid-line: rgba(4, 102, 200, 0.2);
+        }
+
+        body {
+            background-color: var(--background-color);
+            background-image: linear-gradient(to bottom, rgba(4, 102, 200, 0.05), rgba(1, 22, 56, 0.1));
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+
+        .main-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .main-title {
             text-align: center;
-            font-size: 24px;
-            margin: 20px 0;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-top: 20px;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
         }
 
         .data-card {
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            padding: 15px;
-            margin-bottom: 15px;
+            border: 1px solid rgba(4, 102, 200, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
             text-align: center;
-            background-color: #f8f9fa;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-card .label {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 1.1rem;  /* 增大标签字体 */
+            padding: 0;
+            display: block;
+            margin-bottom: 5px;
         }
 
         .data-card .value {
-            font-size: 2em;
-            font-weight: bold;
+            font-size: 2.5em;  /* 增大数值字体 */
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
         }
 
         .data-card .change-rate {
-            font-size: 0.9em;
+            font-size: 1.1em;  /* 增大变化率字体 */
             margin-top: 5px;
+            font-weight: 600;
         }
 
         .change-rate.positive {
-            color: green;
+            color: var(--positive-color);
         }
 
         .change-rate.negative {
-            color: red;
+            color: var(--negative-color);
         }
 
         .change-rate.neutral {
-            color: #212529;
+            color: #607d8b;
         }
 
         .custom-date-input {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         .custom-date-input input {
-            margin-left: 10px;
+            margin: 0 15px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-line);
+            font-size: 1.1rem;  /* 增大日期输入框字体 */
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--secondary-color);
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;  /* 增大按钮字体 */
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 表格样式优化 */
+        .table-container {
+            position: relative;
+            overflow-x: auto;
+            width: 100%;
+            margin: 20px auto 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+        }
+
+        .summary-table {
+            margin: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+        }
+
+        .summary-table th:first-child,
+        .summary-table td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: var(--card-bg);
+            z-index: 1;
+            width: 120px;  /* 固定部门列宽度 */
+            min-width: 120px;
+        }
+
+        .summary-table th:first-child {
+            background-color: var(--primary-color);
+        }
+
+        .summary-table th {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            vertical-align: middle;
+            padding: 12px 8px;
+            border: none;
+            white-space: nowrap;
+            font-size: 1.05rem;  /* 增大表头字体 */
+        }
+
+        .summary-table td {
+            text-align: center;
+            vertical-align: middle;
+            border-color: var(--grid-line);
+            padding: 10px 8px;
+            font-size: 1.05rem;  /* 增大表格内容字体 */
+            transition: background-color 0.3s ease;
+        }
+
+        .summary-table tr:hover td {
+            background-color: rgba(4, 102, 200, 0.05);
+        }
+
+        .table-section-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 24px;  /* 增大表格标题字体 */
+            font-weight: 600;
+            text-align: center;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .table-section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--highlight-color);
+        }
+
+        .positive-change {
+            color: var(--positive-color);
+            font-weight: 600;
+        }
+
+        .negative-change {
+            color: var(--negative-color);
+            font-weight: 600;
+        }
+
+        .neutral-change {
+            color: #607d8b;
+        }
+
+        .table-active {
+            background-color: rgba(4, 102, 200, 0.08) !important;
+        }
+
+        /* 科技风格图标 */
+        .icon-box {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        /* 科技风格图表区域 */
+        .charts-section {
+            background-color: rgba(248, 249, 250, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .charts-title {
+            color: var(--primary-color);
+            font-size: 1.4rem;  /* 增大图表区域标题字体 */
+            font-weight: 600;
+            margin-bottom: 30px;  /* 增加与图表的间距 */
+            text-align: center;
+        }
+
+        /* 调整日期选择器的响应式布局 */
+        @media (max-width: 768px) {
+            .custom-date-input {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .custom-date-input input {
+                margin: 10px 0;
+                width: 100%;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-top: 10px;
+            }
         }
     </style>
     <!-- jQuery 和 ECharts -->
@@ -68,119 +285,210 @@
 </head>
 
 <body>
+<div class="main-header">
+    <h2 class="main-title"><i class="fas fa-ship icon-box"></i>张家港海事局船舶监督数据看板</h2>
+</div>
+
 <div class="container-fluid">
-    <h2 class="main-title">张家港海事局船舶监督数据看板</h2>
     <div class="custom-date-input">
-        <label for="reportDate" style="margin-right: 10px; line-height: 38px;">选择日期：</label>
+        <label for="reportDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            <i class="far fa-calendar-alt icon-box"></i>选择日期：
+        </label>
         <input type="date" id="reportDate" class="form-control" style="width: auto;">
-        <button type="button" id="fetchDataButton" class="btn btn-primary">拉取数据</button>
+        <button type="button" id="fetchDataButton" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> 拉取数据
+        </button>
     </div>
+
     <div class="row">
-        <!-- 指标板 -->
-        <div class="col-md-2">
+        <!-- 指标板 - 海船数据 -->
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">海船安检数量</div>
+                <div class="label"><i class="fas fa-ship icon-box"></i>海船安检数量</div>
                 <div class="value" id="sea-ship-inspection-value">0</div>
                 <div class="change-rate" id="sea-ship-inspection-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">海船缺陷数量</div>
+                <div class="label"><i class="fas fa-exclamation-triangle icon-box"></i>海船缺陷数量</div>
                 <div class="value" id="sea-ship-defect-value">0</div>
                 <div class="change-rate" id="sea-ship-defect-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">海船滞留数量</div>
+                <div class="label"><i class="fas fa-anchor icon-box"></i>海船滞留数量</div>
                 <div class="value" id="sea-ship-detention-value">0</div>
                 <div class="change-rate" id="sea-ship-detention-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">内河船安检数量</div>
+                <div class="label"><i class="fas fa-water icon-box"></i>内河船安检数量</div>
                 <div class="value" id="river-ship-inspection-value">0</div>
                 <div class="change-rate" id="river-ship-inspection-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+    </div>
+
+    <div class="row">
+        <!-- 指标板 - 内河船数据 -->
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">内河船缺陷数量</div>
+                <div class="label"><i class="fas fa-exclamation-triangle icon-box"></i>内河船缺陷数量</div>
                 <div class="value" id="river-ship-defect-value">0</div>
                 <div class="change-rate" id="river-ship-defect-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">内河船滞留数量</div>
+                <div class="label"><i class="fas fa-anchor icon-box"></i>内河船滞留数量</div>
                 <div class="value" id="river-ship-detention-value">0</div>
                 <div class="change-rate" id="river-ship-detention-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">PSC检查数量</div>
+                <div class="label"><i class="fas fa-flag icon-box"></i>PSC检查数量</div>
                 <div class="value" id="psc-inspection-value">0</div>
                 <div class="change-rate" id="psc-inspection-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">PSC缺陷数量</div>
+                <div class="label"><i class="fas fa-exclamation-circle icon-box"></i>PSC缺陷数量</div>
                 <div class="value" id="psc-defect-value">0</div>
                 <div class="change-rate" id="psc-defect-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+    </div>
+
+    <div class="row">
+        <!-- 指标板 - PSC和现场监督数据 -->
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">PSC滞留数量</div>
+                <div class="label"><i class="fas fa-stop-circle icon-box"></i>PSC滞留数量</div>
                 <div class="value" id="psc-detention-value">0</div>
                 <div class="change-rate" id="psc-detention-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">船舶现场监督数量</div>
+                <div class="label"><i class="fas fa-search icon-box"></i>船舶现场监督数量</div>
                 <div class="value" id="on-site-value">0</div>
                 <div class="change-rate" id="on-site-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="data-card">
-                <div class="label">现场监督异常数量</div>
+                <div class="label"><i class="fas fa-exclamation icon-box"></i>现场监督异常数量</div>
                 <div class="value" id="on-site-abnormal-value">0</div>
                 <div class="change-rate" id="on-site-abnormal-rate">0%</div>
             </div>
         </div>
     </div>
+
+    <!-- 新增部门数据统计表格 - 改进响应式布局 -->
     <div class="row">
-        <div class="col-md-4">
-            <div id="inspection-chart" class="chart-container"></div>
-        </div>
-        <div class="col-md-4">
-            <div id="defect-chart" class="chart-container"></div>
-        </div>
-        <div class="col-md-4">
-            <div id="detention-chart" class="chart-container"></div>
+        <div class="col-12">
+            <h4 class="table-section-title"><i class="fas fa-table icon-box"></i>各部门船舶监督数据统计表</h4>
+            <div class="table-container">
+                <table class="table table-bordered table-striped summary-table">
+                    <thead>
+                    <tr>
+                        <th rowspan="2">部门</th>
+                        <th colspan="3">海船安检</th>
+                        <th colspan="3">海船缺陷</th>
+                        <th colspan="3">海船滞留</th>
+                        <th colspan="3">内河船安检</th>
+                        <th colspan="3">内河船缺陷</th>
+                        <th colspan="3">内河船滞留</th>
+                        <th colspan="3">PSC检查</th>
+                        <th colspan="3">PSC缺陷</th>
+                        <th colspan="3">PSC滞留</th>
+                        <th colspan="3">船舶现场监督</th>
+                        <th colspan="3">现场监督异常</th>
+                    </tr>
+                    <tr>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                    </tr>
+                    </thead>
+                    <tbody id="department-data-body">
+                    <!-- 数据将通过JavaScript动态填充 -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-4">
-            <div id="river-inspection-chart" class="chart-container"></div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>海船检查数据趋势图</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <div id="inspection-chart" class="chart-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="defect-chart" class="chart-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="detention-chart" class="chart-container"></div>
+            </div>
         </div>
-        <div class="col-md-4">
-            <div id="river-defect-chart" class="chart-container"></div>
-        </div>
-        <div class="col-md-4">
-            <div id="river-detention-chart" class="chart-container"></div>
+    </div>
+
+    <div class="charts-section mt-4">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>内河船检查数据趋势图</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <div id="river-inspection-chart" class="chart-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="river-defect-chart" class="chart-container"></div>
+            </div>
+            <div class="col-md-4">
+                <div id="river-detention-chart" class="chart-container"></div>
+            </div>
         </div>
     </div>
 </div>
 <!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="${ctxStatic}/nickjs/popper.min.js"></script>
+<script src="${ctxStatic}/bootstrap/js/bootstrap.min.js"></script>
+<!-- SweetAlert2 为拉取数据时的消息提示 -->
+<script src="${ctxStatic}/nickjs/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
 
@@ -209,46 +517,70 @@
 
         // 拉取数据按钮点击事件
         fetchDataButton.on('click', function() {
-            fetchData();
+            // 添加加载动画
+            $(this).html('<i class="fas fa-spinner fa-spin"></i> 数据加载中...');
+            $(this).prop('disabled', true);
+
+            fetchData().then(() => {
+                // 恢复按钮状态
+                $(this).html('<i class="fas fa-sync-alt"></i> 拉取数据');
+                $(this).prop('disabled', false);
+            });
         });
+
         function fetchData(){
-            // 获取当前选择的日期
-            var selectedDate = dateInput.val();
-            var currentDate = new Date(selectedDate); // 复制 selectedDate 避免修改原值
-            var currentDayOfWeek = currentDate.getDay(); // 获取星期几
+            return new Promise((resolve) => {
+                // 获取当前选择的日期
+                var selectedDate = dateInput.val();
+                var currentDate = new Date(selectedDate); // 复制 selectedDate 避免修改原值
+                var currentDayOfWeek = currentDate.getDay(); // 获取星期几
 
-            // 计算上周五的日期
-            var currentWeekStartDate = new Date(currentDate);
-            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
+                // 计算上周五的日期
+                var currentWeekStartDate = new Date(currentDate);
+                currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
 
-            var lastWeekStartDate = new Date(currentWeekStartDate);
-            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+                var lastWeekStartDate = new Date(currentWeekStartDate);
+                lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
 
-            // 构建请求参数
-            var params = {
-                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
-            }
-            // 更新标题
-            // updateTitle(currentWeekStartDate, new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000)); // Calculate end date
-            // 发送 AJAX 请求获取数据
-            $.ajax({
-                url: 'fetchData',
-                type: 'GET',
-                dataType: 'json',
-                data: params,
-                success: function(data) {
-                    alert('数据拉取成功');
-                    renderDataCards(data);
-                    renderCharts(data);
-                    renderRiverCharts(data); // 新增：渲染内河船图表
-                },
-                error: function(error){
-                    console.error('Error fetching chart data:', error);
-                    alert('获取数据失败，请查看控制台错误信息。');
+                // 构建请求参数
+                var params = {
+                    currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
+                    lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
                 }
+
+                // 发送 AJAX 请求获取数据
+                $.ajax({
+                    url: 'fetchData',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: params,
+                    success: function(data) {
+                        Swal.fire({
+                            title: '成功!',
+                            text: '数据拉取成功',
+                            icon: 'success',
+                            confirmButtonText: '确定'
+                        });
+                        renderDataCards(data);
+                        renderCharts(data);
+                        renderRiverCharts(data); // 新增：渲染内河船图表
+                        renderDepartmentTable(data); // 新增：渲染部门数据表格
+                        resolve();
+                    },
+                    error: function(error){
+                        console.error('Error fetching chart data:', error);
+                        Swal.fire({
+                            title: '错误!',
+                            text: '获取数据失败，请查看控制台错误信息。',
+                            icon: 'error',
+                            confirmButtonText: '确定'
+                        });
+                        resolve();
+                    }
+                });
             });
         }
+
         function fetchDataAndRenderCharts(){
             // 获取当前选择的日期
             var selectedDate = dateInput.val();
@@ -270,16 +602,14 @@
             // 计算结束日期
             var currentWeekEndDate = new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
 
-
-
             var formattedStartDate = currentWeekStartDate.toISOString().slice(0, 10);
             var formattedEndDate = currentWeekEndDate.toISOString().slice(0, 10);
 
             // 更新标题
-            var titleText = "张家港海事局船舶监督数据看板 ("+formattedStartDate+"-"+ formattedEndDate+")";
+            var titleText = "张家港海事局船舶监督数据看板 ("+formattedStartDate+" 至 "+ formattedEndDate+")";
 
+            $('.main-title').html('<i class="fas fa-ship icon-box"></i>' + titleText);
 
-            $('.main-title').text(titleText);
             // 发送 AJAX 请求获取数据
             $.ajax({
                 url: 'chartDataWithDate',
@@ -287,18 +617,304 @@
                 dataType: 'json',
                 data: params,
                 success: function(data) {
-                    console.log(data);
                     renderDataCards(data);
                     renderCharts(data);
                     renderRiverCharts(data); // 新增：渲染内河船图表
+                    renderDepartmentTable(data); // 新增：渲染部门数据表格
                 },
                 error: function(error){
                     console.error('Error fetching chart data:', error);
-                    alert('获取数据失败，请查看控制台错误信息。');
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
                 }
             });
         }
 
+        // 新增：渲染部门数据表格
+        function renderDepartmentTable(data) {
+            var tableBody = $('#department-data-body');
+            tableBody.empty();
+
+            // 假设数据结构中有一个categories数组，包含了所有部门名称
+            var departments = data.categories;
+
+            departments.forEach(function(dept, index) {
+                var row = $('<tr></tr>');
+
+                // 添加部门名称
+                row.append('<td>' + dept + '</td>');
+
+                // 海船安检数据
+                var seaInspLast = data.seaShipInspectionCounts.last[index] || 0;
+                var seaInspCurrent = data.seaShipInspectionCounts.current[index].value || 0;
+                var seaInspRate = data.seaShipInspectionCounts.current[index] ?
+                    data.seaShipInspectionCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + seaInspLast + '</td>');
+                row.append('<td>' + seaInspCurrent + '</td>');
+                row.append('<td class="' + getRateClass(seaInspRate) + '">' + formatRate(seaInspRate) + '</td>');
+
+                // 海船缺陷数据
+                var seaDefLast = data.seaShipDefectCounts.last[index] || 0;
+                var seaDefCurrent = data.seaShipDefectCounts.current[index].value || 0;
+                var seaDefRate = data.seaShipDefectCounts.current[index] ?
+                    data.seaShipDefectCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + seaDefLast + '</td>');
+                row.append('<td>' + seaDefCurrent + '</td>');
+                row.append('<td class="' + getRateClass(seaDefRate) + '">' + formatRate(seaDefRate) + '</td>');
+
+                // 海船滞留数据
+                var seaDetLast = data.seaShipDetentionCounts.last[index] || 0;
+                var seaDetCurrent = data.seaShipDetentionCounts.current[index].value || 0;
+                var seaDetRate = data.seaShipDetentionCounts.current[index] ?
+                    data.seaShipDetentionCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + seaDetLast + '</td>');
+                row.append('<td>' + seaDetCurrent + '</td>');
+                row.append('<td class="' + getRateClass(seaDetRate) + '">' + formatRate(seaDetRate) + '</td>');
+
+                // 内河船安检数据
+                var riverInspLast = data.riverShipInspectionCounts.last[index] || 0;
+                var riverInspCurrent = data.riverShipInspectionCounts.current[index].value || 0;
+                var riverInspRate = data.riverShipInspectionCounts.current[index] ?
+                    data.riverShipInspectionCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + riverInspLast + '</td>');
+                row.append('<td>' + riverInspCurrent + '</td>');
+                row.append('<td class="' + getRateClass(riverInspRate) + '">' + formatRate(riverInspRate) + '</td>');
+
+                // 内河船缺陷数据
+                var riverDefLast = data.riverShipDefectCounts.last[index] || 0;
+                var riverDefCurrent = data.riverShipDefectCounts.current[index].value || 0;
+                var riverDefRate = data.riverShipDefectCounts.current[index] ?
+                    data.riverShipDefectCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + riverDefLast + '</td>');
+                row.append('<td>' + riverDefCurrent + '</td>');
+                row.append('<td class="' + getRateClass(riverDefRate) + '">' + formatRate(riverDefRate) + '</td>');
+
+                // 内河船滞留数据
+                var riverDetLast = data.riverShipDetentionCounts.last[index] || 0;
+                var riverDetCurrent = data.riverShipDetentionCounts.current[index].value || 0;
+                var riverDetRate = data.riverShipDetentionCounts.current[index] ?
+                    data.riverShipDetentionCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + riverDetLast + '</td>');
+                row.append('<td>' + riverDetCurrent + '</td>');
+                row.append('<td class="' + getRateClass(riverDetRate) + '">' + formatRate(riverDetRate) + '</td>');
+
+                // PSC检查数据
+                var pscInspLast = data.pscInspectionCounts ? (data.pscInspectionCounts.last[index] || 0) : 0;
+                var pscInspCurrent = data.pscInspectionCounts ?
+                    (data.pscInspectionCounts.current[index] ? data.pscInspectionCounts.current[index].value || 0 : 0) : 0;
+                var pscInspRate = data.pscInspectionCounts && data.pscInspectionCounts.current[index] ?
+                    data.pscInspectionCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + pscInspLast + '</td>');
+                row.append('<td>' + pscInspCurrent + '</td>');
+                row.append('<td class="' + getRateClass(pscInspRate) + '">' + formatRate(pscInspRate) + '</td>');
+
+                // PSC缺陷数据
+                var pscDefLast = data.pscDefectCounts ? (data.pscDefectCounts.last[index] || 0) : 0;
+                var pscDefCurrent = data.pscDefectCounts ?
+                    (data.pscDefectCounts.current[index] ? data.pscDefectCounts.current[index].value || 0 : 0) : 0;
+                var pscDefRate = data.pscDefectCounts && data.pscDefectCounts.current[index] ?
+                    data.pscDefectCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + pscDefLast + '</td>');
+                row.append('<td>' + pscDefCurrent + '</td>');
+                row.append('<td class="' + getRateClass(pscDefRate) + '">' + formatRate(pscDefRate) + '</td>');
+
+                // PSC滞留数据
+                var pscDetLast = data.pscDetentionCounts ? (data.pscDetentionCounts.last[index] || 0) : 0;
+                var pscDetCurrent = data.pscDetentionCounts ?
+                    (data.pscDetentionCounts.current[index] ? data.pscDetentionCounts.current[index].value || 0 : 0) : 0;
+                var pscDetRate = data.pscDetentionCounts && data.pscDetentionCounts.current[index] ?
+                    data.pscDetentionCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + pscDetLast + '</td>');
+                row.append('<td>' + pscDetCurrent + '</td>');
+                row.append('<td class="' + getRateClass(pscDetRate) + '">' + formatRate(pscDetRate) + '</td>');
+
+                // 船舶现场监督数据
+                var onSiteLast = data.onSiteCounts ? (data.onSiteCounts.last[index] || 0) : 0;
+                var onSiteCurrent = data.onSiteCounts ?
+                    (data.onSiteCounts.current[index] ? data.onSiteCounts.current[index].value || 0 : 0) : 0;
+                var onSiteRate = data.onSiteCounts && data.onSiteCounts.current[index] ?
+                    data.onSiteCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + onSiteLast + '</td>');
+                row.append('<td>' + onSiteCurrent + '</td>');
+                row.append('<td class="' + getRateClass(onSiteRate) + '">' + formatRate(onSiteRate) + '</td>');
+
+                // 现场监督异常数据
+                var onSiteAbnormalLast = data.onSiteAbnormalCounts ? (data.onSiteAbnormalCounts.last[index] || 0) : 0;
+                var onSiteAbnormalCurrent = data.onSiteAbnormalCounts ?
+                    (data.onSiteAbnormalCounts.current[index] ? data.onSiteAbnormalCounts.current[index].value || 0 : 0) : 0;
+                var onSiteAbnormalRate = data.onSiteAbnormalCounts && data.onSiteAbnormalCounts.current[index] ?
+                    data.onSiteAbnormalCounts.current[index].changeRate || 0 : 0;
+
+                row.append('<td>' + onSiteAbnormalLast + '</td>');
+                row.append('<td>' + onSiteAbnormalCurrent + '</td>');
+                row.append('<td class="' + getRateClass(onSiteAbnormalRate) + '">' + formatRate(onSiteAbnormalRate) + '</td>');
+
+                tableBody.append(row);
+            });
+
+            // 添加合计行
+            addTotalRow(tableBody, data);
+        }
+
+        // 添加合计行
+        function addTotalRow(tableBody, data) {
+            var row = $('<tr class="table-active"></tr>');
+            row.append('<td><strong>合计</strong></td>');
+
+            // 计算海船安检合计
+            var seaInspLastTotal = sumArray(data.seaShipInspectionCounts.last);
+            var seaInspCurrentTotal = sumArrayValues(data.seaShipInspectionCounts.current);
+            var seaInspRateTotal = calculateChangeRate(seaInspLastTotal, seaInspCurrentTotal);
+
+            row.append('<td><strong>' + seaInspLastTotal + '</strong></td>');
+            row.append('<td><strong>' + seaInspCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(seaInspRateTotal) + '"><strong>' + formatRate(seaInspRateTotal) + '</strong></td>');
+
+            // 计算海船缺陷合计
+            var seaDefLastTotal = sumArray(data.seaShipDefectCounts.last);
+            var seaDefCurrentTotal = sumArrayValues(data.seaShipDefectCounts.current);
+            var seaDefRateTotal = calculateChangeRate(seaDefLastTotal, seaDefCurrentTotal);
+
+            row.append('<td><strong>' + seaDefLastTotal + '</strong></td>');
+            row.append('<td><strong>' + seaDefCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(seaDefRateTotal) + '"><strong>' + formatRate(seaDefRateTotal) + '</strong></td>');
+
+            // 计算海船滞留合计
+            var seaDetLastTotal = sumArray(data.seaShipDetentionCounts.last);
+            var seaDetCurrentTotal = sumArrayValues(data.seaShipDetentionCounts.current);
+            var seaDetRateTotal = calculateChangeRate(seaDetLastTotal, seaDetCurrentTotal);
+
+            row.append('<td><strong>' + seaDetLastTotal + '</strong></td>');
+            row.append('<td><strong>' + seaDetCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(seaDetRateTotal) + '"><strong>' + formatRate(seaDetRateTotal) + '</strong></td>');
+
+            // 计算内河船安检合计
+            var riverInspLastTotal = sumArray(data.riverShipInspectionCounts.last);
+            var riverInspCurrentTotal = sumArrayValues(data.riverShipInspectionCounts.current);
+            var riverInspRateTotal = calculateChangeRate(riverInspLastTotal, riverInspCurrentTotal);
+
+            row.append('<td><strong>' + riverInspLastTotal + '</strong></td>');
+            row.append('<td><strong>' + riverInspCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(riverInspRateTotal) + '"><strong>' + formatRate(riverInspRateTotal) + '</strong></td>');
+
+            // 计算内河船缺陷合计
+            var riverDefLastTotal = sumArray(data.riverShipDefectCounts.last);
+            var riverDefCurrentTotal = sumArrayValues(data.riverShipDefectCounts.current);
+            var riverDefRateTotal = calculateChangeRate(riverDefLastTotal, riverDefCurrentTotal);
+
+            row.append('<td><strong>' + riverDefLastTotal + '</strong></td>');
+            row.append('<td><strong>' + riverDefCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(riverDefRateTotal) + '"><strong>' + formatRate(riverDefRateTotal) + '</strong></td>');
+
+            // 计算内河船滞留合计
+            var riverDetLastTotal = sumArray(data.riverShipDetentionCounts.last);
+            var riverDetCurrentTotal = sumArrayValues(data.riverShipDetentionCounts.current);
+            var riverDetRateTotal = calculateChangeRate(riverDetLastTotal, riverDetCurrentTotal);
+
+            row.append('<td><strong>' + riverDetLastTotal + '</strong></td>');
+            row.append('<td><strong>' + riverDetCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(riverDetRateTotal) + '"><strong>' + formatRate(riverDetRateTotal) + '</strong></td>');
+
+            // 计算PSC检查合计
+            var pscInspLastTotal = data.pscInspectionCounts ? sumArray(data.pscInspectionCounts.last) : 0;
+            var pscInspCurrentTotal = data.pscInspectionCounts ? sumArrayValues(data.pscInspectionCounts.current) : 0;
+            var pscInspRateTotal = calculateChangeRate(pscInspLastTotal, pscInspCurrentTotal);
+
+            row.append('<td><strong>' + pscInspLastTotal + '</strong></td>');
+            row.append('<td><strong>' + pscInspCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(pscInspRateTotal) + '"><strong>' + formatRate(pscInspRateTotal) + '</strong></td>');
+
+            // 计算PSC缺陷合计
+            var pscDefLastTotal = data.pscDefectCounts ? sumArray(data.pscDefectCounts.last) : 0;
+            var pscDefCurrentTotal = data.pscDefectCounts ? sumArrayValues(data.pscDefectCounts.current) : 0;
+            var pscDefRateTotal = calculateChangeRate(pscDefLastTotal, pscDefCurrentTotal);
+
+            row.append('<td><strong>' + pscDefLastTotal + '</strong></td>');
+            row.append('<td><strong>' + pscDefCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(pscDefRateTotal) + '"><strong>' + formatRate(pscDefRateTotal) + '</strong></td>');
+
+            // 计算PSC滞留合计
+            var pscDetLastTotal = data.pscDetentionCounts ? sumArray(data.pscDetentionCounts.last) : 0;
+            var pscDetCurrentTotal = data.pscDetentionCounts ? sumArrayValues(data.pscDetentionCounts.current) : 0;
+            var pscDetRateTotal = calculateChangeRate(pscDetLastTotal, pscDetCurrentTotal);
+
+            row.append('<td><strong>' + pscDetLastTotal + '</strong></td>');
+            row.append('<td><strong>' + pscDetCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(pscDetRateTotal) + '"><strong>' + formatRate(pscDetRateTotal) + '</strong></td>');
+
+            // 计算船舶现场监督合计
+            var onSiteLastTotal = data.onSiteCounts ? sumArray(data.onSiteCounts.last) : 0;
+            var onSiteCurrentTotal = data.onSiteCounts ? sumArrayValues(data.onSiteCounts.current) : 0;
+            var onSiteRateTotal = calculateChangeRate(onSiteLastTotal, onSiteCurrentTotal);
+
+            row.append('<td><strong>' + onSiteLastTotal + '</strong></td>');
+            row.append('<td><strong>' + onSiteCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(onSiteRateTotal) + '"><strong>' + formatRate(onSiteRateTotal) + '</strong></td>');
+
+            // 计算现场监督异常合计
+            var onSiteAbnormalLastTotal = data.onSiteAbnormalCounts ? sumArray(data.onSiteAbnormalCounts.last) : 0;
+            var onSiteAbnormalCurrentTotal = data.onSiteAbnormalCounts ? sumArrayValues(data.onSiteAbnormalCounts.current) : 0;
+            var onSiteAbnormalRateTotal = calculateChangeRate(onSiteAbnormalLastTotal, onSiteAbnormalCurrentTotal);
+
+            row.append('<td><strong>' + onSiteAbnormalLastTotal + '</strong></td>');
+            row.append('<td><strong>' + onSiteAbnormalCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(onSiteAbnormalRateTotal) + '"><strong>' + formatRate(onSiteAbnormalRateTotal) + '</strong></td>');
+
+            tableBody.append(row);
+        }
+
+        // 计算数组合计
+        function sumArray(arr) {
+            if (!arr) return 0;
+            return arr.reduce(function(a, b) {
+                return a + (typeof b === 'number' ? b : 0);
+            }, 0);
+        }
+
+        // 计算对象数组的值合计
+        function sumArrayValues(arr) {
+            if (!arr) return 0;
+            return arr.reduce(function(a, b) {
+                if (b && typeof b === 'object') {
+                    return a + (typeof b.value === 'number' ? b.value : 0);
+                } else {
+                    return a + (typeof b === 'number' ? b : 0);
+                }
+            }, 0);
+        }
+
+        // 计算变化率
+        function calculateChangeRate(lastValue, currentValue) {
+            if (lastValue === 0) return currentValue > 0 ? 100 : 0;
+            return ((currentValue - lastValue) / lastValue) * 100;
+        }
+
+        // 格式化变化率
+        function formatRate(rate) {
+            if (rate === 0) return "0%";
+            return (rate > 0 ? "+" : "") + rate.toFixed(2) + "%";
+        }
+
+        // 获取变化率的CSS类
+        function getRateClass(rate) {
+            if (rate > 0) return "positive-change";
+            if (rate < 0) return "negative-change";
+            return "neutral-change";
+        }
 
         function renderDataCards(data){
             // 更新指标板
@@ -315,8 +931,7 @@
             updateDataCard("psc-detention-value", data.indicatorData.pscDetention.value,data.indicatorData.pscDetention.rate,"psc-detention-rate");
 
             updateDataCard("on-site-value",data.indicatorData.onSiteCount.value,data.indicatorData.onSiteCount.rate,"on-site-rate");
-            updateDataCard("on-site-abnormal-value",data.indicatorData.onSiteAbnormalCount.value,data.indicatorData.onSiteAbnormalCount.rate,"on-site-abnorma-rate");
-
+            updateDataCard("on-site-abnormal-value",data.indicatorData.onSiteAbnormalCount.value,data.indicatorData.onSiteAbnormalCount.rate,"on-site-abnormal-rate");
         }
 
 
@@ -335,17 +950,26 @@
         }
 
         function renderCharts(data) {
-            // 通用的图表配置
+            // 科技风格图表配置
             var baseOption = {
                 tooltip: {
                     trigger: 'axis',
                     axisPointer: {
                         type: 'shadow'
                     },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14  // 增大提示框字体
+                    },
                     formatter: function (params) {
                         var tooltipText = params[0].name;
                         params.forEach(function (item) {
-                            tooltipText += "<br/>" + item.seriesName + ": " + item.value;
+                            tooltipText += "<br/>" +
+                                '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + item.color + '"></span>' +
+                                item.seriesName + ": " + item.value;
                             if (item.data && item.data.changeRate !== undefined) {
                                 tooltipText += " (" + (item.data.changeRate > 0 ? "+" : "") + item.data.changeRate + "%)";
                             }
@@ -354,32 +978,65 @@
                     }
                 },
                 legend: {
-                    data: ['上周', '本周'], // 设置图例
+                    data: ['上周', '本周'],
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14  // 增大图例字体
+                    },
+                    top: 30,  // 将图例下移，避免与标题重叠
+                    left: 'center'
                 },
                 grid: {
                     left: '3%',
                     right: '4%',
                     bottom: '3%',
+                    top: 80,  // 增加顶部边距，为标题和图例留出空间
                     containLabel: true
                 },
                 xAxis: {
                     type: 'category',
                     axisLabel: {
                         rotate: 30,
-                        interval:0//设置刻度标签显示全部
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12  // 增大X轴标签字体
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
                     },
                     data: data.categories
                 },
                 yAxis: {
-                    type: 'value'
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12  // 增大Y轴标签字体
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
                 },
-
             };
 
             // 安检艘次图表配置
             var inspectionOption = Object.assign({},baseOption,{
                 title: {
-                    text: '海船安检艘次'
+                    text: '海船安检艘次',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16  // 增大标题字体
+                    },
+                    left: 'center',
+                    top: 10
                 },
                 series: [
                     {
@@ -388,10 +1045,34 @@
                         data: data.seaShipInspectionCounts.last,
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            color: '#67C23A',
+                            fontSize: 12  // 增大标签字体
                         },
                         itemStyle: {
-                            color:'#67C23A'//绿色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#5daf34'
+                                    }, {
+                                        offset: 1, color: '#8bc868'
+                                    }]
+                                }
+                            }
                         }
                     },
                     {
@@ -401,17 +1082,40 @@
                         label: {
                             show: true,
                             position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12,  // 增大标签字体
                             formatter: function(params) {
                                 if (params.data && params.data.changeRate !== undefined) {
-                                    return params.value+ " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
+                                    return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
                                 }
                                 return params.value
                             }
                         },
                         itemStyle: {
-                            color:'#409EFF'//蓝色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#2f8ef5'
+                                    }, {
+                                        offset: 1, color: '#5a9df5'
+                                    }]
+                                }
+                            }
                         }
-
                     }
                 ]
             });
@@ -420,7 +1124,14 @@
             // 缺陷数量图表配置
             var defectOption = Object.assign({},baseOption,{
                 title: {
-                    text: '海船缺陷数量'
+                    text: '海船缺陷数量',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16  // 增大标题字体
+                    },
+                    left: 'center',
+                    top: 10
                 },
                 series: [
                     {
@@ -429,10 +1140,34 @@
                         data: data.seaShipDefectCounts.last,
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            color: '#67C23A',
+                            fontSize: 12  // 增大标签字体
                         },
                         itemStyle: {
-                            color:'#67C23A'//绿色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#5daf34'
+                                    }, {
+                                        offset: 1, color: '#8bc868'
+                                    }]
+                                }
+                            }
                         }
                     },
                     {
@@ -442,6 +1177,8 @@
                         label: {
                             show: true,
                             position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12,  // 增大标签字体
                             formatter: function(params) {
                                 if (params.data && params.data.changeRate !== undefined) {
                                     return params.value+ " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
@@ -450,9 +1187,30 @@
                             }
                         },
                         itemStyle: {
-                            color:'#409EFF'//蓝色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#2f8ef5'
+                                    }, {
+                                        offset: 1, color: '#5a9df5'
+                                    }]
+                                }
+                            }
                         }
-
                     }
                 ]
             });
@@ -460,7 +1218,14 @@
             // 滞留艘次图表配置
             var detentionOption = Object.assign({},baseOption,{
                 title: {
-                    text: '海船滞留艘次'
+                    text: '海船滞留艘次',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16  // 增大标题字体
+                    },
+                    left: 'center',
+                    top: 10
                 },
                 series: [
                     {
@@ -469,10 +1234,34 @@
                         data: data.seaShipDetentionCounts.last,
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            color: '#67C23A',
+                            fontSize: 12  // 增大标签字体
                         },
                         itemStyle: {
-                            color:'#67C23A'//绿色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#5daf34'
+                                    }, {
+                                        offset: 1, color: '#8bc868'
+                                    }]
+                                }
+                            }
                         }
                     },
                     {
@@ -482,6 +1271,8 @@
                         label: {
                             show: true,
                             position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12,  // 增大标签字体
                             formatter: function(params) {
                                 if (params.data && params.data.changeRate !== undefined) {
                                     return params.value+ " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
@@ -490,7 +1281,29 @@
                             }
                         },
                         itemStyle: {
-                            color:'#409EFF'//蓝色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#2f8ef5'
+                                    }, {
+                                        offset: 1, color: '#5a9df5'
+                                    }]
+                                }
+                            }
                         }
                     },
                 ]
@@ -500,22 +1313,30 @@
             inspectionChart.setOption(inspectionOption);
             defectChart.setOption(defectOption);
             detentionChart.setOption(detentionOption);
-
         }
 
 
         function renderRiverCharts(data){
-            // 通用的图表配置
+            // 科技风格图表配置
             var baseOption = {
                 tooltip: {
                     trigger: 'axis',
                     axisPointer: {
                         type: 'shadow'
                     },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14  // 增大提示框字体
+                    },
                     formatter: function (params) {
                         var tooltipText = params[0].name;
                         params.forEach(function (item) {
-                            tooltipText += "<br/>" + item.seriesName + ": " + item.value;
+                            tooltipText += "<br/>" +
+                                '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + item.color + '"></span>' +
+                                item.seriesName + ": " + item.value;
                             if (item.data && item.data.changeRate !== undefined) {
                                 tooltipText += " (" + (item.data.changeRate > 0 ? "+" : "") + item.data.changeRate + "%)";
                             }
@@ -524,31 +1345,65 @@
                     }
                 },
                 legend: {
-                    data: ['上周', '本周'], // 设置图例
+                    data: ['上周', '本周'],
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14  // 增大图例字体
+                    },
+                    top: 30,  // 将图例下移，避免与标题重叠
+                    left: 'center'
                 },
                 grid: {
                     left: '3%',
                     right: '4%',
                     bottom: '3%',
+                    top: 80,  // 增加顶部边距，为标题和图例留出空间
                     containLabel: true
                 },
                 xAxis: {
                     type: 'category',
                     axisLabel: {
                         rotate: 30,
-                        interval:0//设置刻度标签显示全部
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12  // 增大X轴标签字体
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
                     },
                     data: data.categories
                 },
                 yAxis: {
-                    type: 'value'
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12  // 增大Y轴标签字体
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
                 },
-
             };
-            // 安检艘次图表配置
+
+            // 内河船安检艘次图表配置
             var inspectionOption = Object.assign({},baseOption,{
                 title: {
-                    text: '内河船安检艘次'
+                    text: '内河船安检艘次',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16  // 增大标题字体
+                    },
+                    left: 'center',
+                    top: 10
                 },
                 series: [
                     {
@@ -557,10 +1412,34 @@
                         data: data.riverShipInspectionCounts.last,
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            color: '#67C23A',
+                            fontSize: 12  // 增大标签字体
                         },
                         itemStyle: {
-                            color:'#67C23A'//绿色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#5daf34'
+                                    }, {
+                                        offset: 1, color: '#8bc868'
+                                    }]
+                                }
+                            }
                         }
                     },
                     {
@@ -570,25 +1449,56 @@
                         label: {
                             show: true,
                             position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12,  // 增大标签字体
                             formatter: function(params) {
                                 if (params.data && params.data.changeRate !== undefined) {
-                                    return params.value+ " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
+                                    return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
                                 }
                                 return params.value
                             }
                         },
                         itemStyle: {
-                            color:'#409EFF'//蓝色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#2f8ef5'
+                                    }, {
+                                        offset: 1, color: '#5a9df5'
+                                    }]
+                                }
+                            }
                         }
                     }
                 ]
             });
 
 
-            // 缺陷数量图表配置
+            // 内河船缺陷数量图表配置
             var defectOption = Object.assign({},baseOption,{
                 title: {
-                    text: '内河船缺陷数量'
+                    text: '内河船缺陷数量',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16  // 增大标题字体
+                    },
+                    left: 'center',
+                    top: 10
                 },
                 series: [
                     {
@@ -597,10 +1507,34 @@
                         data: data.riverShipDefectCounts.last,
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            color: '#67C23A',
+                            fontSize: 12  // 增大标签字体
                         },
                         itemStyle: {
-                            color:'#67C23A'//绿色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#5daf34'
+                                    }, {
+                                        offset: 1, color: '#8bc868'
+                                    }]
+                                }
+                            }
                         }
                     },
                     {
@@ -610,6 +1544,8 @@
                         label: {
                             show: true,
                             position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12,  // 增大标签字体
                             formatter: function(params) {
                                 if (params.data && params.data.changeRate !== undefined) {
                                     return params.value+ " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
@@ -618,16 +1554,45 @@
                             }
                         },
                         itemStyle: {
-                            color:'#409EFF'//蓝色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#2f8ef5'
+                                    }, {
+                                        offset: 1, color: '#5a9df5'
+                                    }]
+                                }
+                            }
                         }
                     }
                 ]
             });
 
-            // 滞留艘次图表配置
+            // 内河船滞留艘次图表配置
             var detentionOption = Object.assign({},baseOption,{
                 title: {
-                    text: '内河船滞留艘次'
+                    text: '内河船滞留艘次',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16  // 增大标题字体
+                    },
+                    left: 'center',
+                    top: 10
                 },
                 series: [
                     {
@@ -636,10 +1601,34 @@
                         data: data.riverShipDetentionCounts.last,
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            color: '#67C23A',
+                            fontSize: 12  // 增大标签字体
                         },
                         itemStyle: {
-                            color:'#67C23A'//绿色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#5daf34'
+                                    }, {
+                                        offset: 1, color: '#8bc868'
+                                    }]
+                                }
+                            }
                         }
                     },
                     {
@@ -649,6 +1638,8 @@
                         label: {
                             show: true,
                             position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12,  // 增大标签字体
                             formatter: function(params) {
                                 if (params.data && params.data.changeRate !== undefined) {
                                     return params.value+ " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
@@ -657,7 +1648,29 @@
                             }
                         },
                         itemStyle: {
-                            color:'#409EFF'//蓝色
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#2f8ef5'
+                                    }, {
+                                        offset: 1, color: '#5a9df5'
+                                    }]
+                                }
+                            }
                         }
                     }
                 ]
@@ -670,9 +1683,18 @@
             riverDetentionChart.setOption(detentionOption);
         }
 
-
+        // 窗口大小变化时调整图表大小
+        $(window).resize(function() {
+            inspectionChart.resize();
+            defectChart.resize();
+            detentionChart.resize();
+            riverInspectionChart.resize();
+            riverDefectChart.resize();
+            riverDetentionChart.resize();
+        });
     });
 </script>
+<!-- SweetAlert2 为拉取数据时的消息提示 -->
 </body>
 
 </html>

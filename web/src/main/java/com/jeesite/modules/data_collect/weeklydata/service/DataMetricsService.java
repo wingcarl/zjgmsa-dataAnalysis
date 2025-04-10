@@ -68,8 +68,7 @@ public class DataMetricsService extends CrudService<DataMetricsDao, DataMetrics>
 		ShipInspection shipInspection = new ShipInspection();
 		shipInspection.setInspectionDate_gte(dataMetrics.getStartTime());
 		shipInspection.setInspectionDate_lte(dataMetrics.getEndTime());
-		shipInspection.setInspectionType("初查");
-		shipInspection.setShipType("海船");
+		shipInspection.setInspectionType("海船");
 		String[] agency = {"张家港海事局","港区海事处","锦丰海事处","保税区海事处(筹)"};
 		shipInspection.setInspectionAgency_in(agency);
 		List<DataMetrics> dataList = findDataMetricsList(shipInspection);

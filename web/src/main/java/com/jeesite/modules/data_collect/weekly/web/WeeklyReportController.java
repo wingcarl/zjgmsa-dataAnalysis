@@ -270,6 +270,12 @@ public class WeeklyReportController extends BaseController {
 		Map<String,Object> riverShipInspectionCounts = new HashMap<>();
 		Map<String,Object> riverShipDefectCounts = new HashMap<>();
 		Map<String,Object> riverShipDetentionCounts = new HashMap<>();
+		// 新增PSC和船舶现场监督检查数据
+		Map<String,Object> pscInspectionCounts = new HashMap<>();
+		Map<String,Object> pscDefectCounts = new HashMap<>();
+		Map<String,Object> pscDetentionCounts = new HashMap<>();
+		Map<String,Object> onSiteCounts = new HashMap<>();
+		Map<String,Object> onSiteAbnormalCounts = new HashMap<>();
 
 
 		List<Object> currentSeaShipInspectionCountsList = new ArrayList<>();
@@ -286,7 +292,17 @@ public class WeeklyReportController extends BaseController {
 		List<Object> currentRiverShipDetentionCountsList = new ArrayList<>();
 		List<Object> lastRiverShipDetentionCountsList = new ArrayList<>();
 
-
+		// 新增PSC和船舶现场监督检查数据列表
+		List<Object> currentPscInspectionCountsList = new ArrayList<>();
+		List<Object> lastPscInspectionCountsList = new ArrayList<>();
+		List<Object> currentPscDefectCountsList = new ArrayList<>();
+		List<Object> lastPscDefectCountsList = new ArrayList<>();
+		List<Object> currentPscDetentionCountsList = new ArrayList<>();
+		List<Object> lastPscDetentionCountsList = new ArrayList<>();
+		List<Object> currentOnSiteCountsList = new ArrayList<>();
+		List<Object> lastOnSiteCountsList = new ArrayList<>();
+		List<Object> currentOnSiteAbnormalCountsList = new ArrayList<>();
+		List<Object> lastOnSiteAbnormalCountsList = new ArrayList<>();
 
 
 		for(Map.Entry<String,List<WeeklyReport>> currentEntry : groupedCurrentData.entrySet()){
@@ -299,6 +315,13 @@ public class WeeklyReportController extends BaseController {
 			long currentTotalRiverInspectionCount = 0;
 			long currentTotalRiverDefectCount = 0;
 			long currentTotalRiverDetentionCount = 0;
+			// 新增PSC和船舶现场监督检查数据
+			long currentTotalPscInspectionCount = 0;
+			long currentTotalPscDefectCount = 0;
+			long currentTotalPscDetentionCount = 0;
+			long currentTotalOnSiteCount = 0;
+			long currentTotalOnSiteAbnormalCount = 0;
+
 			for (WeeklyReport report : currentList){
 				currentTotalInspectionCount += report.getSeaShipInspectionCount() == null ? 0 : report.getSeaShipInspectionCount();
 				currentTotalDefectCount += report.getSeaShipDefectCount() == null ? 0 : report.getSeaShipDefectCount();
@@ -306,6 +329,12 @@ public class WeeklyReportController extends BaseController {
 				currentTotalRiverInspectionCount += report.getRiverShipInspectionCount() == null ? 0 : report.getRiverShipInspectionCount();
 				currentTotalRiverDefectCount += report.getRiverShipDefectCount() == null ? 0 : report.getRiverShipDefectCount();
 				currentTotalRiverDetentionCount += report.getRiverShipDetentionCount() == null ? 0 : report.getRiverShipDetentionCount();
+				// 新增PSC和船舶现场监督检查数据
+				currentTotalPscInspectionCount += report.getPscInspectionCount() == null ? 0 : report.getPscInspectionCount();
+				currentTotalPscDefectCount += report.getPscDefectCount() == null ? 0 : report.getPscDefectCount();
+				currentTotalPscDetentionCount += report.getPscDetentionCount() == null ? 0 : report.getPscDetentionCount();
+				currentTotalOnSiteCount += report.getOnSiteCount() == null ? 0 : report.getOnSiteCount();
+				currentTotalOnSiteAbnormalCount += report.getOnSiteAbnormalCount() == null ? 0 : report.getOnSiteAbnormalCount();
 			}
 
 
@@ -316,6 +345,13 @@ public class WeeklyReportController extends BaseController {
 			long lastTotalRiverInspectionCount = 0;
 			long lastTotalRiverDefectCount = 0;
 			long lastTotalRiverDetentionCount = 0;
+			// 新增PSC和船舶现场监督检查数据
+			long lastTotalPscInspectionCount = 0;
+			long lastTotalPscDefectCount = 0;
+			long lastTotalPscDetentionCount = 0;
+			long lastTotalOnSiteCount = 0;
+			long lastTotalOnSiteAbnormalCount = 0;
+
 			if(groupedLastData.containsKey(departmentName)){
 				List<WeeklyReport> lastList =  groupedLastData.get(departmentName);
 				for (WeeklyReport report : lastList){
@@ -325,6 +361,12 @@ public class WeeklyReportController extends BaseController {
 					lastTotalRiverInspectionCount += report.getRiverShipInspectionCount() == null ? 0 : report.getRiverShipInspectionCount();
 					lastTotalRiverDefectCount += report.getRiverShipDefectCount() == null ? 0 : report.getRiverShipDefectCount();
 					lastTotalRiverDetentionCount += report.getRiverShipDetentionCount() == null ? 0 : report.getRiverShipDetentionCount();
+					// 新增PSC和船舶现场监督检查数据
+					lastTotalPscInspectionCount += report.getPscInspectionCount() == null ? 0 : report.getPscInspectionCount();
+					lastTotalPscDefectCount += report.getPscDefectCount() == null ? 0 : report.getPscDefectCount();
+					lastTotalPscDetentionCount += report.getPscDetentionCount() == null ? 0 : report.getPscDetentionCount();
+					lastTotalOnSiteCount += report.getOnSiteCount() == null ? 0 : report.getOnSiteCount();
+					lastTotalOnSiteAbnormalCount += report.getOnSiteAbnormalCount() == null ? 0 : report.getOnSiteAbnormalCount();
 				}
 			}
 
@@ -382,7 +424,6 @@ public class WeeklyReportController extends BaseController {
 			lastRiverShipInspectionCountsList.add(lastTotalRiverInspectionCount);
 
 
-
 			double riverDefectChangeRate = 0;
 			if(lastTotalRiverDefectCount !=0){
 				riverDefectChangeRate = (double)Math.round(( (double) (currentTotalRiverDefectCount - lastTotalRiverDefectCount)/ lastTotalRiverDefectCount) * 10000 ) / 100 ;
@@ -408,7 +449,67 @@ public class WeeklyReportController extends BaseController {
 			}});
 			lastRiverShipDetentionCountsList.add(lastTotalRiverDetentionCount);
 
+			// 新增PSC数据处理
+			double pscInspectionChangeRate = 0;
+			if(lastTotalPscInspectionCount !=0){
+				pscInspectionChangeRate = (double)Math.round(( (double) (currentTotalPscInspectionCount - lastTotalPscInspectionCount)/ lastTotalPscInspectionCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalPscInspectionCount = currentTotalPscInspectionCount;
+			final double finalPscInspectionChangeRate = pscInspectionChangeRate;
+			currentPscInspectionCountsList.add(new HashMap<String, Object>(){{
+				put("value",finalCurrentTotalPscInspectionCount);
+				put("changeRate",finalPscInspectionChangeRate);
+			}});
+			lastPscInspectionCountsList.add(lastTotalPscInspectionCount);
 
+			double pscDefectChangeRate = 0;
+			if(lastTotalPscDefectCount !=0){
+				pscDefectChangeRate = (double)Math.round(( (double) (currentTotalPscDefectCount - lastTotalPscDefectCount)/ lastTotalPscDefectCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalPscDefectCount = currentTotalPscDefectCount;
+			final double finalPscDefectChangeRate = pscDefectChangeRate;
+			currentPscDefectCountsList.add(new HashMap<String, Object>(){{
+				put("value",finalCurrentTotalPscDefectCount);
+				put("changeRate",finalPscDefectChangeRate);
+			}});
+			lastPscDefectCountsList.add(lastTotalPscDefectCount);
+
+			double pscDetentionChangeRate = 0;
+			if(lastTotalPscDetentionCount !=0){
+				pscDetentionChangeRate = (double)Math.round(( (double) (currentTotalPscDetentionCount - lastTotalPscDetentionCount)/ lastTotalPscDetentionCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalPscDetentionCount = currentTotalPscDetentionCount;
+			final double finalPscDetentionChangeRate = pscDetentionChangeRate;
+			currentPscDetentionCountsList.add(new HashMap<String, Object>(){{
+				put("value",finalCurrentTotalPscDetentionCount);
+				put("changeRate",finalPscDetentionChangeRate);
+			}});
+			lastPscDetentionCountsList.add(lastTotalPscDetentionCount);
+
+			// 新增船舶现场监督数据处理
+			double onSiteChangeRate = 0;
+			if(lastTotalOnSiteCount !=0){
+				onSiteChangeRate = (double)Math.round(( (double) (currentTotalOnSiteCount - lastTotalOnSiteCount)/ lastTotalOnSiteCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalOnSiteCount = currentTotalOnSiteCount;
+			final double finalOnSiteChangeRate = onSiteChangeRate;
+			currentOnSiteCountsList.add(new HashMap<String, Object>(){{
+				put("value",finalCurrentTotalOnSiteCount);
+				put("changeRate",finalOnSiteChangeRate);
+			}});
+			lastOnSiteCountsList.add(lastTotalOnSiteCount);
+
+			double onSiteAbnormalChangeRate = 0;
+			if(lastTotalOnSiteAbnormalCount !=0){
+				onSiteAbnormalChangeRate = (double)Math.round(( (double) (currentTotalOnSiteAbnormalCount - lastTotalOnSiteAbnormalCount)/ lastTotalOnSiteAbnormalCount) * 10000 ) / 100 ;
+			}
+			final long finalCurrentTotalOnSiteAbnormalCount = currentTotalOnSiteAbnormalCount;
+			final double finalOnSiteAbnormalChangeRate = onSiteAbnormalChangeRate;
+			currentOnSiteAbnormalCountsList.add(new HashMap<String, Object>(){{
+				put("value",finalCurrentTotalOnSiteAbnormalCount);
+				put("changeRate",finalOnSiteAbnormalChangeRate);
+			}});
+			lastOnSiteAbnormalCountsList.add(lastTotalOnSiteAbnormalCount);
 		}
 
 
@@ -427,6 +528,18 @@ public class WeeklyReportController extends BaseController {
 		riverShipDetentionCounts.put("current",currentRiverShipDetentionCountsList);
 		riverShipDetentionCounts.put("last",lastRiverShipDetentionCountsList);
 
+		// 添加PSC和船舶现场监督检查数据到结果集
+		pscInspectionCounts.put("current",currentPscInspectionCountsList);
+		pscInspectionCounts.put("last",lastPscInspectionCountsList);
+		pscDefectCounts.put("current",currentPscDefectCountsList);
+		pscDefectCounts.put("last",lastPscDefectCountsList);
+		pscDetentionCounts.put("current",currentPscDetentionCountsList);
+		pscDetentionCounts.put("last",lastPscDetentionCountsList);
+		onSiteCounts.put("current",currentOnSiteCountsList);
+		onSiteCounts.put("last",lastOnSiteCountsList);
+		onSiteAbnormalCounts.put("current",currentOnSiteAbnormalCountsList);
+		onSiteAbnormalCounts.put("last",lastOnSiteAbnormalCountsList);
+
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("categories", categories);
@@ -437,6 +550,14 @@ public class WeeklyReportController extends BaseController {
 		result.put("riverShipInspectionCounts", riverShipInspectionCounts);
 		result.put("riverShipDefectCounts", riverShipDefectCounts);
 		result.put("riverShipDetentionCounts", riverShipDetentionCounts);
+
+		// 添加PSC和船舶现场监督检查数据到结果中
+		result.put("pscInspectionCounts", pscInspectionCounts);
+		result.put("pscDefectCounts", pscDefectCounts);
+		result.put("pscDetentionCounts", pscDetentionCounts);
+		result.put("onSiteCounts", onSiteCounts);
+		result.put("onSiteAbnormalCounts", onSiteAbnormalCounts);
+
 		result.put("indicatorData", indicatorData);
 		return result;
 	}

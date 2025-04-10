@@ -1,6 +1,8 @@
 package com.jeesite.modules.data_collect.weekly.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 import com.jeesite.common.lang.DateUtils;
@@ -17,6 +19,7 @@ import com.jeesite.modules.data_collect.shiponsite.service.ShipOnSiteInspectionS
 import com.jeesite.modules.sys.entity.Office;
 import com.jeesite.modules.sys.service.OfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -643,5 +646,59 @@ public class WeeklyReportService extends CrudService<WeeklyReportDao, WeeklyRepo
 		results.defectCount = defectCount;
 
 		return results;
+	}
+
+	/**
+	 * 每天凌晨 2 点执行两次数据拉取任务：
+	 * - 一次是上周五 -> 本周四
+	 * - 一次是上上周五 -> 上周四
+	 */
+	/**
+	 * 定时执行任务：
+	 * - 周五：00:00 ~ 17:00 每小时整点运行
+	 * - 其他日子：每天凌晨2:00执行一次
+	 */
+	@Scheduled(cron = "0 0 0-19 * * ?")
+	public void scheduledHourlyTask() {
+		LocalDate today = LocalDate.now();
+		DayOfWeek dayOfWeek = today.getDayOfWeek();
+
+		if (dayOfWeek == DayOfWeek.FRIDAY) {
+			logger.info("【周五每小时任务】当前时间：{}，执行 fetchData", LocalTime.now());
+			runWeeklyFetch(today);
+		}
+	}
+
+	@Scheduled(cron = "0 0 2 * * ?")
+	public void scheduledDailyTask() {
+		LocalDate today = LocalDate.now();
+		DayOfWeek dayOfWeek = today.getDayOfWeek();
+
+		if (dayOfWeek != DayOfWeek.FRIDAY) {
+			logger.info("【非周五凌晨2点任务】当前时间：{}，执行 fetchData", LocalTime.now());
+			runWeeklyFetch(today);
+		}
+	}
+
+	/**
+	 * 调用 fetchData 方法，分别处理两个周期：
+	 * - 当前周期：上周五 ~ 本周四
+	 * - 上一周期：上上周五 ~ 上周四
+	 */
+	private void runWeeklyFetch(LocalDate today) {
+		// 找到“最近的周四”
+		LocalDate currentThursday = today.with(DayOfWeek.THURSDAY);
+		if (today.getDayOfWeek().getValue() < DayOfWeek.THURSDAY.getValue()) {
+			currentThursday = currentThursday.minusWeeks(1);
+		}
+
+		LocalDate currentStartDate = currentThursday.minusDays(6); // 当前周期：上周五
+		LocalDate previousStartDate = currentStartDate.minusWeeks(1); // 上一周期：上上周五
+
+		logger.info("执行 fetchData：当前周期 {} ~ {}", currentStartDate, currentStartDate.plusDays(6));
+		fetchData(currentStartDate);
+
+		logger.info("执行 fetchData：上一周期 {} ~ {}", previousStartDate, previousStartDate.plusDays(6));
+		fetchData(previousStartDate);
 	}
 }

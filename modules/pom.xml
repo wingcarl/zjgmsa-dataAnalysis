@@ -17,7 +17,6 @@
         <module>cms</module>
 		<module>app</module>
 		<module>data_collect</module>
-
 	</modules>
 	
 	<developers>  

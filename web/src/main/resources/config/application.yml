@@ -4,12 +4,12 @@
 #======================================#
 
 # 产品或项目名称、软件开发公司名称
-productName: JeeSite Demo
-companyName: ThinkGem
+productName: 张家港海事局数据融合系统
+companyName: zjgmsa
 
 # 产品版本、版权年份
-productVersion: V5.7
-copyrightYear: 2024
+productVersion: V1.0
+copyrightYear: 2025
 
 # 是否演示模式
 demoMode: false
@@ -25,7 +25,7 @@ server:
 
   port: 8980
   servlet:
-    context-path: /js
+    context-path: /hmsdata
     register-default-servlet: false
 #    encoding.enabled: true
   tomcat:
@@ -55,8 +55,8 @@ jdbc:
   type: mysql
   driver: com.mysql.cj.jdbc.Driver
   url: jdbc:mysql://127.0.0.1:3306/data_analysis?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
-  username: root
-  password: root
+  username: report
+  password: report123
   testSql: SELECT 1
 
 #  # Oracle 数据库配置（11g，若使用 12c 以上版本，请打开 /modules/core/pom.xml 文件，替换为 Oracle 12c 驱动并编译打包 core 模块）

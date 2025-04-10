@@ -1,0 +1,370 @@
+<% layout('/layouts/default.html', {title: '登录', libs: ['validate'], bodyClass: 'login-page'}){ %>
+<% include('/include/upgrade.html'){} // 如果客户浏览器版本过低，则显示浏览器升级提示。 %>
+<!-- <link rel="stylesheet" href="${ctxStatic}/icheck/1.0/square/blue.css?${_version}"> -->
+<link rel="stylesheet" href="${ctxStatic}/jquery-toastr/2.1/toastr.min.css?${_version}">
+<link rel="stylesheet" href="${ctxStatic}/modules/sys/sysLogin.css?${_version}">
+<div class="login-box tech-login-box" style="margin:7% auto 300px auto;">
+    <div class="login-logo tech-logo">
+        <a href="${ctxAdmin}/login">
+            <b>${@Global.getConfig('productNamePrefix')}${@Global.getConfig('productName')}</b>
+            <small>${@Global.getConfig('productVersion')}</small>
+        </a>
+    </div>
+    <div class="login-box-body tech-login-body">
+
+        <% var isLoginByValidCode = @Global.getConfigToBoolean('user.loginByValidCode', 'true'); %>
+        <% if(isLoginByValidCode){ %>
+        <ul id="loginTab" class="nav nav-tabs tech-tabs">
+            <li class="active"><a href="#tab-1" data-toggle="tab" action="${ctxAdmin}/login">${text('账号登录')}</a></li>
+        </ul>
+        <% } %>
+        <#form:form id="loginForm" model="${user!}" action="${ctxAdmin}/login" method="post" class="tab-content">
+        <% if(!isLoginByValidCode && isBlank(message!)){ %>
+        <h4 class="login-box-msg tech-welcome">${text('欢迎回来')+'！'}</h4>
+        <% }else if(isNotBlank(message!)){ %>
+        <h4 class="login-box-msg text-red">${message}</h4>
+        <% } %>
+        <div class="form-group has-feedback tech-input">
+            <span class="icon-user form-control-feedback" title="${text('登录账号')}"></span>
+            <#form:input type="text" name="username" class="form-control required"
+            data-msg-required="${text('请填写登录账号.')}" placeholder="${text('登录账号')}"
+            value="${cookie('rememberUserCode')}"/>
+        </div>
+        <div class="form-group has-feedback tab-pane tab-1 tab-3 active tech-input">
+				<span class="icon-lock form-control-feedback" title="${text('登录密码，鼠标按下显示密码')}"
+                      onmousedown="$('#password').attr('type','text')" onmouseup="$('#password').attr('type','password')"
+                      onmouseenter="$(this).removeClass('icon-lock').addClass('icon-eye')"
+                      onmouseout="$(this).removeClass('icon-eye').addClass('icon-lock')"></span>
+            <#form:input type="password" name="password" class="form-control required"
+            data-msg-required="${text('请填写登录密码.')}" placeholder="${text('登录密码')}" autocomplete="off"/>
+        </div>
+        <% if(@Global.getConfigToBoolean('user.loginCodeCorpUnique', 'false')){ %>
+        <div class="form-group has-feedback tech-input">
+            <#form:treeselect id="switchCorpSelect" title="${text('登录租户')}" allowClear="false"
+            name="param_corpCode" url="${ctxAdmin}/sys/corpAdmin/treeData?isShowCode=true" placeholder="${text('登录租户')}"/>
+        </div>
+        <% } %>
+        <div class="form-group has-feedback tech-input" id="isValidCodeLogin" style="display:${isValidCodeLogin?'blank':'none'}">
+            <#form:validcode name="validCode" isRequired="true" isRemote="true" isLazy="${!isValidCodeLogin}"/>
+        </div>
+
+        <div class="form-group">
+            <div class="mt5 icheck tech-checkbox">
+                <label title="${text('公共场所慎用,下次不需要再填写帐号')}"><input type="checkbox"
+                                                                                   name="rememberUserCode"${isNotBlank(cookie('rememberUserCode'))?' checked':''}
+                    class="form-control" data-style="minimal-grey"> ${text('记住账号')}</label> &nbsp;
+                <label title="${text('公共场所慎用,下次不需要再填写帐号和密码')}"><input type="checkbox"
+                                                                                         name="rememberMe"${isNotBlank(cookie('rememberMe'))?' checked':''}
+                    class="form-control" data-style="minimal-grey"> ${text('自动登录')}</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <!-- <input type="hidden" name="param_deviceType" value="pc"> -->
+            <input type="hidden" name="__url" value="${parameter.__url!}">
+            <button type="submit" class="btn btn-primary btn-block btn-flat tech-btn"
+                    id="btnSubmit" data-loading="${text('登录验证成功，正在进入...')}"
+                    data-login-valid="${text('正在验证登录，请稍候...')}">${text('立即登录')}</button>
+        </div>
+    </#form:form>
+    <div class="row">
+        <div class="col-xs-12">
+            <% if(@Global.getConfigToBoolean('sys.account.registerUser', 'false')){ %>
+            <% } %>
+            <% if (@com.jeesite.common.i18n.I18nLocaleResolver.enabled()){ %>
+            <div class="dropdown pull-right tech-dropdown">
+                <a href="javascript:" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown">
+                    <i class="fa icon-globe"></i> ${@DictUtils.getDictLabel('sys_lang_type', lang(), 'zh_CN')}
+                </a>
+                <ul class="dropdown-menu">
+                    <li class="mt5"></li>
+                    <% for(var dict in @DictUtils.getDictList('sys_lang_type')){ %>
+                    <li><a href="${ctxPath}/lang/${dict.dictValue}">${dict.dictLabel}</a></li>
+                    <% } %>
+                    <li class="mt10"></li>
+                </ul>
+            </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+<div class="login-copyright tech-copyright">
+    &copy; ${@DateUtils.getYear()} ${@Global.getConfig('productName')} - Powered By <a
+        id="loginKey" data-key="${@Global.getConfig('shiro.loginSubmit.secretKey')}"
+        href="" target="_blank">张家港海事局数据管理中心</a>
+</div>
+</div>
+<% } %>
+<script src="${ctxStatic}/common/des.js?${_version}"></script>
+<script src="${ctxStatic}/jquery-toastr/2.1/toastr.min.js?${_version}"></script>
+<script src="${ctxStatic}/modules/sys/sysLogin.js?${_version}"></script>
+
+<style>
+    body.login-page {
+        background-image: url('${ctxStatic}/images/login-bg.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: #051a30;
+        position: relative;
+        overflow: hidden;
+    }
+
+
+
+    .tech-login-box {
+        position: relative;
+        z-index: 10;
+    }
+
+    .tech-logo a {
+        color: #44ccff !important;
+        text-shadow: 0 0 10px rgba(68, 204, 255, 0.5), 0 0 20px rgba(68, 204, 255, 0.3);
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+
+    .tech-logo small {
+        color: #99e6ff;
+    }
+
+    .tech-login-body {
+        background: rgba(7, 25, 54, 0.75);
+        border-radius: 8px;
+        box-shadow: 0 0 30px rgba(0, 150, 255, 0.15);
+        border: 1px solid rgba(32, 124, 229, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 25px 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    .login-page .login-box-body {
+        width: 360px;
+        margin: auto;
+        padding: 28px;
+        background: rgba(7, 25, 54, 0.75);
+        border-radius: 8px;
+        box-shadow: 0 0 30px rgba(0, 150, 255, 0.15);
+        border: 1px solid rgba(32, 124, 229, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 25px 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    /* 添加发光边线效果 */
+    .tech-login-body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg,
+        rgba(32, 124, 229, 0) 0%,
+        rgba(32, 124, 229, 0.8) 50%,
+        rgba(32, 124, 229, 0) 100%);
+    }
+
+    .tech-welcome {
+        color: #67d7ff;
+        font-weight: 400;
+        margin-bottom: 25px;
+    }
+
+    .tech-input .form-control {
+        background-color: rgba(9, 30, 62, 0.7);
+        border: 1px solid rgba(32, 124, 229, 0.3);
+        color: #e6f5ff;
+        border-radius: 4px;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+    }
+
+    .tech-input .form-control:focus {
+        background-color: rgba(11, 40, 82, 0.7);
+        border-color: #44ccff;
+        box-shadow: 0 0 10px rgba(68, 204, 255, 0.3);
+    }
+
+    .tech-input .form-control::placeholder {
+        color: rgba(142, 197, 252, 0.5);
+    }
+
+    .tech-input .form-control-feedback {
+        color: #44ccff;
+        line-height: 34px;
+    }
+
+    .tech-checkbox label {
+        color: #8ecfff;
+        font-weight: normal;
+    }
+
+    .tech-btn {
+        background: linear-gradient(90deg, #0070d2, #00a2e2);
+        border: none;
+        color: white;
+        font-weight: 500;
+        padding: 10px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
+    }
+
+    .tech-btn:hover, .tech-btn:focus {
+        background: linear-gradient(90deg, #0080e6, #00b2f5);
+        box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .tech-btn:active {
+        transform: translateY(1px);
+    }
+
+    .tech-btn::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(60deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0) 80%);
+        transform: rotate(45deg);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .tech-btn:hover::after {
+        opacity: 1;
+        animation: shimmer 1.5s ease-in-out;
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%) rotate(45deg);
+        }
+        100% {
+            transform: translateX(100%) rotate(45deg);
+        }
+    }
+
+    .switchSkin {
+        color: #44ccff;
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 18px;
+        transition: color 0.3s ease;
+    }
+
+    .switchSkin:hover {
+        color: #99e6ff;
+    }
+
+    .tech-tabs {
+        border-bottom: 1px solid rgba(32, 124, 229, 0.3);
+    }
+
+    .tech-tabs li a {
+        color: #8ecfff;
+        background-color: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .tech-tabs li.active a,
+    .tech-tabs li a:hover,
+    .tech-tabs li a:focus {
+        color: #44ccff;
+        background-color: transparent;
+        border: none;
+        border-bottom: 3px solid #44ccff;
+    }
+
+    .tech-dropdown a {
+        color: #8ecfff;
+    }
+
+    .tech-dropdown a:hover,
+    .tech-dropdown a:focus {
+        color: #44ccff;
+    }
+
+    .tech-copyright {
+        color: rgba(142, 207, 255, 0.7);
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+    }
+    .login-page .login-copyright,.login-page .login-copyright a {
+        color: rgba(142, 207, 255, 0.7);
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+    }
+
+    .tech-copyright a {
+        color: #67d7ff;
+        transition: color 0.3s ease;
+    }
+
+    .tech-copyright a:hover {
+        color: #44ccff;
+        text-decoration: none;
+    }
+
+    /* 添加轻微的背景粒子动画效果 */
+    @keyframes techParticle {
+        0% {
+            opacity: 0.3;
+        }
+        50% {
+            opacity: 0.8;
+        }
+        100% {
+            opacity: 0.3;
+        }
+    }
+
+    .tech-login-body::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+                circle at center,
+                rgba(32, 124, 229, 0.05) 0%,
+                rgba(32, 124, 229, 0) 70%
+        );
+        opacity: 0.5;
+        animation: techParticle 8s infinite;
+        pointer-events: none;
+    }
+
+    /* 针对输入框的额外优化 */
+    .form-control-feedback {
+        z-index: 10;
+    }
+
+    .has-feedback .form-control {
+        padding-right: 42.5px;
+    }
+
+    /* 修改checkbox样式 */
+    .icheck input[type="checkbox"] {
+        border: 1px solid rgba(32, 124, 229, 0.4) !important;
+    }
+
+    .icheck input[type="checkbox"]:checked {
+        background-color: #44ccff !important;
+    }
+</style>

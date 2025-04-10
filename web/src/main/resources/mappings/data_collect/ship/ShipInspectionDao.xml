@@ -3,13 +3,36 @@
 <mapper namespace="com.jeesite.modules.data_collect.ship.dao.ShipInspectionDao">
 	
 	<select id="findDistinctList" resultType="ShipInspection">
-		SELECT ${sqlMap.column.toSql()}
+		SELECT
+		MAX(id) AS id,
+		ship_id,
+		inspection_date,
+		inspection_agency,
+		MAX(ship_name_cn) AS ship_name_cn,
+		MAX(port_of_registry) AS port_of_registry,
+		MAX(inspection_type) AS inspection_type,
+		MAX(safety_inspection_type) AS safety_inspection_type,
+		MAX(inspection_port) AS inspection_port,
+		MAX(inspector) AS inspector,
+		MAX(defect_count) AS defect_count,
+		MAX(detained) AS detained,
+		MAX(defect_code) AS defect_code,
+		MAX(defect_description) AS defect_description,
+		MAX(handling_comments) AS handling_comments,
+		MAX(ship_type) AS ship_type,
+		MAX(create_by) AS create_by,
+		MAX(create_date) AS create_date,
+		MAX(update_by) AS update_by,
+		MAX(update_date) AS update_date,
+		MAX(remarks) AS remarks
 		FROM ${sqlMap.table.toSql()}
 		<where>
 			${sqlMap.where.toSql()}
 		</where>
-		group by ship_id,inspection_date,inspection_agency
-		ORDER BY ${sqlMap.order.toSql()}
+		GROUP BY
+		ship_id, inspection_date, inspection_agency
+		ORDER BY
+		MAX(update_date) DESC
 	</select>
 	
 </mapper>

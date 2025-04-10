@@ -21,7 +21,7 @@
 	
 	<properties>
 		
-		<finalName>web</finalName><!-- war or jar 包的名称 -->
+		<finalName>hmsdata</finalName><!-- war or jar 包的名称 -->
 		<start-class>com.jeesite.modules.Application</start-class>
 		
 		<!-- docker setting -->
@@ -143,7 +143,7 @@
 		<name>JeeSite</name>
 		<url>http://jeesite.com</url>
 	</organization>
-	
+
 	<repositories>
 		<repository>
 			<id>aliyun-repos</id>

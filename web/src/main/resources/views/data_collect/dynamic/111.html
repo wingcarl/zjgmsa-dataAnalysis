@@ -1,0 +1,182 @@
+// 修复渲染合并的巡航数据表格函数
+function renderCombinedPatrolTable(data) {
+const tableBody = $('#patrol-data-body');
+tableBody.empty();
+
+// 获取部门列表
+const departments = data.categories || [];
+
+// 为每个部门创建行 - 改用传统字符串连接
+departments.forEach(function(department, index) {
+const row = $('<tr></tr>');
+
+// 添加部门名称 - 改用传统字符串连接
+row.append('<td>' + department + '</td>');
+
+// 1. 海巡艇发现异常数据
+const patrolBoatAbnormalLastValue = data.patrolBoatAbnormalDiscoveryLast ? data.patrolBoatAbnormalDiscoveryLast[index] || 0 : 0;
+const patrolBoatAbnormalCurrentValue = data.patrolBoatAbnormalDiscoveryCurrent ?
+(typeof data.patrolBoatAbnormalDiscoveryCurrent[index] === 'object' ?
+data.patrolBoatAbnormalDiscoveryCurrent[index]?.value || 0 :
+data.patrolBoatAbnormalDiscoveryCurrent[index] || 0) : 0;
+
+const patrolBoatAbnormalChangeRate = calculateChangeRate(patrolBoatAbnormalCurrentValue, patrolBoatAbnormalLastValue);
+
+// 改用传统字符串连接
+row.append('<td>' + patrolBoatAbnormalLastValue + '</td>');
+row.append('<td>' + patrolBoatAbnormalCurrentValue + '</td>');
+row.append('<td class="' + getRateClass(patrolBoatAbnormalChangeRate) + '">' + formatRate(patrolBoatAbnormalChangeRate) + '</td>');
+
+// 2. 海巡艇立案调查数据
+const patrolBoatInvestigationLastValue = data.patrolBoatInvestigationCasesLast ? data.patrolBoatInvestigationCasesLast[index] || 0 : 0;
+const patrolBoatInvestigationCurrentValue = data.patrolBoatInvestigationCasesCurrent ?
+(typeof data.patrolBoatInvestigationCasesCurrent[index] === 'object' ?
+data.patrolBoatInvestigationCasesCurrent[index]?.value || 0 :
+data.patrolBoatInvestigationCasesCurrent[index] || 0) : 0;
+
+const patrolBoatInvestigationChangeRate = calculateChangeRate(patrolBoatInvestigationCurrentValue, patrolBoatInvestigationLastValue);
+
+// 改用传统字符串连接
+row.append('<td>' + patrolBoatInvestigationLastValue + '</td>');
+row.append('<td>' + patrolBoatInvestigationCurrentValue + '</td>');
+row.append('<td class="' + getRateClass(patrolBoatInvestigationChangeRate) + '">' + formatRate(patrolBoatInvestigationChangeRate) + '</td>');
+
+// 3. 电子巡航发现异常数据
+const electronicAbnormalLastValue = data.electronicPatrolAbnormalDiscoveryLast ? data.electronicPatrolAbnormalDiscoveryLast[index] || 0 : 0;
+const electronicAbnormalCurrentValue = data.electronicPatrolAbnormalDiscoveryCurrent ?
+(typeof data.electronicPatrolAbnormalDiscoveryCurrent[index] === 'object' ?
+data.electronicPatrolAbnormalDiscoveryCurrent[index]?.value || 0 :
+data.electronicPatrolAbnormalDiscoveryCurrent[index] || 0) : 0;
+
+const electronicAbnormalChangeRate = calculateChangeRate(electronicAbnormalCurrentValue, electronicAbnormalLastValue);
+
+// 改用传统字符串连接
+row.append('<td>' + electronicAbnormalLastValue + '</td>');
+row.append('<td>' + electronicAbnormalCurrentValue + '</td>');
+row.append('<td class="' + getRateClass(electronicAbnormalChangeRate) + '">' + formatRate(electronicAbnormalChangeRate) + '</td>');
+
+// 4. 电子巡航立案调查数据
+const electronicInvestigationLastValue = data.electronicPatrolInvestigationCasesLast ? data.electronicPatrolInvestigationCasesLast[index] || 0 : 0;
+const electronicInvestigationCurrentValue = data.electronicPatrolInvestigationCasesCurrent ?
+(typeof data.electronicPatrolInvestigationCasesCurrent[index] === 'object' ?
+data.electronicPatrolInvestigationCasesCurrent[index]?.value || 0 :
+data.electronicPatrolInvestigationCasesCurrent[index] || 0) : 0;
+
+const electronicInvestigationChangeRate = calculateChangeRate(electronicInvestigationCurrentValue, electronicInvestigationLastValue);
+
+// 改用传统字符串连接
+row.append('<td>' + electronicInvestigationLastValue + '</td>');
+row.append('<td>' + electronicInvestigationCurrentValue + '</td>');
+row.append('<td class="' + getRateClass(electronicInvestigationChangeRate) + '">' + formatRate(electronicInvestigationChangeRate) + '</td>');
+
+// 5. 无人机巡航发现异常数据
+const droneAbnormalLastValue = data.droneAbnormalDiscoveryLast ? data.droneAbnormalDiscoveryLast[index] || 0 : 0;
+const droneAbnormalCurrentValue = data.droneAbnormalDiscoveryCurrent ?
+(typeof data.droneAbnormalDiscoveryCurrent[index] === 'object' ?
+data.droneAbnormalDiscoveryCurrent[index]?.value || 0 :
+data.droneAbnormalDiscoveryCurrent[index] || 0) : 0;
+
+const droneAbnormalChangeRate = calculateChangeRate(droneAbnormalCurrentValue, droneAbnormalLastValue);
+
+// 改用传统字符串连接
+row.append('<td>' + droneAbnormalLastValue + '</td>');
+row.append('<td>' + droneAbnormalCurrentValue + '</td>');
+row.append('<td class="' + getRateClass(droneAbnormalChangeRate) + '">' + formatRate(droneAbnormalChangeRate) + '</td>');
+
+// 6. 无人机巡航立案调查数据
+const droneInvestigationLastValue = data.droneInvestigationCasesLast ? data.droneInvestigationCasesLast[index] || 0 : 0;
+const droneInvestigationCurrentValue = data.droneInvestigationCasesCurrent ?
+(typeof data.droneInvestigationCasesCurrent[index] === 'object' ?
+data.droneInvestigationCasesCurrent[index]?.value || 0 :
+data.droneInvestigationCasesCurrent[index] || 0) : 0;
+
+const droneInvestigationChangeRate = calculateChangeRate(droneInvestigationCurrentValue, droneInvestigationLastValue);
+
+// 改用传统字符串连接
+row.append('<td>' + droneInvestigationLastValue + '</td>');
+row.append('<td>' + droneInvestigationCurrentValue + '</td>');
+row.append('<td class="' + getRateClass(droneInvestigationChangeRate) + '">' + formatRate(droneInvestigationChangeRate) + '</td>');
+
+tableBody.append(row);
+});
+
+// 添加合计行
+addCombinedPatrolTotalRow(tableBody, data);
+}
+
+// 添加合并的巡航数据合计行 - 同样修改为传统字符串连接
+function addCombinedPatrolTotalRow(tableBody, data) {
+// 计算总计 - 保持不变
+function sumArray(arr) {
+if (!arr) return 0;
+return arr.reduce((sum, item) => {
+if (typeof item === 'object' && item) {
+return sum + (item.value || 0);
+}
+return sum + (typeof item === 'number' ? item : 0);
+}, 0);
+}
+
+// 计算各项总数
+// 1. 海巡艇数据
+const patrolBoatAbnormalLastTotal = sumArray(data.patrolBoatAbnormalDiscoveryLast);
+const patrolBoatAbnormalCurrentTotal = sumArray(data.patrolBoatAbnormalDiscoveryCurrent);
+const patrolBoatInvestigationLastTotal = sumArray(data.patrolBoatInvestigationCasesLast);
+const patrolBoatInvestigationCurrentTotal = sumArray(data.patrolBoatInvestigationCasesCurrent);
+
+// 2. 电子巡航数据
+const electronicAbnormalLastTotal = sumArray(data.electronicPatrolAbnormalDiscoveryLast);
+const electronicAbnormalCurrentTotal = sumArray(data.electronicPatrolAbnormalDiscoveryCurrent);
+const electronicInvestigationLastTotal = sumArray(data.electronicPatrolInvestigationCasesLast);
+const electronicInvestigationCurrentTotal = sumArray(data.electronicPatrolInvestigationCasesCurrent);
+
+// 3. 无人机巡航数据
+const droneAbnormalLastTotal = sumArray(data.droneAbnormalDiscoveryLast);
+const droneAbnormalCurrentTotal = sumArray(data.droneAbnormalDiscoveryCurrent);
+const droneInvestigationLastTotal = sumArray(data.droneInvestigationCasesLast);
+const droneInvestigationCurrentTotal = sumArray(data.droneInvestigationCasesCurrent);
+
+// 计算变化率
+const patrolBoatAbnormalChangeRate = calculateChangeRate(patrolBoatAbnormalCurrentTotal, patrolBoatAbnormalLastTotal);
+const patrolBoatInvestigationChangeRate = calculateChangeRate(patrolBoatInvestigationCurrentTotal, patrolBoatInvestigationLastTotal);
+const electronicAbnormalChangeRate = calculateChangeRate(electronicAbnormalCurrentTotal, electronicAbnormalLastTotal);
+const electronicInvestigationChangeRate = calculateChangeRate(electronicInvestigationCurrentTotal, electronicInvestigationLastTotal);
+const droneAbnormalChangeRate = calculateChangeRate(droneAbnormalCurrentTotal, droneAbnormalLastTotal);
+const droneInvestigationChangeRate = calculateChangeRate(droneInvestigationCurrentTotal, droneInvestigationLastTotal);
+
+// 创建合计行
+const totalRow = $('<tr class="table-active"></tr>');
+totalRow.append('<td><strong>合计</strong></td>');
+
+// 1. 添加海巡艇发现异常总计 - 改用传统字符串连接
+totalRow.append('<td><strong>' + patrolBoatAbnormalLastTotal + '</strong></td>');
+totalRow.append('<td><strong>' + patrolBoatAbnormalCurrentTotal + '</strong></td>');
+totalRow.append('<td class="' + getRateClass(patrolBoatAbnormalChangeRate) + '"><strong>' + formatRate(patrolBoatAbnormalChangeRate) + '</strong></td>');
+
+// 2. 添加海巡艇立案调查总计 - 改用传统字符串连接
+totalRow.append('<td><strong>' + patrolBoatInvestigationLastTotal + '</strong></td>');
+totalRow.append('<td><strong>' + patrolBoatInvestigationCurrentTotal + '</strong></td>');
+totalRow.append('<td class="' + getRateClass(patrolBoatInvestigationChangeRate) + '"><strong>' + formatRate(patrolBoatInvestigationChangeRate) + '</strong></td>');
+
+// 3. 添加电子巡航发现异常总计 - 改用传统字符串连接
+totalRow.append('<td><strong>' + electronicAbnormalLastTotal + '</strong></td>');
+totalRow.append('<td><strong>' + electronicAbnormalCurrentTotal + '</strong></td>');
+totalRow.append('<td class="' + getRateClass(electronicAbnormalChangeRate) + '"><strong>' + formatRate(electronicAbnormalChangeRate) + '</strong></td>');
+
+// 4. 添加电子巡航立案调查总计 - 改用传统字符串连接
+totalRow.append('<td><strong>' + electronicInvestigationLastTotal + '</strong></td>');
+totalRow.append('<td><strong>' + electronicInvestigationCurrentTotal + '</strong></td>');
+totalRow.append('<td class="' + getRateClass(electronicInvestigationChangeRate) + '"><strong>' + formatRate(electronicInvestigationChangeRate) + '</strong></td>');
+
+// 5. 添加无人机巡航发现异常总计 - 改用传统字符串连接
+totalRow.append('<td><strong>' + droneAbnormalLastTotal + '</strong></td>');
+totalRow.append('<td><strong>' + droneAbnormalCurrentTotal + '</strong></td>');
+totalRow.append('<td class="' + getRateClass(droneAbnormalChangeRate) + '"><strong>' + formatRate(droneAbnormalChangeRate) + '</strong></td>');
+
+// 6. 添加无人机巡航立案调查总计 - 改用传统字符串连接
+totalRow.append('<td><strong>' + droneInvestigationLastTotal + '</strong></td>');
+totalRow.append('<td><strong>' + droneInvestigationCurrentTotal + '</strong></td>');
+totalRow.append('<td class="' + getRateClass(droneInvestigationChangeRate) + '"><strong>' + formatRate(droneInvestigationChangeRate) + '</strong></td>');
+
+tableBody.append(totalRow);
+}
