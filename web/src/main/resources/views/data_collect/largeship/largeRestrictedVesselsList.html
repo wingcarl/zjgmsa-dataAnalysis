@@ -1,0 +1,295 @@
+<% layout('/layouts/default.html', {title: '大型受限船舶管理', libs: ['dataGrid']}){ %>
+<div class="main-content">
+	<div class="box box-main">
+		<div class="box-header">
+			<div class="box-title">
+				<i class="fa icon-notebook"></i> ${text('大型受限船舶管理')}
+			</div>
+			<div class="box-tools pull-right">
+				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
+				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
+				<% if(hasPermi('largeship:largeRestrictedVessels:edit')){ %>
+						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
+					<a href="${ctx}/largeship/largeRestrictedVessels/form" class="btn btn-default btnTool" title="${text('新增大型受限船舶')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<% } %>
+				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
+			</div>
+		</div>
+		<div class="box-body">
+			<#form:form id="searchForm" model="${largeRestrictedVessels}" action="${ctx}/largeship/largeRestrictedVessels/listData" method="post" class="form-inline hide"
+					data-page-no="${parameter.pageNo}" data-page-size="${parameter.pageSize}" data-order-by="${parameter.orderBy}">
+				<div class="form-group">
+					<label class="control-label">${text('序号')}：</label>
+					<div class="control-inline">
+						<#form:input path="no" maxlength="9" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('日期')}：</label>
+					<div class="control-inline">
+						<#form:input path="operationDate_gte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd" data-done="operationDate_lte.click()"/>
+						&nbsp;-&nbsp;
+						<#form:input path="operationDate_lte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('中文船名')}：</label>
+					<div class="control-inline">
+						<#form:input path="chineseShipName" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('英文船名')}：</label>
+					<div class="control-inline">
+						<#form:input path="englishShipName" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('海上移动识别码')}：</label>
+					<div class="control-inline">
+						<#form:input path="mmsi" maxlength="20" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船籍港')}：</label>
+					<div class="control-inline">
+						<#form:input path="portOfRegistry" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('所有人或经营人')}：</label>
+					<div class="control-inline">
+						<#form:input path="ownerOrOperator" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('代理名称')}：</label>
+					<div class="control-inline">
+						<#form:input path="agentName" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船长')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipLength_gte" maxlength="8" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="shipLength_lte" maxlength="8" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船宽')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipWidth_gte" maxlength="8" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="shipWidth_lte" maxlength="8" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船舶水面以上最大高度')}：</label>
+					<div class="control-inline">
+						<#form:input path="maxHeightAboveWater_gte" maxlength="8" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="maxHeightAboveWater_lte" maxlength="8" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船舶最大淡水吃水')}：</label>
+					<div class="control-inline">
+						<#form:input path="maxFreshwaterDraft_gte" maxlength="8" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="maxFreshwaterDraft_lte" maxlength="8" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('总吨')}：</label>
+					<div class="control-inline">
+						<#form:input path="grossTonnage_gte" maxlength="8" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="grossTonnage_lte" maxlength="8" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('核定载重吨')}：</label>
+					<div class="control-inline">
+						<#form:input path="deadweightTonnage_gte" maxlength="8" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="deadweightTonnage_lte" maxlength="8" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('实际载货情况')}：</label>
+					<div class="control-inline">
+						<#form:input path="actualCargoStatus" maxlength="200" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('货物名称')}：</label>
+					<div class="control-inline">
+						<#form:input path="cargoName" maxlength="200" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('靠泊码头或泊位名称')}：</label>
+					<div class="control-inline">
+						<#form:input path="berthName" maxlength="200" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('靠泊码头或泊位等级')}：</label>
+					<div class="control-inline">
+						<#form:input path="berthTonnageGrade_gte" maxlength="100" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="berthTonnageGrade_lte" maxlength="100" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('进/出')}：</label>
+					<div class="control-inline">
+						<#form:input path="entryExitDirection" maxlength="＇entry＇" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('预计进/出港日期')}：</label>
+					<div class="control-inline">
+						<#form:input path="expectedEntryExitDate_gte" class="form-control width-60"/>
+						&nbsp;-&nbsp;
+						<#form:input path="expectedEntryExitDate_lte" class="form-control width-60"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('安全措施')}：</label>
+					<div class="control-inline">
+						<#form:input path="safetyMeasures" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('备注信息')}：</label>
+					<div class="control-inline">
+						<#form:input path="remarks" maxlength="500" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-search"></i> ${text('查询')}</button>
+					<button type="reset" class="btn btn-default btn-sm isQuick"><i class="glyphicon glyphicon-repeat"></i> ${text('重置')}</button>
+				</div>
+			</#form:form>
+			<table id="dataGrid"></table>
+			<div id="dataGridPage"></div>
+		</div>
+	</div>
+</div>
+<% } %>
+<script>
+//# // 初始化DataGrid对象
+$('#dataGrid').dataGrid({
+	searchForm: $('#searchForm'),
+	columnModel: [
+		{header:'${text("序号")}', name:'no', index:'a.no', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
+			return '<a href="${ctx}/largeship/largeRestrictedVessels/form?id='+row.id+'" class="btnList" data-title="${text("编辑大型受限船舶")}">'+(val||row.id)+'</a>';
+		}},
+		{header:'${text("日期")}', name:'operationDate', index:'a.operation_date', width:150, align:"center"},
+		{header:'${text("中文船名")}', name:'chineseShipName', index:'a.chinese_ship_name', width:150, align:"left"},
+		{header:'${text("英文船名")}', name:'englishShipName', index:'a.english_ship_name', width:150, align:"left"},
+		{header:'${text("海上移动识别码")}', name:'mmsi', index:'a.mmsi', width:150, align:"left"},
+		{header:'${text("船籍港")}', name:'portOfRegistry', index:'a.port_of_registry', width:150, align:"left"},
+		{header:'${text("所有人或经营人")}', name:'ownerOrOperator', index:'a.owner_or_operator', width:150, align:"left"},
+		{header:'${text("代理名称")}', name:'agentName', index:'a.agent_name', width:150, align:"left"},
+		{header:'${text("代理联系电话")}', name:'agentPhone', index:'a.agent_phone', width:150, align:"left"},
+		{header:'${text("船长")}', name:'shipLength', index:'a.ship_length', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("船宽")}', name:'shipWidth', index:'a.ship_width', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("船舶水面以上最大高度")}', name:'maxHeightAboveWater', index:'a.max_height_above_water', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("船舶最大淡水吃水")}', name:'maxFreshwaterDraft', index:'a.max_freshwater_draft', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("总吨")}', name:'grossTonnage', index:'a.gross_tonnage', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("核定载重吨")}', name:'deadweightTonnage', index:'a.deadweight_tonnage', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("实际载货情况")}', name:'actualCargoStatus', index:'a.actual_cargo_status', width:150, align:"left"},
+		{header:'${text("货物名称")}', name:'cargoName', index:'a.cargo_name', width:150, align:"left"},
+		{header:'${text("靠泊码头或泊位名称")}', name:'berthName', index:'a.berth_name', width:150, align:"left"},
+		{header:'${text("靠泊码头或泊位等级")}', name:'berthTonnageGrade', index:'a.berth_tonnage_grade', width:150, align:"left"},
+		{header:'${text("进/出")}', name:'entryExitDirection', index:'a.entry_exit_direction', width:150, align:"left"},
+		{header:'${text("预计进/出港日期")}', name:'expectedEntryExitDate', index:'a.expected_entry_exit_date', width:150, align:"left"},
+		{header:'${text("安全措施")}', name:'safetyMeasures', index:'a.safety_measures', width:150, align:"left"},
+		{header:'${text("更新时间")}', name:'updateDate', index:'a.update_date', width:150, align:"center"},
+		{header:'${text("备注信息")}', name:'remarks', index:'a.remarks', width:150, align:"left"},
+		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
+			var actions = [];
+			//# if(hasPermi('largeship:largeRestrictedVessels:edit')){
+				actions.push('<a href="${ctx}/largeship/largeRestrictedVessels/form?id='+row.id+'" class="btnList" title="${text("编辑大型受限船舶")}"><i class="fa fa-pencil"></i></a>&nbsp;');
+				actions.push('<a href="${ctx}/largeship/largeRestrictedVessels/delete?id='+row.id+'" class="btnList" title="${text("删除大型受限船舶")}" data-confirm="${text("确认要删除该大型受限船舶吗？")}"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			//# }
+			return actions.join('');
+		}}
+	],
+	//# // 加载成功后执行事件
+	ajaxSuccess: function(data){
+		
+	}
+});
+</script><script>
+$('#btnExport').click(function(){
+	js.ajaxSubmitForm($('#searchForm'), {
+		url: '${ctx}/largeship/largeRestrictedVessels/exportData',
+		clearParams: 'pageNo,pageSize',
+		downloadFile: true
+	});
+});
+$('#btnImport').click(function(){
+	js.layer.open({
+		type: 1,
+		area: ['400px'],
+		title: '${text("导入大型受限船舶")}',
+		resize: false,
+		scrollbar: true,
+		content: js.template('importTpl'),
+		btn: ['<i class="fa fa-check"></i> ${text("导入")}',
+			'<i class="fa fa-remove"></i> ${text("关闭")}'],
+		btn1: function(index, layero){
+			var form = {
+				inputForm: layero.find('#inputForm'),
+				file: layero.find('#file').val()
+			};
+		    if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
+		    	js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
+		        return false;
+		    }
+			js.ajaxSubmitForm(form.inputForm, function(data){
+				js.showMessage(data.message);
+				if(data.result == Global.TRUE){
+					js.layer.closeAll();
+				}
+				page();
+			}, "json");
+			return true;
+		}
+	});
+});
+</script>
+<script id="importTpl" type="text/template">//<!--
+<form id="inputForm" action="${ctx}/largeship/largeRestrictedVessels/importData" method="post" enctype="multipart/form-data"
+	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
+	<div class="row">
+		<div class="col-xs-12 col-xs-offset-1">
+			<input type="file" id="file" name="file" class="form-file"/>
+			<div class="mt10 pt5" style="color:red">
+				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
+			</div>
+			<div class="mt10 pt5">
+				<a href="${ctx}/largeship/largeRestrictedVessels/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>
+			</div>
+		</div>
+	</div>
+</form>
+//--></script>
