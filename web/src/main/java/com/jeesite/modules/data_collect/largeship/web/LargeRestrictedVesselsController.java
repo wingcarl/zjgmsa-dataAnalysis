@@ -140,5 +140,14 @@ public class LargeRestrictedVesselsController extends BaseController {
 		largeRestrictedVesselsService.delete(largeRestrictedVessels);
 		return renderResult(Global.TRUE, text("删除大型受限船舶成功！"));
 	}
+
+	/**
+	 * 数据分析页面
+	 */
+	@RequiresPermissions("largeship:largeRestrictedVessels:view")
+	@RequestMapping(value = "chart")
+	public String chart() {
+		return "data_collect/largeship/largeRestrictedVesselsChart";
+	}
 	
 }
