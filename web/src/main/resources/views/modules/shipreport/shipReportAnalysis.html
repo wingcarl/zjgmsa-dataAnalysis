@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>船舶进出港数据分析看板</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #0466c8;
+            --secondary-color: #0353a4;
+            --accent-color: #023e7d;
+            --text-color: #001845;
+            --highlight-color: #33a1fd;
+            --background-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --positive-color: #38b000;
+            --negative-color: #d90429;
+            --grid-line: rgba(4, 102, 200, 0.2);
+            --chart-colors: #64B5F6, #81C784, #FFB74D, #E57373, #BA68C8, #4DD0E1;
+        }
+
+        body {
+            background-color: var(--background-color);
+            background-image: linear-gradient(to bottom, rgba(4, 102, 200, 0.05), rgba(1, 22, 56, 0.1));
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+
+        .main-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: 20px 0 30px;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        .data-card {
+            border: 1px solid rgba(4, 102, 200, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-card .label {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .data-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .data-card .change-rate {
+            font-size: 1.1em;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .change-rate.positive {
+            color: var(--positive-color);
+        }
+
+        .change-rate.negative {
+            color: var(--negative-color);
+        }
+
+        .change-rate.neutral {
+            color: #607d8b;
+        }
+
+        .date-range-picker {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .date-range-picker input {
+            margin: 0 15px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-line);
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--secondary-color);
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-section {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+
+        .filter-select {
+            border: 1px solid var(--grid-line);
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin-right: 15px;
+        }
+
+        .charts-section {
+            background-color: rgba(248, 249, 250, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .charts-title {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .icon-box {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .date-range-picker {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .date-range-picker input {
+                margin: 10px 0;
+                width: 100%;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="main-header">
+    <h2 class="main-title"><i class="fas fa-ship icon-box"></i>船舶进出港数据分析看板</h2>
+</div>
+
+<div class="container-fluid">
+    <!-- 日期选择器 -->
+    <div class="date-range-picker">
+        <label for="startDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            <i class="far fa-calendar-alt icon-box"></i>开始日期：
+        </label>
+        <input type="date" id="startDate" class="form-control" style="width: auto;">
+
+        <label for="endDate" style="margin: 0 10px 0 20px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            <i class="far fa-calendar-alt icon-box"></i>结束日期：
+        </label>
+        <input type="date" id="endDate" class="form-control" style="width: auto;">
+
+        <button type="button" id="fetchDataButton" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> 查询数据
+        </button>
+    </div>
+
+    <!-- 数据卡片区域 -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-ship icon-box"></i>进出船舶总数</div>
+                <div class="value" id="total-ships-value">0</div>
+                <div class="change-rate" id="total-ships-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-sign-in-alt icon-box"></i>进港船舶数量</div>
+                <div class="value" id="arrival-ships-value">0</div>
+                <div class="change-rate" id="arrival-ships-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-sign-out-alt icon-box"></i>出港船舶数量</div>
+                <div class="value" id="departure-ships-value">0</div>
+                <div class="change-rate" id="departure-ships-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-water icon-box"></i>内河船舶数量</div>
+                <div class="value" id="river-ships-value">0</div>
+                <div class="change-rate" id="river-ships-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-dharmachakra icon-box"></i>海船数量</div>
+                <div class="value" id="sea-ships-value">0</div>
+                <div class="change-rate" id="sea-ships-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-exclamation-triangle icon-box"></i>危化品船舶数量</div>
+                <div class="value" id="hazardous-ships-value">0</div>
+                <div class="change-rate" id="hazardous-ships-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-ruler-horizontal icon-box"></i>80米以下船舶</div>
+                <div class="value" id="small-ships-value">0</div>
+                <div class="change-rate" id="small-ships-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-ruler-combined icon-box"></i>80-150米船舶</div>
+                <div class="value" id="medium-ships-value">0</div>
+                <div class="change-rate" id="medium-ships-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-ruler-vertical icon-box"></i>150米以上船舶</div>
+                <div class="value" id="large-ships-value">0</div>
+                <div class="change-rate" id="large-ships-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图表筛选条件 -->
+    <div class="filter-section">
+        <div class="row">
+            <div class="col-md-3">
+                <span class="filter-label"><i class="fas fa-filter icon-box"></i>进出港：</span>
+                <select id="port-direction-filter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="in">进港</option>
+                    <option value="out">出港</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <span class="filter-label"><i class="fas fa-filter icon-box"></i>船舶类型：</span>
+                <select id="ship-type-filter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="river">内河船</option>
+                    <option value="sea">海船</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <span class="filter-label"><i class="fas fa-filter icon-box"></i>危险品：</span>
+                <select id="hazardous-filter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="yes">是</option>
+                    <option value="no">否</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <span class="filter-label"><i class="fas fa-filter icon-box"></i>船舶长度：</span>
+                <select id="length-filter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="small">80米以下</option>
+                    <option value="medium">80-150米</option>
+                    <option value="large">150米以上</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 各海事机构船舶数量图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-building icon-box"></i>各海事机构船舶数量</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="agency-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 各泊位船舶数量图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-anchor icon-box"></i>各泊位船舶数量</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="berth-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 时间趋势图 -->
+    <div class="charts-section">
+        <div class="row">
+            <div class="col-md-9">
+                <h5 class="charts-title"><i class="fas fa-chart-line icon-box"></i>船舶进出港时间趋势</h5>
+            </div>
+            <div class="col-md-3">
+                <div style="text-align: right; margin-top: 10px;">
+                    <select id="time-interval" class="filter-select">
+                        <option value="day">按日</option>
+                        <option value="week">按周</option>
+                        <option value="month">按月</option>
+                        <option value="quarter">按季</option>
+                        <option value="year">按年</option>
+                    </select>
+                    <select id="agency-filter" class="filter-select">
+                        <option value="all">全部机构</option>
+                        <!-- 动态加载海事机构 -->
+                    </select>
+                    <select id="berth-filter" class="filter-select">
+                        <option value="all">全部泊位</option>
+                        <!-- 动态加载泊位 -->
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="trend-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery 和 ECharts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<!-- Scripts -->
+<script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
+<script src="${ctxStatic}/nickjs/sweetalert2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // 初始化图表实例
+        var agencyChart = echarts.init(document.getElementById('agency-chart'));
+        var berthChart = echarts.init(document.getElementById('berth-chart'));
+        var trendChart = echarts.init(document.getElementById('trend-chart'));
+
+        // 设置默认日期为当前日期和30天前
+        var today = new Date();
+        var thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        $('#startDate').val(formatDate(thirtyDaysAgo));
+        $('#endDate').val(formatDate(today));
+
+        // 初始化图表配置
+        initializeCharts();
+
+        // 获取并展示数据
+        fetchAndDisplayData();
+
+        // 绑定查询按钮点击事件
+        $('#fetchDataButton').on('click', function() {
+            fetchAndDisplayData();
+        });
+
+        // 绑定筛选器变化事件
+        $('#port-direction-filter, #ship-type-filter, #hazardous-filter, #length-filter, #time-interval, #agency-filter, #berth-filter').on('change', function() {
+            applyFilters();
+        });
+
+        // 窗口大小变化时调整图表大小
+        $(window).on('resize', function() {
+            agencyChart.resize();
+            berthChart.resize();
+            trendChart.resize();
+        });
+
+        // 初始化图表配置
+        function initializeCharts() {
+            // 初始化海事机构图表
+            agencyChart.setOption({
+                title: {
+                    text: '加载中...',
+                    x: 'center',
+                    y: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16,
+                        fontWeight: 'normal'
+                    }
+                }
+            });
+
+            // 初始化泊位图表
+            berthChart.setOption({
+                title: {
+                    text: '加载中...',
+                    x: 'center',
+                    y: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16,
+                        fontWeight: 'normal'
+                    }
+                }
+            });
+
+            // 初始化趋势图表
+            trendChart.setOption({
+                title: {
+                    text: '加载中...',
+                    x: 'center',
+                    y: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16,
+                        fontWeight: 'normal'
+                    }
+                }
+            });
+        }
+
+        // 格式化日期函数
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = ('0' + (date.getMonth() + 1)).slice(-2);
+            var day = ('0' + date.getDate()).slice(-2);
+            return year + '-' + month + '-' + day;
+        }
+
+        // 获取并显示数据
+        function fetchAndDisplayData() {
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+
+            if (!startDate || !endDate) {
+                Swal.fire({
+                    title: '错误',
+                    text: '请选择开始和结束日期',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+                return;
+            }
+
+            // 显示加载中
+            $('#fetchDataButton').html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            $('#fetchDataButton').prop('disabled', true);
+
+            // 显示图表加载状态
+            agencyChart.showLoading();
+            berthChart.showLoading();
+            trendChart.showLoading();
+
+            // 发送AJAX请求获取数据
+            $.ajax({
+                url: 'statisticsData',
+                type: 'GET',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // 更新数据卡片
+                        updateDataCards(response.data);
+                        
+                        // 存储原始数据以便筛选
+                        window.rawData = response.data;
+
+                        // 加载海事机构和泊位下拉选项
+                        loadAgencyAndBerthOptions(response.data);
+
+                        // 应用筛选并刷新图表
+                        applyFilters();
+
+                        Swal.fire({
+                            title: '成功',
+                            text: '数据加载完成',
+                            icon: 'success',
+                            confirmButtonText: '确定'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: '错误',
+                            text: response.message || '加载数据失败',
+                            icon: 'error',
+                            confirmButtonText: '确定'
+                        });
+                    }
+
+                    // 恢复按钮状态
+                    $('#fetchDataButton').html('<i class="fas fa-sync-alt"></i> 查询数据');
+                    $('#fetchDataButton').prop('disabled', false);
+
+                    // 隐藏图表加载状态
+                    agencyChart.hideLoading();
+                    berthChart.hideLoading();
+                    trendChart.hideLoading();
+                },
+                error: function(error) {
+                    console.error('加载数据失败:', error);
+
+                    Swal.fire({
+                        title: '错误',
+                        text: '服务器错误，请稍后再试',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+
+                    // 恢复按钮状态
+                    $('#fetchDataButton').html('<i class="fas fa-sync-alt"></i> 查询数据');
+                    $('#fetchDataButton').prop('disabled', false);
+
+                    // 隐藏图表加载状态
+                    agencyChart.hideLoading();
+                    berthChart.hideLoading();
+                    trendChart.hideLoading();
+                }
+            });
+        }
+
+        // 更新数据卡片
+        function updateDataCards(data) {
+            updateCard('total-ships', data.totalShips.current, data.totalShips.previous);
+            updateCard('arrival-ships', data.arrivalShips.current, data.arrivalShips.previous);
+            updateCard('departure-ships', data.departureShips.current, data.departureShips.previous);
+            updateCard('river-ships', data.riverShips.current, data.riverShips.previous);
+            updateCard('sea-ships', data.seaShips.current, data.seaShips.previous);
+            updateCard('hazardous-ships', data.hazardousShips.current, data.hazardousShips.previous);
+            updateCard('small-ships', data.smallShips.current, data.smallShips.previous);
+            updateCard('medium-ships', data.mediumShips.current, data.mediumShips.previous);
+            updateCard('large-ships', data.largeShips.current, data.largeShips.previous);
+        }
+
+        // 更新单个数据卡片
+        function updateCard(id, current, previous) {
+            $('#' + id + '-value').text(current);
+
+            var changeRate = 0;
+            if (previous > 0) {
+                changeRate = ((current - previous) / previous) * 100;
+            } else if (current > 0) {
+                changeRate = 100;
+            }
+
+            var rateText = (changeRate > 0 ? '+' : '') + changeRate.toFixed(2) + '%';
+            var rateElement = $('#' + id + '-rate');
+
+            rateElement.text(rateText);
+
+            if (changeRate > 0) {
+                rateElement.removeClass('negative neutral').addClass('positive');
+            } else if (changeRate < 0) {
+                rateElement.removeClass('positive neutral').addClass('negative');
+            } else {
+                rateElement.removeClass('positive negative').addClass('neutral');
+            }
+        }
+
+        // 加载海事机构和泊位下拉选项
+        function loadAgencyAndBerthOptions(data) {
+            // 清空现有选项
+            $('#agency-filter').find('option:not(:first)').remove();
+            $('#berth-filter').find('option:not(:first)').remove();
+
+            // 添加海事机构选项
+            if (data.agencies && data.agencies.length > 0) {
+                data.agencies.forEach(function(agency) {
+                    $('#agency-filter').append(new Option(agency, agency));
+                });
+            }
+
+            // 添加泊位选项
+            if (data.berths && data.berths.length > 0) {
+                data.berths.forEach(function(berth) {
+                    $('#berth-filter').append(new Option(berth, berth));
+                });
+            }
+        }
+
+        // 应用筛选并刷新图表
+        function applyFilters() {
+            if (!window.rawData) return;
+
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            var portDirection = $('#port-direction-filter').val();
+            var shipType = $('#ship-type-filter').val();
+            var hazardous = $('#hazardous-filter').val();
+            var lengthRange = $('#length-filter').val();
+            var agency = $('#agency-filter').val();
+            var berth = $('#berth-filter').val();
+            var interval = $('#time-interval').val();
+
+            // 显示加载状态
+            agencyChart.showLoading();
+            berthChart.showLoading();
+            trendChart.showLoading();
+
+            // 发送请求获取筛选后的数据
+            $.ajax({
+                url: 'filteredData',
+                type: 'GET',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate,
+                    portDirection: portDirection,
+                    shipType: shipType,
+                    hazardous: hazardous,
+                    lengthRange: lengthRange,
+                    agency: agency,
+                    berth: berth
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success' && response.data) {
+                        // 获取趋势数据
+                        $.ajax({
+                            url: 'trendData',
+                            type: 'GET',
+                            data: {
+                                startDate: startDate,
+                                endDate: endDate,
+                                interval: interval,
+                                portDirection: portDirection,
+                                shipType: shipType,
+                                hazardous: hazardous,
+                                lengthRange: lengthRange,
+                                agency: agency,
+                                berth: berth
+                            },
+                            dataType: 'json',
+                            success: function(trendResponse) {
+                                if (trendResponse.status === 'success') {
+                                    // 合并数据 - 使用筛选后的数据而不是重新请求原始统计数据
+                                    var completeData = {
+                                        agencyData: response.data.agencyData || [],
+                                        berthData: response.data.berthData || [],
+                                        trendData: trendResponse.data || []
+                                    };
+
+                                    // 渲染图表
+                                    renderCharts(completeData);
+                                } else {
+                                    console.error('获取趋势数据失败:', trendResponse.message);
+                                    showErrorChart();
+                                }
+                            },
+                            error: function(error) {
+                                console.error('获取趋势数据出错:', error);
+                                showErrorChart();
+                            }
+                        });
+                    } else {
+                        console.error('获取筛选数据失败:', response.message);
+                        showErrorChart();
+                    }
+                },
+                error: function(error) {
+                    console.error('获取筛选数据出错:', error);
+                    showErrorChart();
+                }
+            });
+        }
+
+        // 显示错误图表
+        function showErrorChart() {
+            var errorOption = {
+                title: {
+                    text: '数据加载失败',
+                    x: 'center',
+                    y: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16,
+                        fontWeight: 'normal'
+                    }
+                }
+            };
+
+            agencyChart.setOption(errorOption);
+            berthChart.setOption(errorOption);
+            trendChart.setOption(errorOption);
+
+            // 隐藏加载状态
+            agencyChart.hideLoading();
+            berthChart.hideLoading();
+            trendChart.hideLoading();
+        }
+
+        // 渲染所有图表
+        function renderCharts(data) {
+            // 隐藏加载状态
+            agencyChart.hideLoading();
+            berthChart.hideLoading();
+            trendChart.hideLoading();
+
+            // 渲染海事机构图表
+            if (data.agencyData && data.agencyData.length > 0) {
+                renderAgencyChart(data.agencyData);
+            } else {
+                agencyChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+            }
+
+            // 渲染泊位图表
+            if (data.berthData && data.berthData.length > 0) {
+                renderBerthChart(data.berthData);
+            } else {
+                berthChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+            }
+
+            // 渲染趋势图表
+            if (data.trendData && data.trendData.length > 0) {
+                renderTrendChart(data.trendData);
+            } else {
+                trendChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+            }
+        }
+
+        // 渲染海事机构图表
+        function renderAgencyChart(agencyData) {
+            if (!agencyData || agencyData.length === 0) {
+                agencyChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+                return;
+            }
+
+            // 按数量从高到低排序
+            agencyData.sort(function(a, b) {
+                return b.count - a.count;
+            });
+
+            // 显示所有机构数据，不限制数量
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: true,
+                        yAxisIndex: [0],
+                        left: '93%',
+                        start: 0,
+                        end: Math.min(100, 15 * 100 / agencyData.length) // 默认显示15个或更少
+                    },
+                    {
+                        type: 'inside',
+                        yAxisIndex: [0],
+                        start: 0,
+                        end: Math.min(100, 15 * 100 / agencyData.length)
+                    }
+                ],
+                xAxis: {
+                    type: 'value',
+                    name: '船舶数量',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: agencyData.map(function(item) {
+                        return item.name;
+                    }),
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 0
+                    },
+                    inverse: true // 反转Y轴，使得数量多的在上面
+                },
+                series: [
+                    {
+                        name: '船舶数量',
+                        type: 'bar',
+                        data: agencyData.map(function(item) {
+                            return item.count;
+                        }),
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                {offset: 0, color: '#0466c8'},
+                                {offset: 1, color: '#33a1fd'}
+                            ])
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}'
+                        }
+                    }
+                ]
+            };
+
+            agencyChart.setOption(option, true);
+        }
+
+        // 渲染泊位图表
+        function renderBerthChart(berthData) {
+            if (!berthData || berthData.length === 0) {
+                berthChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+                return;
+            }
+
+            // 按数量从高到低排序
+            berthData.sort(function(a, b) {
+                return b.count - a.count;
+            });
+
+            // 显示所有泊位数据，不限制数量
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: true,
+                        yAxisIndex: [0],
+                        left: '93%',
+                        start: 0,
+                        end: Math.min(100, 20 * 100 / berthData.length) // 默认显示20个或更少
+                    },
+                    {
+                        type: 'inside',
+                        yAxisIndex: [0],
+                        start: 0,
+                        end: Math.min(100, 20 * 100 / berthData.length)
+                    }
+                ],
+                xAxis: {
+                    type: 'value',
+                    name: '船舶数量',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: berthData.map(function(item) {
+                        return item.name;
+                    }),
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 0
+                    },
+                    inverse: true // 反转Y轴，使得数量多的在上面
+                },
+                series: [
+                    {
+                        name: '船舶数量',
+                        type: 'bar',
+                        data: berthData.map(function(item) {
+                            return item.count;
+                        }),
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                {offset: 0, color: '#81C784'},
+                                {offset: 1, color: '#38b000'}
+                            ])
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}'
+                        }
+                    }
+                ]
+            };
+
+            berthChart.setOption(option, true);
+        }
+
+        // 渲染趋势图表
+        function renderTrendChart(trendData) {
+            if (!trendData || trendData.length === 0 || trendData.every(function(series) { return series.data.length === 0; })) {
+                trendChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+                return;
+            }
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross',
+                        label: {
+                            backgroundColor: '#6a7985'
+                        }
+                    }
+                },
+                legend: {
+                    data: trendData.map(function(series) {
+                        return series.name;
+                    })
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: trendData[0].data.map(function(item) {
+                            return item.date;
+                        })
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '船舶数量'
+                    }
+                ],
+                series: trendData.map(function(series, index) {
+                    var colors = ['#0466c8', '#38b000', '#d90429', '#ffb74d', '#ba68c8', '#4dd0e1'];
+                    return {
+                        name: series.name,
+                        type: 'line',
+                        stack: '总量',
+                        areaStyle: {
+                            opacity: 0.3
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: series.data.map(function(item) {
+                            return item.value;
+                        }),
+                        itemStyle: {
+                            color: colors[index % colors.length]
+                        }
+                    };
+                })
+            };
+
+            trendChart.setOption(option, true);
+        }
+    });
+</script>
+</body>
+</html>
