@@ -410,4 +410,35 @@ public class ShipReportController extends BaseController {
 		
 		return result;
 	}
+
+	/**
+	 * 获取航线分布数据
+	 */
+	@RequiresPermissions("shipreport:shipReport:view")
+	@RequestMapping(value = "routeDistribution")
+	@ResponseBody
+	public Map<String, Object> getRouteDistribution(String startDate, String endDate,
+												 String portDirection, String shipType, String hazardous, String lengthRange,
+												 String agency, String berth) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date start = DateUtils.parseDate(startDate);
+			Date end = DateUtils.parseDate(endDate);
+			
+			// 获取航线分布数据
+			List<Map<String, Object>> routeData = shipReportService.getRouteDistribution(
+					start, end, portDirection, shipType, hazardous, lengthRange, agency, berth);
+			
+			result.put("status", "success");
+			result.put("data", routeData);
+		} catch (Exception e) {
+			logger.error("获取航线分布数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取航线分布数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
 }

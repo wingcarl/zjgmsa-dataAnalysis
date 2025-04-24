@@ -432,6 +432,16 @@
             </div>
         </div>
     </div>
+
+    <!-- 航线分布 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="charts-section">
+                <h5 class="charts-title"><i class="fas fa-route icon-box"></i>航线分布</h5>
+                <div id="route-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- jQuery 和 ECharts -->
@@ -451,6 +461,7 @@
         var cargoTypeChart = echarts.init(document.getElementById('cargo-type-chart'));
         var shipLengthChart = echarts.init(document.getElementById('ship-length-chart'));
         var deadweightChart = echarts.init(document.getElementById('deadweight-chart'));
+        var routeChart = echarts.init(document.getElementById('route-chart'));
 
         // 设置默认日期为当前日期和30天前
         var today = new Date();
@@ -485,6 +496,7 @@
             cargoTypeChart.resize();
             shipLengthChart.resize();
             deadweightChart.resize();
+            routeChart.resize();
         });
 
         // 初始化图表配置
@@ -586,6 +598,20 @@
                     }
                 }
             });
+
+            // 初始化航线分布图表
+            routeChart.setOption({
+                title: {
+                    text: '加载中...',
+                    x: 'center',
+                    y: 'center',
+                    textStyle: {
+                        color: '#999',
+                        fontSize: 16,
+                        fontWeight: 'normal'
+                    }
+                }
+            });
         }
 
         // 格式化日期函数
@@ -623,6 +649,7 @@
             cargoTypeChart.showLoading();
             shipLengthChart.showLoading();
             deadweightChart.showLoading();
+            routeChart.showLoading();
 
             // 发送AJAX请求获取数据
             $.ajax({
@@ -674,6 +701,7 @@
                     cargoTypeChart.hideLoading();
                     shipLengthChart.hideLoading();
                     deadweightChart.hideLoading();
+                    routeChart.hideLoading();
                 },
                 error: function(error) {
                     console.error('加载数据失败:', error);
@@ -697,6 +725,7 @@
                     cargoTypeChart.hideLoading();
                     shipLengthChart.hideLoading();
                     deadweightChart.hideLoading();
+                    routeChart.hideLoading();
                 }
             });
         }
@@ -782,6 +811,7 @@
             cargoTypeChart.showLoading();
             shipLengthChart.showLoading();
             deadweightChart.showLoading();
+            routeChart.showLoading();
 
             // 发送请求获取筛选后的数据
             $.ajax({
@@ -886,29 +916,59 @@
                                                                             dataType: 'json',
                                                                             success: function(deadweightResponse) {
                                                                                 if (deadweightResponse.status === 'success') {
-                                                                                    // 合并数据
-                                                                                    var completeData = {
-                                                                                        agencyData: response.data.agencyData || [],
-                                                                                        berthData: response.data.berthData || [],
-                                                                                        trendData: trendResponse.data || [],
-                                                                                        shipTypeData: shipTypeResponse.data || [],
-                                                                                        cargoTypeData: cargoTypeResponse.data || [],
-                                                                                        shipLengthData: lengthResponse.data || [],
-                                                                                        deadweightData: deadweightResponse.data || []
-                                                                                    };
-                                                                                    
-                                                                                    // 渲染所有图表
-                                                                                    renderCharts(completeData);
+                                                                                    // 获取航线分布数据
+                                                                                    $.ajax({
+                                                                                        url: 'routeDistribution',
+                                                                                        type: 'GET',
+                                                                                        data: {
+                                                                                            startDate: startDate,
+                                                                                            endDate: endDate,
+                                                                                            portDirection: portDirection,
+                                                                                            shipType: shipType,
+                                                                                            hazardous: hazardous,
+                                                                                            lengthRange: lengthRange,
+                                                                                            agency: agency,
+                                                                                            berth: berth
+                                                                                        },
+                                                                                        dataType: 'json',
+                                                                                        success: function(routeResponse) {
+                                                                                            if (routeResponse.status === 'success') {
+                                                                                                // 合并数据
+                                                                                                var completeData = {
+                                                                                                    agencyData: response.data.agencyData || [],
+                                                                                                    berthData: response.data.berthData || [],
+                                                                                                    trendData: trendResponse.data || [],
+                                                                                                    shipTypeData: shipTypeResponse.data || [],
+                                                                                                    cargoTypeData: cargoTypeResponse.data || [],
+                                                                                                    shipLengthData: lengthResponse.data || [],
+                                                                                                    deadweightData: deadweightResponse.data || [],
+                                                                                                    routeData: routeResponse.data || []
+                                                                                                };
+                                                                                                
+                                                                                                // 渲染所有图表
+                                                                                                renderCharts(completeData);
+                                                                                            } else {
+                                                                                                console.error('获取航线分布数据失败:', routeResponse.message);
+                                                                                                routeChart.hideLoading();
+                                                                                            }
+                                                                                        },
+                                                                                        error: function(error) {
+                                                                                            console.error('获取航线分布数据出错:', error);
+                                                                                            routeChart.hideLoading();
+                                                                                        }
+                                                                                    });
                                                                                 } else {
                                                                                     console.error('获取船舶载重吨分布数据失败:', deadweightResponse.message);
                                                                                     shipLengthChart.hideLoading();
                                                                                     deadweightChart.hideLoading();
+                                                                                    routeChart.hideLoading();
                                                                                 }
                                                                             },
                                                                             error: function(error) {
                                                                                 console.error('获取船舶载重吨分布数据出错:', error);
                                                                                 shipLengthChart.hideLoading();
                                                                                 deadweightChart.hideLoading();
+                                                                                routeChart.hideLoading();
                                                                             }
                                                                         });
                                                                     } else {
@@ -995,6 +1055,7 @@
             cargoTypeChart.setOption(errorOption);
             shipLengthChart.setOption(errorOption);
             deadweightChart.setOption(errorOption);
+            routeChart.setOption(errorOption);
 
             // 隐藏加载状态
             agencyChart.hideLoading();
@@ -1004,6 +1065,7 @@
             cargoTypeChart.hideLoading();
             shipLengthChart.hideLoading();
             deadweightChart.hideLoading();
+            routeChart.hideLoading();
         }
 
         // 渲染所有图表
@@ -1016,6 +1078,7 @@
             cargoTypeChart.hideLoading();
             shipLengthChart.hideLoading();
             deadweightChart.hideLoading();
+            routeChart.hideLoading();
 
             // 渲染海事机构图表
             if (data.agencyData && data.agencyData.length > 0) {
@@ -1130,6 +1193,24 @@
                 renderDeadweightChart(data.deadweightData);
             } else {
                 deadweightChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+            }
+
+            // 渲染航线分布图
+            if (data.routeData && data.routeData.length > 0) {
+                renderRouteChart(data.routeData);
+            } else {
+                routeChart.setOption({
                     title: {
                         text: '暂无数据',
                         x: 'center',
@@ -1678,6 +1759,113 @@
             };
             
             deadweightChart.setOption(option, true);
+        }
+
+        // 渲染航线分布图
+        function renderRouteChart(routeData) {
+            if (!routeData || routeData.length === 0) {
+                routeChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        x: 'center',
+                        y: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 16,
+                            fontWeight: 'normal'
+                        }
+                    }
+                });
+                return;
+            }
+            
+            // 按数量从高到低排序（确保最多只显示50条数据）
+            var topRoutes = routeData.slice(0, 50);
+            
+            var option = {
+                title: {
+                    text: '',
+                    show: false
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var param = params[0];
+                        return param.name + ': ' + param.value + ' 艘次';
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: true,
+                        yAxisIndex: [0],
+                        left: '93%',
+                        start: 0,
+                        end: topRoutes.length > 20 ? 20 * 100 / topRoutes.length : 100 // 默认显示前20条
+                    },
+                    {
+                        type: 'inside',
+                        yAxisIndex: [0],
+                        start: 0,
+                        end: topRoutes.length > 20 ? 20 * 100 / topRoutes.length : 100
+                    }
+                ],
+                xAxis: {
+                    type: 'value',
+                    name: '船舶艘次',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: topRoutes.map(function(item) {
+                        return item.name || '未知';
+                    }),
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 0,
+                        formatter: function(value) {
+                            if (value && value.length > 15) {
+                                return value.substring(0, 15) + '...';
+                            }
+                            return value || '未知';
+                        }
+                    },
+                    inverse: true // 反转Y轴，使得数量多的在上面
+                },
+                series: [
+                    {
+                        name: '航线分布',
+                        type: 'bar',
+                        data: topRoutes.map(function(item) {
+                            return item.value;
+                        }),
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                {offset: 0, color: '#3a86ff'},
+                                {offset: 1, color: '#8338ec'}
+                            ])
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}'
+                        }
+                    }
+                ]
+            };
+            
+            routeChart.setOption(option, true);
         }
     });
 </script>

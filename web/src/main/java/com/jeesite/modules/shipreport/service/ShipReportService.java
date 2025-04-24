@@ -927,4 +927,68 @@ public List<Map<String, Object>> getDeadweightDistribution(Date startDate, Date 
     // 执行查询并返回结果
     return jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
 }
+
+/**
+ * 获取航线分布数据
+ */
+public List<Map<String, Object>> getRouteDistribution(Date startDate, Date endDate, 
+                                              String portDirection, String shipType, 
+                                              String hazardous, String lengthRange, 
+                                              String agency, String berth) {
+    // 构建SQL查询 - 按航线统计
+    StringBuilder sqlBuilder = new StringBuilder();
+    sqlBuilder.append("SELECT ");
+    sqlBuilder.append("up_down_port as name, ");
+    sqlBuilder.append("COUNT(*) as value ");
+    sqlBuilder.append("FROM ship_report WHERE estimated_arrival_departure_time >= ? AND estimated_arrival_departure_time <= ? ");
+    
+    // 构建参数列表
+    List<Object> params = new ArrayList<>();
+    params.add(startDate);
+    params.add(endDate);
+    
+    // 添加筛选条件
+    if ("in".equals(portDirection)) {
+        sqlBuilder.append(" AND in_out_port LIKE '%进%'");
+    } else if ("out".equals(portDirection)) {
+        sqlBuilder.append(" AND in_out_port LIKE '%出%'");
+    }
+    
+    if ("river".equals(shipType)) {
+        sqlBuilder.append(" AND sea_river_ship LIKE '%内河船%'");
+    } else if ("sea".equals(shipType)) {
+        sqlBuilder.append(" AND sea_river_ship LIKE '%海船%'");
+    }
+    
+    if ("yes".equals(hazardous)) {
+        sqlBuilder.append(" AND is_hazardous_cargo = '是'");
+    } else if ("no".equals(hazardous)) {
+        sqlBuilder.append(" AND is_hazardous_cargo != '是'");
+    }
+    
+    if ("small".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length < 80");
+    } else if ("medium".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length >= 80 AND ship_length < 150");
+    } else if ("large".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length >= 150");
+    }
+    
+    if (agency != null && !"all".equals(agency)) {
+        sqlBuilder.append(" AND reporting_agency = ?");
+        params.add(agency);
+    }
+    
+    if (berth != null && !"all".equals(berth)) {
+        sqlBuilder.append(" AND berth = ?");
+        params.add(berth);
+    }
+    
+    sqlBuilder.append(" GROUP BY up_down_port ");
+    sqlBuilder.append(" ORDER BY value DESC ");
+    sqlBuilder.append(" LIMIT 50");
+    
+    // 执行查询并返回结果
+    return jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
+}
 }
