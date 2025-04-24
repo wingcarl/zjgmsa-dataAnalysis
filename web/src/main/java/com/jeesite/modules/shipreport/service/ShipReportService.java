@@ -763,4 +763,168 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		// 执行查询并返回结果
 		return jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
 	}
+
+	/**
+ * 获取船舶长度分布数据
+ */
+public List<Map<String, Object>> getShipLengthDistribution(Date startDate, Date endDate, 
+                                                     String portDirection, String shipType, 
+                                                     String hazardous, String lengthRange, 
+                                                     String agency, String berth) {
+    // 构建SQL查询 - 按区间统计
+    StringBuilder sqlBuilder = new StringBuilder();
+    sqlBuilder.append("SELECT ");
+    sqlBuilder.append("CASE ");
+    sqlBuilder.append("  WHEN ship_length < 50 THEN '小于50米' ");
+    sqlBuilder.append("  WHEN ship_length >= 50 AND ship_length < 80 THEN '50-80米' ");
+    sqlBuilder.append("  WHEN ship_length >= 80 AND ship_length < 100 THEN '80-100米' ");
+    sqlBuilder.append("  WHEN ship_length >= 100 AND ship_length < 150 THEN '100-150米' ");
+    sqlBuilder.append("  WHEN ship_length >= 150 AND ship_length < 200 THEN '150-200米' ");
+    sqlBuilder.append("  WHEN ship_length >= 200 THEN '200米以上' ");
+    sqlBuilder.append("  ELSE '未知' ");
+    sqlBuilder.append("END as name, ");
+    sqlBuilder.append("COUNT(*) as value, ");
+    sqlBuilder.append("MIN(ship_length) as min_length, ");
+    sqlBuilder.append("MAX(ship_length) as max_length, ");
+    sqlBuilder.append("AVG(ship_length) as avg_length ");
+    sqlBuilder.append("FROM ship_report WHERE estimated_arrival_departure_time >= ? AND estimated_arrival_departure_time <= ? ");
+    
+    // 构建参数列表
+    List<Object> params = new ArrayList<>();
+    params.add(startDate);
+    params.add(endDate);
+    
+    // 添加筛选条件
+    if ("in".equals(portDirection)) {
+        sqlBuilder.append(" AND in_out_port LIKE '%进%'");
+    } else if ("out".equals(portDirection)) {
+        sqlBuilder.append(" AND in_out_port LIKE '%出%'");
+    }
+    
+    if ("river".equals(shipType)) {
+        sqlBuilder.append(" AND sea_river_ship LIKE '%内河船%'");
+    } else if ("sea".equals(shipType)) {
+        sqlBuilder.append(" AND sea_river_ship LIKE '%海船%'");
+    }
+    
+    if ("yes".equals(hazardous)) {
+        sqlBuilder.append(" AND is_hazardous_cargo = '是'");
+    } else if ("no".equals(hazardous)) {
+        sqlBuilder.append(" AND is_hazardous_cargo != '是'");
+    }
+    
+    if ("small".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length < 80");
+    } else if ("medium".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length >= 80 AND ship_length < 150");
+    } else if ("large".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length >= 150");
+    }
+    
+    if (agency != null && !"all".equals(agency)) {
+        sqlBuilder.append(" AND reporting_agency = ?");
+        params.add(agency);
+    }
+    
+    if (berth != null && !"all".equals(berth)) {
+        sqlBuilder.append(" AND berth = ?");
+        params.add(berth);
+    }
+    
+    sqlBuilder.append(" GROUP BY CASE ");
+    sqlBuilder.append("  WHEN ship_length < 50 THEN '小于50米' ");
+    sqlBuilder.append("  WHEN ship_length >= 50 AND ship_length < 80 THEN '50-80米' ");
+    sqlBuilder.append("  WHEN ship_length >= 80 AND ship_length < 100 THEN '80-100米' ");
+    sqlBuilder.append("  WHEN ship_length >= 100 AND ship_length < 150 THEN '100-150米' ");
+    sqlBuilder.append("  WHEN ship_length >= 150 AND ship_length < 200 THEN '150-200米' ");
+    sqlBuilder.append("  WHEN ship_length >= 200 THEN '200米以上' ");
+    sqlBuilder.append("  ELSE '未知' ");
+    sqlBuilder.append("END ");
+    sqlBuilder.append("ORDER BY min_length");
+    
+    // 执行查询并返回结果
+    return jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
+}
+
+/**
+ * 获取船舶载重吨分布数据
+ */
+public List<Map<String, Object>> getDeadweightDistribution(Date startDate, Date endDate, 
+                                                     String portDirection, String shipType, 
+                                                     String hazardous, String lengthRange, 
+                                                     String agency, String berth) {
+    // 构建SQL查询 - 按区间统计
+    StringBuilder sqlBuilder = new StringBuilder();
+    sqlBuilder.append("SELECT ");
+    sqlBuilder.append("CASE ");
+    sqlBuilder.append("  WHEN deadweight_tonnage < 1000 THEN '小于1000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 1000 AND deadweight_tonnage < 5000 THEN '1000-5000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 5000 AND deadweight_tonnage < 10000 THEN '5000-10000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 10000 AND deadweight_tonnage < 30000 THEN '10000-30000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 30000 AND deadweight_tonnage < 50000 THEN '30000-50000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 50000 THEN '50000吨以上' ");
+    sqlBuilder.append("  ELSE '未知' ");
+    sqlBuilder.append("END as name, ");
+    sqlBuilder.append("COUNT(*) as value, ");
+    sqlBuilder.append("MIN(deadweight_tonnage) as min_tonnage, ");
+    sqlBuilder.append("MAX(deadweight_tonnage) as max_tonnage, ");
+    sqlBuilder.append("AVG(deadweight_tonnage) as avg_tonnage ");
+    sqlBuilder.append("FROM ship_report WHERE estimated_arrival_departure_time >= ? AND estimated_arrival_departure_time <= ? ");
+    
+    // 构建参数列表
+    List<Object> params = new ArrayList<>();
+    params.add(startDate);
+    params.add(endDate);
+    
+    // 添加筛选条件
+    if ("in".equals(portDirection)) {
+        sqlBuilder.append(" AND in_out_port LIKE '%进%'");
+    } else if ("out".equals(portDirection)) {
+        sqlBuilder.append(" AND in_out_port LIKE '%出%'");
+    }
+    
+    if ("river".equals(shipType)) {
+        sqlBuilder.append(" AND sea_river_ship LIKE '%内河船%'");
+    } else if ("sea".equals(shipType)) {
+        sqlBuilder.append(" AND sea_river_ship LIKE '%海船%'");
+    }
+    
+    if ("yes".equals(hazardous)) {
+        sqlBuilder.append(" AND is_hazardous_cargo = '是'");
+    } else if ("no".equals(hazardous)) {
+        sqlBuilder.append(" AND is_hazardous_cargo != '是'");
+    }
+    
+    if ("small".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length < 80");
+    } else if ("medium".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length >= 80 AND ship_length < 150");
+    } else if ("large".equals(lengthRange)) {
+        sqlBuilder.append(" AND ship_length >= 150");
+    }
+    
+    if (agency != null && !"all".equals(agency)) {
+        sqlBuilder.append(" AND reporting_agency = ?");
+        params.add(agency);
+    }
+    
+    if (berth != null && !"all".equals(berth)) {
+        sqlBuilder.append(" AND berth = ?");
+        params.add(berth);
+    }
+    
+    sqlBuilder.append(" GROUP BY CASE ");
+    sqlBuilder.append("  WHEN deadweight_tonnage < 1000 THEN '小于1000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 1000 AND deadweight_tonnage < 5000 THEN '1000-5000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 5000 AND deadweight_tonnage < 10000 THEN '5000-10000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 10000 AND deadweight_tonnage < 30000 THEN '10000-30000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 30000 AND deadweight_tonnage < 50000 THEN '30000-50000吨' ");
+    sqlBuilder.append("  WHEN deadweight_tonnage >= 50000 THEN '50000吨以上' ");
+    sqlBuilder.append("  ELSE '未知' ");
+    sqlBuilder.append("END ");
+    sqlBuilder.append("ORDER BY min_tonnage");
+    
+    // 执行查询并返回结果
+    return jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
+}
 }

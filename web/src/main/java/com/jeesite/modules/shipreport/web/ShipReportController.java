@@ -348,4 +348,66 @@ public class ShipReportController extends BaseController {
 
 		return result;
 	}
+
+	/**
+	 * 获取船舶长度分布数据
+	 */
+	@RequiresPermissions("shipreport:shipReport:view")
+	@RequestMapping(value = "shipLengthDistribution")
+	@ResponseBody
+	public Map<String, Object> getShipLengthDistribution(String startDate, String endDate,
+													String portDirection, String shipType, String hazardous, String lengthRange,
+													String agency, String berth) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date start = DateUtils.parseDate(startDate);
+			Date end = DateUtils.parseDate(endDate);
+			
+			// 获取船舶长度分布数据
+			List<Map<String, Object>> lengthData = shipReportService.getShipLengthDistribution(
+					start, end, portDirection, shipType, hazardous, lengthRange, agency, berth);
+			
+			result.put("status", "success");
+			result.put("data", lengthData);
+		} catch (Exception e) {
+			logger.error("获取船舶长度分布数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取船舶长度分布数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
+
+	/**
+	 * 获取船舶载重吨分布数据
+	 */
+	@RequiresPermissions("shipreport:shipReport:view")
+	@RequestMapping(value = "deadweightDistribution")
+	@ResponseBody
+	public Map<String, Object> getDeadweightDistribution(String startDate, String endDate,
+													String portDirection, String shipType, String hazardous, String lengthRange,
+													String agency, String berth) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date start = DateUtils.parseDate(startDate);
+			Date end = DateUtils.parseDate(endDate);
+			
+			// 获取船舶载重吨分布数据
+			List<Map<String, Object>> deadweightData = shipReportService.getDeadweightDistribution(
+					start, end, portDirection, shipType, hazardous, lengthRange, agency, berth);
+			
+			result.put("status", "success");
+			result.put("data", deadweightData);
+		} catch (Exception e) {
+			logger.error("获取船舶载重吨分布数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取船舶载重吨分布数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
 }
