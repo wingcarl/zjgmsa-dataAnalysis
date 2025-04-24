@@ -206,6 +206,90 @@
                 height: 300px;
             }
         }
+        
+        /* 全屏按钮样式 */
+        .chart-fullscreen-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 8px;
+            z-index: 10;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-fullscreen-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .fullscreen-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        
+        .fullscreen-modal-content {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .fullscreen-chart-container {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .fullscreen-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            color: var(--primary-color);
+            cursor: pointer;
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .fullscreen-close:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .fullscreen-title {
+            padding: 15px 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+            border-bottom: 1px solid #eee;
+        }
+        
+        .charts-section {
+            position: relative;
+        }
     </style>
 </head>
 
@@ -347,6 +431,7 @@
     <!-- 各海事机构船舶数量图表 -->
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-building icon-box"></i>各海事机构船舶数量</h5>
+        <div class="chart-fullscreen-btn" data-chart="agency-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
         <div class="row">
             <div class="col-md-12">
                 <div id="agency-chart" class="chart-container"></div>
@@ -357,6 +442,7 @@
     <!-- 各泊位船舶数量图表 -->
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-anchor icon-box"></i>各泊位船舶数量</h5>
+        <div class="chart-fullscreen-btn" data-chart="berth-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
         <div class="row">
             <div class="col-md-12">
                 <div id="berth-chart" class="chart-container"></div>
@@ -390,6 +476,7 @@
                 </div>
             </div>
         </div>
+        <div class="chart-fullscreen-btn" data-chart="trend-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
         <div class="row">
             <div class="col-md-12">
                 <div id="trend-chart" class="chart-container"></div>
@@ -403,6 +490,7 @@
         <div class="col-md-6">
             <div class="charts-section">
                 <h5 class="charts-title"><i class="fas fa-ship icon-box"></i>船舶类型分布</h5>
+                <div class="chart-fullscreen-btn" data-chart="ship-type-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
                 <div id="ship-type-chart" class="chart-container"></div>
             </div>
         </div>
@@ -410,6 +498,7 @@
         <div class="col-md-6">
             <div class="charts-section">
                 <h5 class="charts-title"><i class="fas fa-cubes icon-box"></i>货物类型分布</h5>
+                <div class="chart-fullscreen-btn" data-chart="cargo-type-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
                 <div id="cargo-type-chart" class="chart-container"></div>
             </div>
         </div>
@@ -421,6 +510,7 @@
         <div class="col-md-6">
             <div class="charts-section">
                 <h5 class="charts-title"><i class="fas fa-ruler-horizontal icon-box"></i>船舶长度分布</h5>
+                <div class="chart-fullscreen-btn" data-chart="ship-length-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
                 <div id="ship-length-chart" class="chart-container"></div>
             </div>
         </div>
@@ -428,6 +518,7 @@
         <div class="col-md-6">
             <div class="charts-section">
                 <h5 class="charts-title"><i class="fas fa-weight icon-box"></i>船舶载重吨分布</h5>
+                <div class="chart-fullscreen-btn" data-chart="deadweight-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
                 <div id="deadweight-chart" class="chart-container"></div>
             </div>
         </div>
@@ -438,6 +529,7 @@
         <div class="col-md-12">
             <div class="charts-section">
                 <h5 class="charts-title"><i class="fas fa-route icon-box"></i>航线分布</h5>
+                <div class="chart-fullscreen-btn" data-chart="route-chart"><i class="fas fa-expand-arrows-alt"></i> 全屏</div>
                 <div id="route-chart" class="chart-container"></div>
             </div>
         </div>
@@ -462,6 +554,98 @@
         var shipLengthChart = echarts.init(document.getElementById('ship-length-chart'));
         var deadweightChart = echarts.init(document.getElementById('deadweight-chart'));
         var routeChart = echarts.init(document.getElementById('route-chart'));
+        
+        // 创建全屏图表实例
+        var fullscreenChart = null;
+        
+        // 创建全屏图表映射
+        var chartTitles = {
+            "agency-chart": "各海事机构船舶数量",
+            "berth-chart": "各泊位船舶数量",
+            "trend-chart": "船舶进出港时间趋势",
+            "ship-type-chart": "船舶类型分布",
+            "cargo-type-chart": "货物类型分布",
+            "ship-length-chart": "船舶长度分布",
+            "deadweight-chart": "船舶载重吨分布",
+            "route-chart": "航线分布"
+        };
+        
+        // 处理全屏按钮点击
+        $('.chart-fullscreen-btn').on('click', function() {
+            var chartId = $(this).data('chart');
+            var chartTitle = chartTitles[chartId];
+            $('#fullscreenTitle').text(chartTitle);
+            $('#fullscreenModal').css('display', 'block');
+            
+            // 如果已经存在全屏图表实例，先销毁
+            if (fullscreenChart) {
+                fullscreenChart.dispose();
+            }
+            
+            // 初始化全屏图表
+            fullscreenChart = echarts.init(document.getElementById('fullscreenChartContainer'));
+            
+            // 复制原图表的配置
+            var originalChart;
+            switch(chartId) {
+                case 'agency-chart':
+                    originalChart = agencyChart;
+                    break;
+                case 'berth-chart':
+                    originalChart = berthChart;
+                    break;
+                case 'trend-chart':
+                    originalChart = trendChart;
+                    break;
+                case 'ship-type-chart':
+                    originalChart = shipTypeChart;
+                    break;
+                case 'cargo-type-chart':
+                    originalChart = cargoTypeChart;
+                    break;
+                case 'ship-length-chart':
+                    originalChart = shipLengthChart;
+                    break;
+                case 'deadweight-chart':
+                    originalChart = deadweightChart;
+                    break;
+                case 'route-chart':
+                    originalChart = routeChart;
+                    break;
+            }
+            
+            var option = originalChart.getOption();
+            
+            // 设置全屏图表的配置
+            fullscreenChart.setOption(option);
+            
+            // 设置防止屏幕大小变化
+            $(window).resize();
+        });
+        
+        // 关闭全屏模态框
+        $('.fullscreen-close').on('click', function() {
+            $('#fullscreenModal').css('display', 'none');
+            
+            // 销毁全屏图表实例
+            if (fullscreenChart) {
+                fullscreenChart.dispose();
+                fullscreenChart = null;
+            }
+        });
+        
+        // 点击模态框背景关闭
+        $('#fullscreenModal').on('click', function(e) {
+            if (e.target === this) {
+                $('#fullscreenModal').css('display', 'none');
+                
+                // 销毁全屏图表实例
+                if (fullscreenChart) {
+                    fullscreenChart.dispose();
+                    fullscreenChart = null;
+                }
+            }
+        });
 
         // 设置默认日期为当前日期和30天前
         var today = new Date();
@@ -497,6 +681,11 @@
             shipLengthChart.resize();
             deadweightChart.resize();
             routeChart.resize();
+            
+            // 调整全屏图表大小
+            if (fullscreenChart) {
+                fullscreenChart.resize();
+            }
         });
 
         // 初始化图表配置
@@ -1869,5 +2058,15 @@
         }
     });
 </script>
+
+<!-- 全屏图表模态框 -->
+<div id="fullscreenModal" class="fullscreen-modal">
+    <div class="fullscreen-modal-content">
+        <div class="fullscreen-close"><i class="fas fa-times"></i></div>
+        <div class="fullscreen-title" id="fullscreenTitle">图表详情</div>
+        <div id="fullscreenChartContainer" class="fullscreen-chart-container"></div>
+    </div>
+</div>
+
 </body>
 </html>
