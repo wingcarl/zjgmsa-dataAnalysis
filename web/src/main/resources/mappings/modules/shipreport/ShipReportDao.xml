@@ -12,4 +12,82 @@
 		ORDER BY ${sqlMap.order.toSql()}
 	</select> -->
 	
+	<!-- 获取船舶类型分布数据 -->
+	<select id="getShipTypeDistribution" resultType="Map" parameterType="Map">
+		SELECT 
+			ship_type as name, 
+			COUNT(1) as value 
+		FROM ship_report 
+		WHERE estimated_arrival_departure_time BETWEEN #{startDate} AND #{endDate}
+		<if test="portDirection != null">
+			AND in_out_port = #{portDirection}
+		</if>
+		<if test="shipType != null">
+			AND sea_river_ship = #{shipType}
+		</if>
+		<if test="hazardous != null">
+			AND is_hazardous_cargo = #{hazardous}
+		</if>
+		<if test="lengthRange != null">
+			<choose>
+				<when test="lengthRange == 'small'">
+					AND ship_length &lt; 80
+				</when>
+				<when test="lengthRange == 'medium'">
+					AND ship_length &gt;= 80 AND ship_length &lt; 150
+				</when>
+				<when test="lengthRange == 'large'">
+					AND ship_length &gt;= 150
+				</when>
+			</choose>
+		</if>
+		<if test="agency != null">
+			AND reporting_agency = #{agency}
+		</if>
+		<if test="berth != null">
+			AND berth = #{berth}
+		</if>
+		GROUP BY ship_type
+		ORDER BY value DESC
+	</select>
+	
+	<!-- 获取货物类型分布数据 -->
+	<select id="getCargoTypeDistribution" resultType="Map" parameterType="Map">
+		SELECT 
+			cargo_type as name, 
+			SUM(loading_unloading_cargo_volume) as value 
+		FROM ship_report 
+		WHERE estimated_arrival_departure_time BETWEEN #{startDate} AND #{endDate}
+		<if test="portDirection != null">
+			AND in_out_port = #{portDirection}
+		</if>
+		<if test="shipType != null">
+			AND sea_river_ship = #{shipType}
+		</if>
+		<if test="hazardous != null">
+			AND is_hazardous_cargo = #{hazardous}
+		</if>
+		<if test="lengthRange != null">
+			<choose>
+				<when test="lengthRange == 'small'">
+					AND ship_length &lt; 80
+				</when>
+				<when test="lengthRange == 'medium'">
+					AND ship_length &gt;= 80 AND ship_length &lt; 150
+				</when>
+				<when test="lengthRange == 'large'">
+					AND ship_length &gt;= 150
+				</when>
+			</choose>
+		</if>
+		<if test="agency != null">
+			AND reporting_agency = #{agency}
+		</if>
+		<if test="berth != null">
+			AND berth = #{berth}
+		</if>
+		GROUP BY cargo_type
+		ORDER BY value DESC
+	</select>
+	
 </mapper>

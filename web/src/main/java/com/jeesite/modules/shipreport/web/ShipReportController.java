@@ -66,7 +66,7 @@ public class ShipReportController extends BaseController {
 		Page<ShipReport> page = shipReportService.findPage(shipReport);
 		return page;
 	}
-	
+
 	/**
 	 * 查看编辑表单
 	 */
@@ -76,7 +76,7 @@ public class ShipReportController extends BaseController {
 		model.addAttribute("shipReport", shipReport);
 		return "modules/shipreport/shipReportForm";
 	}
-	
+
 	/**
 	 * 保存数据
 	 */
@@ -98,7 +98,7 @@ public class ShipReportController extends BaseController {
 		shipReportService.delete(shipReport);
 		return renderResult(Global.TRUE, text("删除船舶报告表成功！"));
 	}
-	
+
 	/**
 	 * 数据分析页面
 	 */
@@ -107,7 +107,7 @@ public class ShipReportController extends BaseController {
 	public String analysis(Model model) {
 		return "modules/shipreport/shipReportAnalysis";
 	}
-	
+
 	/**
 	 * 获取统计数据
 	 */
@@ -121,7 +121,7 @@ public class ShipReportController extends BaseController {
 			// 解析日期
 			Date start = DateUtils.parseDate(startDate);
 			Date end = DateUtils.parseDate(endDate);
-			
+
 			// 获取统计数据
 			Map<String, Object> stats = shipReportService.getStatisticsData(start, end);
 			
@@ -132,10 +132,10 @@ public class ShipReportController extends BaseController {
 			result.put("status", "error");
 			result.put("message", "获取统计数据失败: " + e.getMessage());
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	 * 获取筛选后的数据
 	 */
@@ -163,10 +163,10 @@ public class ShipReportController extends BaseController {
 			result.put("status", "error");
 			result.put("message", "获取筛选数据失败: " + e.getMessage());
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	 * 获取趋势数据
 	 */
@@ -174,7 +174,7 @@ public class ShipReportController extends BaseController {
 	@RequestMapping(value = "trendData")
 	@ResponseBody
 	public Map<String, Object> getTrendData(String startDate, String endDate, String interval,
-										   String portDirection, String shipType, String hazardous, String lengthRange,
+											String portDirection, String shipType, String hazardous, String lengthRange,
 										   String agency, String berth) {
 		Map<String, Object> result = new HashMap<>();
 		
@@ -194,10 +194,10 @@ public class ShipReportController extends BaseController {
 			result.put("status", "error");
 			result.put("message", "获取趋势数据失败: " + e.getMessage());
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	 * 获取独立的海事机构列表
 	 */
@@ -247,10 +247,105 @@ public class ShipReportController extends BaseController {
 			result.put("data", berths);
 		} catch (Exception e) {
 			logger.error("获取泊位列表失败", e);
-			result.put("status", "error");
+				result.put("status", "error");
 			result.put("message", "获取泊位列表失败: " + e.getMessage());
 		}
 		
+				return result;
+			}
+
+	/**
+	 * 获取船舶类型分布数据
+	 */
+	@RequiresPermissions("shipreport:shipReport:view")
+	@RequestMapping(value = "shipTypeDistribution")
+	@ResponseBody
+	public Map<String, Object> getShipTypeDistribution(String startDate, String endDate,
+													  String portDirection, String shipType, String hazardous, String lengthRange,
+													  String agency, String berth) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date start = DateUtils.parseDate(startDate);
+			Date end = DateUtils.parseDate(endDate);
+
+			// 获取船舶类型分布数据
+			List<Map<String, Object>> typeData = shipReportService.getShipTypeDistribution(
+					start, end, portDirection, shipType, hazardous, lengthRange, agency, berth);
+			
+			result.put("status", "success");
+			result.put("data", processTopNAndOthers(typeData, 9)); // 处理前9名和"其他"
+		} catch (Exception e) {
+			logger.error("获取船舶类型分布数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取船舶类型分布数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取货物类型分布数据
+	 */
+	@RequiresPermissions("shipreport:shipReport:view")
+	@RequestMapping(value = "cargoTypeDistribution")
+	@ResponseBody
+	public Map<String, Object> getCargoTypeDistribution(String startDate, String endDate,
+													   String portDirection, String shipType, String hazardous, String lengthRange,
+													   String agency, String berth) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date start = DateUtils.parseDate(startDate);
+			Date end = DateUtils.parseDate(endDate);
+			
+			// 获取货物类型分布数据
+			List<Map<String, Object>> cargoData = shipReportService.getCargoTypeDistribution(
+					start, end, portDirection, shipType, hazardous, lengthRange, agency, berth);
+			
+			result.put("status", "success");
+			result.put("data", processTopNAndOthers(cargoData, 9)); // 处理前9名和"其他"
+		} catch (Exception e) {
+			logger.error("获取货物类型分布数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取货物类型分布数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 处理数据，保留前N名，其余归为"其他"
+	 */
+	private List<Map<String, Object>> processTopNAndOthers(List<Map<String, Object>> data, int topN) {
+		if (data == null || data.isEmpty() || data.size() <= topN) {
+			return data;
+		}
+		
+		List<Map<String, Object>> result = new ArrayList<>();
+		// 添加前N个元素
+		for (int i = 0; i < topN; i++) {
+			result.add(data.get(i));
+		}
+		
+		// 合并其余数据为"其他"
+		double otherValue = 0;
+		for (int i = topN; i < data.size(); i++) {
+			Object value = data.get(i).get("value");
+			if (value instanceof Number) {
+				otherValue += ((Number) value).doubleValue();
+			}
+		}
+		
+		if (otherValue > 0) {
+			Map<String, Object> otherMap = new HashMap<>();
+			otherMap.put("name", "其他");
+			otherMap.put("value", otherValue);
+			result.add(otherMap);
+		}
+
 		return result;
 	}
 }

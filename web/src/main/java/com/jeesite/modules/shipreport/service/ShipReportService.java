@@ -35,7 +35,8 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-
+	@Autowired
+	private ShipReportDao shipReportDao;
 	/**
 	 * 获取单条数据
 	 * @param shipReport
@@ -185,7 +186,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		
 		// 查询环比数据
 		Map<String, Object> previousStats = jdbcTemplate.queryForMap(sql, prevStartDate, prevEndDate);
-		
+
 		// 查询各海事机构船舶数量
 		String agencySql = "SELECT reporting_agency as name, COUNT(*) as count " +
 				"FROM ship_report " +
@@ -193,7 +194,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 				"AND estimated_arrival_departure_time <= ? " +
 				"GROUP BY reporting_agency " +
 				"ORDER BY count DESC";
-		
+
 		List<Map<String, Object>> agencyData = jdbcTemplate.queryForList(agencySql, startDate, endDate);
 		
 		// 查询各泊位船舶数量
@@ -203,7 +204,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 				"AND estimated_arrival_departure_time <= ? " +
 				"GROUP BY berth " +
 				"ORDER BY count DESC";
-		
+
 		List<Map<String, Object>> berthData = jdbcTemplate.queryForList(berthSql, startDate, endDate);
 		
 		// 查询独立的海事机构列表
@@ -211,7 +212,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 				"WHERE estimated_arrival_departure_time >= ? " +
 				"AND estimated_arrival_departure_time <= ? " +
 				"ORDER BY reporting_agency";
-		
+
 		List<String> agencies = jdbcTemplate.queryForList(agenciesSql, String.class, startDate, endDate);
 		
 		// 查询独立的泊位列表
@@ -219,7 +220,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 				"WHERE estimated_arrival_departure_time >= ? " +
 				"AND estimated_arrival_departure_time <= ? " +
 				"ORDER BY berth";
-		
+
 		List<String> berths = jdbcTemplate.queryForList(berthsSql, String.class, startDate, endDate);
 		
 		// 组装返回结果
@@ -374,19 +375,19 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		} else if ("out".equals(portDirection)) {
 			berthSqlBuilder.append(" AND in_out_port LIKE '%出%'");
 		}
-		
+
 		if ("river".equals(shipType)) {
 			berthSqlBuilder.append(" AND sea_river_ship LIKE '%内河船%'");
 		} else if ("sea".equals(shipType)) {
 			berthSqlBuilder.append(" AND sea_river_ship LIKE '%海船%'");
 		}
-		
+
 		if ("yes".equals(hazardous)) {
 			berthSqlBuilder.append(" AND is_hazardous_cargo = '是'");
 		} else if ("no".equals(hazardous)) {
 			berthSqlBuilder.append(" AND is_hazardous_cargo != '是'");
 		}
-		
+
 		if ("small".equals(lengthRange)) {
 			berthSqlBuilder.append(" AND ship_length < 80");
 		} else if ("medium".equals(lengthRange)) {
@@ -394,12 +395,12 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		} else if ("large".equals(lengthRange)) {
 			berthSqlBuilder.append(" AND ship_length >= 150");
 		}
-		
+
 		if (agency != null && !"all".equals(agency)) {
 			berthSqlBuilder.append(" AND reporting_agency = ?");
 			berthParams.add(agency);
 		}
-		
+
 		if (berth != null && !"all".equals(berth)) {
 			berthSqlBuilder.append(" AND berth = ?");
 			berthParams.add(berth);
@@ -436,7 +437,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		// 根据时间间隔确定日期格式和分组格式
 		String dateFormat;
 		String groupFormat;
-		
+
 		switch (interval) {
 			case "day":
 				dateFormat = "DATE_FORMAT(estimated_arrival_departure_time, '%Y-%m-%d')";
@@ -462,7 +463,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 				dateFormat = "DATE_FORMAT(estimated_arrival_departure_time, '%Y-%m-%d')";
 				groupFormat = "DATE_FORMAT(estimated_arrival_departure_time, '%Y-%m-%d')";
 		}
-		
+
 		// 构建SQL查询
 		StringBuilder sqlBuilder = new StringBuilder();
 		sqlBuilder.append("SELECT ");
@@ -521,35 +522,35 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		
 		// 执行查询
 		List<Map<String, Object>> groupedStats = jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
-		
+
 		// 准备趋势数据系列
 		List<Map<String, Object>> trendData = new ArrayList<>();
-		
+
 		// 初始化各系列数据
 		Map<String, Object> totalSeries = new HashMap<>();
 		totalSeries.put("name", "总船舶数");
 		List<Map<String, Object>> totalData = new ArrayList<>();
-		
+
 		Map<String, Object> arrivalSeries = new HashMap<>();
 		arrivalSeries.put("name", "进港船舶");
 		List<Map<String, Object>> arrivalData = new ArrayList<>();
-		
+
 		Map<String, Object> departureSeries = new HashMap<>();
 		departureSeries.put("name", "出港船舶");
 		List<Map<String, Object>> departureData = new ArrayList<>();
-		
+
 		Map<String, Object> riverSeries = new HashMap<>();
 		riverSeries.put("name", "内河船");
 		List<Map<String, Object>> riverData = new ArrayList<>();
-		
+
 		Map<String, Object> seaSeries = new HashMap<>();
 		seaSeries.put("name", "海船");
 		List<Map<String, Object>> seaData = new ArrayList<>();
-		
+
 		Map<String, Object> hazardousSeries = new HashMap<>();
 		hazardousSeries.put("name", "危化品船");
 		List<Map<String, Object>> hazardousData = new ArrayList<>();
-		
+
 		// 处理分组统计数据
 		for (Map<String, Object> stat : groupedStats) {
 			String date = (String) stat.get("date");
@@ -565,38 +566,38 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 			totalPoint.put("date", date);
 			totalPoint.put("value", totalCount);
 			totalData.add(totalPoint);
-			
+
 			// 进港船舶
 			Map<String, Object> arrivalPoint = new HashMap<>();
 			arrivalPoint.put("date", date);
 			arrivalPoint.put("value", arrivalCount);
 			arrivalData.add(arrivalPoint);
-			
+
 			// 出港船舶
 			Map<String, Object> departurePoint = new HashMap<>();
 			departurePoint.put("date", date);
 			departurePoint.put("value", departureCount);
 			departureData.add(departurePoint);
-			
+
 			// 内河船
 			Map<String, Object> riverPoint = new HashMap<>();
 			riverPoint.put("date", date);
 			riverPoint.put("value", riverCount);
 			riverData.add(riverPoint);
-			
+
 			// 海船
 			Map<String, Object> seaPoint = new HashMap<>();
 			seaPoint.put("date", date);
 			seaPoint.put("value", seaCount);
 			seaData.add(seaPoint);
-			
+
 			// 危化品船
 			Map<String, Object> hazardousPoint = new HashMap<>();
 			hazardousPoint.put("date", date);
 			hazardousPoint.put("value", hazardousCount);
 			hazardousData.add(hazardousPoint);
 		}
-		
+
 		// 设置各系列数据
 		totalSeries.put("data", totalData);
 		arrivalSeries.put("data", arrivalData);
@@ -604,7 +605,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		riverSeries.put("data", riverData);
 		seaSeries.put("data", seaData);
 		hazardousSeries.put("data", hazardousData);
-		
+
 		// 添加所有系列到趋势数据
 		trendData.add(totalSeries);
 		trendData.add(arrivalSeries);
@@ -612,7 +613,7 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		trendData.add(riverSeries);
 		trendData.add(seaSeries);
 		trendData.add(hazardousSeries);
-		
+
 		return trendData;
 	}
 
@@ -645,5 +646,121 @@ public class ShipReportService extends CrudService<ShipReportDao, ShipReport> {
 		map.put("current", current);
 		map.put("previous", previous);
 		return map;
+	}
+
+	// 获取船舶类型分布数据
+	public List<Map<String, Object>> getShipTypeDistribution(Date startDate, Date endDate, 
+														 String portDirection, String shipType, 
+														 String hazardous, String lengthRange, 
+														 String agency, String berth) {
+		// 构建SQL查询
+		StringBuilder sqlBuilder = new StringBuilder();
+		sqlBuilder.append("SELECT ship_type as name, COUNT(*) as value ");
+		sqlBuilder.append("FROM ship_report WHERE estimated_arrival_departure_time >= ? AND estimated_arrival_departure_time <= ?");
+		
+		// 构建参数列表
+		List<Object> params = new ArrayList<>();
+		params.add(startDate);
+		params.add(endDate);
+		
+		// 添加筛选条件
+		if ("in".equals(portDirection)) {
+			sqlBuilder.append(" AND in_out_port LIKE '%进%'");
+		} else if ("out".equals(portDirection)) {
+			sqlBuilder.append(" AND in_out_port LIKE '%出%'");
+		}
+		
+		if ("river".equals(shipType)) {
+			sqlBuilder.append(" AND sea_river_ship LIKE '%内河船%'");
+		} else if ("sea".equals(shipType)) {
+			sqlBuilder.append(" AND sea_river_ship LIKE '%海船%'");
+		}
+		
+		if ("yes".equals(hazardous)) {
+			sqlBuilder.append(" AND is_hazardous_cargo = '是'");
+		} else if ("no".equals(hazardous)) {
+			sqlBuilder.append(" AND is_hazardous_cargo != '是'");
+		}
+		
+		if ("small".equals(lengthRange)) {
+			sqlBuilder.append(" AND ship_length < 80");
+		} else if ("medium".equals(lengthRange)) {
+			sqlBuilder.append(" AND ship_length >= 80 AND ship_length < 150");
+		} else if ("large".equals(lengthRange)) {
+			sqlBuilder.append(" AND ship_length >= 150");
+		}
+		
+		if (agency != null && !"all".equals(agency)) {
+			sqlBuilder.append(" AND reporting_agency = ?");
+			params.add(agency);
+		}
+		
+		if (berth != null && !"all".equals(berth)) {
+			sqlBuilder.append(" AND berth = ?");
+			params.add(berth);
+		}
+		
+		sqlBuilder.append(" GROUP BY ship_type ORDER BY value DESC");
+		
+		// 执行查询并返回结果
+		return jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
+	}
+
+	// 获取货物类型分布数据（按装卸货物吨位累计）
+	public List<Map<String, Object>> getCargoTypeDistribution(Date startDate, Date endDate, 
+														  String portDirection, String shipType, 
+														  String hazardous, String lengthRange, 
+														  String agency, String berth) {
+		// 构建SQL查询
+		StringBuilder sqlBuilder = new StringBuilder();
+		sqlBuilder.append("SELECT cargo_type as name, SUM(loading_unloading_cargo_volume) as value ");
+		sqlBuilder.append("FROM ship_report WHERE estimated_arrival_departure_time >= ? AND estimated_arrival_departure_time <= ?");
+		
+		// 构建参数列表
+		List<Object> params = new ArrayList<>();
+		params.add(startDate);
+		params.add(endDate);
+		
+		// 添加筛选条件
+		if ("in".equals(portDirection)) {
+			sqlBuilder.append(" AND in_out_port LIKE '%进%'");
+		} else if ("out".equals(portDirection)) {
+			sqlBuilder.append(" AND in_out_port LIKE '%出%'");
+		}
+		
+		if ("river".equals(shipType)) {
+			sqlBuilder.append(" AND sea_river_ship LIKE '%内河船%'");
+		} else if ("sea".equals(shipType)) {
+			sqlBuilder.append(" AND sea_river_ship LIKE '%海船%'");
+		}
+		
+		if ("yes".equals(hazardous)) {
+			sqlBuilder.append(" AND is_hazardous_cargo = '是'");
+		} else if ("no".equals(hazardous)) {
+			sqlBuilder.append(" AND is_hazardous_cargo != '是'");
+		}
+		
+		if ("small".equals(lengthRange)) {
+			sqlBuilder.append(" AND ship_length < 80");
+		} else if ("medium".equals(lengthRange)) {
+			sqlBuilder.append(" AND ship_length >= 80 AND ship_length < 150");
+		} else if ("large".equals(lengthRange)) {
+			sqlBuilder.append(" AND ship_length >= 150");
+		}
+		
+		if (agency != null && !"all".equals(agency)) {
+			sqlBuilder.append(" AND reporting_agency = ?");
+			params.add(agency);
+		}
+		
+		if (berth != null && !"all".equals(berth)) {
+			sqlBuilder.append(" AND berth = ?");
+			params.add(berth);
+		}
+		
+		sqlBuilder.append(" GROUP BY cargo_type ORDER BY value DESC");
+		
+		// 执行查询并返回结果
+		return jdbcTemplate.queryForList(sqlBuilder.toString(), params.toArray());
 	}
 }
