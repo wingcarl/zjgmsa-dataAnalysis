@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张家港海事局周工作数据通报</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
+    <!-- Font Awesome - 添加图标支持 -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Animate CSS - 添加动画效果 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" >
+
+    <!-- Custom CSS - 科技风格设计 -->
+    <style>
+        :root {
+            --primary-color: #0466c8;
+            --secondary-color: #0353a4;
+            --accent-color: #023e7d;
+            --text-color: #001845;
+            --highlight-color: #33a1fd;
+            --background-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --positive-color: #38b000;
+            --negative-color: #d90429;
+            --grid-line: rgba(4, 102, 200, 0.2);
+            --card-border: rgba(4, 102, 200, 0.3);
+            --danger-color: #e63946;
+            --warning-color: #ffb703;
+            --success-color: #06d6a0;
+            --info-color: #118ab2;
+        }
+
+        body {
+            background-color: #071e3d;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(8, 61, 119, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(15, 76, 117, 0.3) 0%, transparent 50%);
+            color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 背景网格效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(4, 102, 200, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(4, 102, 200, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .main-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 25px 0;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            background-image: linear-gradient(to right, rgba(3, 83, 164, 0.9), rgba(4, 102, 200, 0.9));
+            overflow: hidden;
+        }
+
+        .main-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, var(--info-color), var(--primary-color), var(--accent-color));
+        }
+
+        /* 动态背景元素 */
+        .bg-particle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            animation: float 8s infinite ease-in-out;
+        }
+
+        .bg-particle:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .bg-particle:nth-child(2) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            right: 8%;
+            animation-delay: 1s;
+        }
+
+        .bg-particle:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 15%;
+            left: 15%;
+            animation-delay: 2s;
+        }
+
+        .bg-particle:nth-child(4) {
+            width: 120px;
+            height: 120px;
+            bottom: 10%;
+            right: 12%;
+            animation-delay: 3s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(10deg);
+            }
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .dashboard-card {
+            position: relative;
+            height: 280px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            background-color: rgba(15, 52, 96, 0.75);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.4s ease;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(51, 161, 253, 0.2);
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--info-color), var(--highlight-color));
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-content {
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--highlight-color);
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        .card-description {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .btn-tech {
+            background: rgba(51, 161, 253, 0.2);
+            color: white;
+            border: 1px solid var(--highlight-color);
+            border-radius: 30px;
+            padding: 10px 25px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-tech::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.4s ease;
+        }
+
+        .btn-tech:hover {
+            background: rgba(51, 161, 253, 0.4);
+            color: white;
+            box-shadow: 0 5px 15px rgba(51, 161, 253, 0.3);
+        }
+
+        .btn-tech:hover::before {
+            left: 100%;
+        }
+
+        /* 卡片不同颜色变化 */
+        .card-penalty .card-icon,
+        .card-patrol .card-icon,
+        .card-supervision .card-icon,
+        .card-hazardous .card-icon, 
+        .card-government .card-icon,
+        .card-port .card-icon {
+            background: rgba(255, 255, 255, 0.1);
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+        }
+
+        .card-penalty .card-icon {
+            color: var(--danger-color);
+        }
+
+        .card-patrol .card-icon {
+            color: var(--warning-color);
+        }
+
+        .card-supervision .card-icon {
+            color: var(--highlight-color);
+        }
+
+        .card-hazardous .card-icon {
+            color: var(--success-color);
+        }
+
+        .card-government .card-icon {
+            color: var(--info-color);
+        }
+
+        .card-port .card-icon {
+            color: #9b5de5;
+        }
+
+        .card-penalty::before {
+            background: linear-gradient(to right, var(--danger-color), #FF6B6B);
+        }
+
+        .card-patrol::before {
+            background: linear-gradient(to right, var(--warning-color), #FDC500);
+        }
+
+        .card-supervision::before {
+            background: linear-gradient(to right, var(--highlight-color), #3A86FF);
+        }
+
+        .card-hazardous::before {
+            background: linear-gradient(to right, var(--success-color), #2DC653);
+        }
+
+        .card-government::before {
+            background: linear-gradient(to right, var(--info-color), #00BBF9);
+        }
+
+        .card-port::before {
+            background: linear-gradient(to right, #9b5de5, #f15bb5);
+        }
+
+        /* 底部数据展示区域 */
+        .stats-footer {
+            padding: 20px;
+            background-color: rgba(7, 30, 61, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(51, 161, 253, 0.2);
+            margin-top: 20px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: rgba(15, 52, 96, 0.5);
+            margin-bottom: 15px;
+            border: 1px solid rgba(51, 161, 253, 0.1);
+        }
+
+        .stats-title {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 10px;
+        }
+
+        .stats-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* 平板和移动端适配 */
+        @media (max-width: 992px) {
+            .dashboard-card {
+                height: 220px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 24px;
+            }
+
+            .dashboard-card {
+                height: auto;
+                min-height: 220px;
+            }
+            
+            .card-title {
+                font-size: 1.8rem;
+            }
+
+            .stats-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        .last-update {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* 实时时钟 */
+        .realtime-clock {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .realtime-clock {
+                position: relative;
+                top: 0;
+                right: 0;
+                text-align: center;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 背景粒子 -->
+    <div class="bg-particle"></div>
+    <div class="bg-particle"></div>
+    <div class="bg-particle"></div>
+    <div class="bg-particle"></div>
+
+    <div class="main-header">
+        <div class="container">
+            <h1 class="main-title animated fadeIn"><i class="fas fa-chart-line mr-3"></i>张家港海事局周工作数据通报</h1>
+            <div class="realtime-clock" id="realtimeClock"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- 行政处罚卡片 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="dashboard-card card-penalty animated fadeInUp">
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <i class="fas fa-gavel"></i>
+                        </div>
+                        <h3 class="card-title">行政处罚</h3>
+                        <a href="${ctx}/punish/punishJudge/chart" class="btn btn-tech">
+                            <i class="fas fa-chart-bar mr-2"></i>查看详情
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 巡航巡查卡片 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="dashboard-card card-patrol animated fadeInUp" style="animation-delay: 0.1s;">
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3 class="card-title">巡航巡查</h3>
+                        <a href="${ctx}/dynamic/dynamicEnforcementData/chart" class="btn btn-tech">
+                            <i class="fas fa-binoculars mr-2"></i>查看详情
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 船舶监督卡片 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="dashboard-card card-supervision animated fadeInUp" style="animation-delay: 0.2s;">
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <i class="fas fa-ship"></i>
+                        </div>
+                        <h3 class="card-title">船舶监督</h3>
+                        <a href="${ctx}/weekly/weeklyReport/chart" class="btn btn-tech">
+                            <i class="fas fa-clipboard-check mr-2"></i>查看详情
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 危管防污卡片 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="dashboard-card card-hazardous animated fadeInUp" style="animation-delay: 0.3s;">
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <i class="fas fa-radiation-alt"></i>
+                        </div>
+                        <h3 class="card-title">危管防污</h3>
+                        <a href="#" class="btn btn-tech">
+                            <i class="fas fa-shield-alt mr-2"></i>敬请期待
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 政务服务卡片 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="dashboard-card card-government animated fadeInUp" style="animation-delay: 0.4s;">
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <i class="fas fa-id-card"></i>
+                        </div>
+                        <h3 class="card-title">政务服务</h3>
+                        <a href="${ctx}/government/governmentData/chart" class="btn btn-tech">
+                            <i class="fas fa-hands-helping mr-2"></i>查看详情
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 港航信息卡片 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="dashboard-card card-port animated fadeInUp" style="animation-delay: 0.5s;">
+                    <div class="card-content">
+                        <div class="card-icon">
+                            <i class="fas fa-anchor"></i>
+                        </div>
+                        <h3 class="card-title">港航信息</h3>
+                        <a href="${ctx}/largeship/analysis" class="btn btn-tech">
+                            <i class="fas fa-dharmachakra mr-2"></i>查看详情
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="text-center py-4 mt-4">
+        <div class="container">
+            <p class="mb-0">© 2025 张家港海事局 | 技术支持：张家港海事局数据管理中心</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
+    <script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
+    <script src="${ctxStatic}/nickjs/echarts.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 更新实时时钟
+            function updateClock() {
+                var now = new Date();
+                var dateStr = now.getFullYear() + '年' + 
+                             (now.getMonth() + 1) + '月' + 
+                             now.getDate() + '日 ';
+                var timeStr = ('0' + now.getHours()).slice(-2) + ':' + 
+                             ('0' + now.getMinutes()).slice(-2) + ':' + 
+                             ('0' + now.getSeconds()).slice(-2);
+                $('#realtimeClock').text(dateStr + timeStr);
+            }
+
+            // 初始调用一次
+            updateClock();
+
+            // 每秒更新时钟
+            setInterval(updateClock, 1000);
+
+            // 模拟加载数据
+            setTimeout(function() {
+                $('#penaltyCount').text('26');
+                $('#patrolCount').text('38');
+                $('#inspectionCount').text('142');
+                $('#hazardousCount').text('19');
+                $('#certificateCount').text('87');
+                $('#largeShipCount').text('12');
+
+                var now = new Date();
+                var updateTimeStr = now.getFullYear() + '-' + 
+                                  ('0' + (now.getMonth() + 1)).slice(-2) + '-' + 
+                                  ('0' + now.getDate()).slice(-2) + ' ' + 
+                                  ('0' + now.getHours()).slice(-2) + ':' + 
+                                  ('0' + now.getMinutes()).slice(-2);
+                $('#lastUpdateTime').text(updateTimeStr);
+            }, 1000);
+
+            // 从后端获取实时数据
+            $.ajax({
+                url: '${ctx}/weekly/weeklyReport/getDashboardStatistics',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#penaltyCount').text(response.data.penaltyCount);
+                        $('#patrolCount').text(response.data.patrolCount);
+                        $('#inspectionCount').text(response.data.inspectionCount);
+                        $('#hazardousCount').text(response.data.hazardousCount);
+                        $('#certificateCount').text(response.data.certificateCount);
+                        $('#largeShipCount').text(response.data.largeShipCount);
+                        $('#lastUpdateTime').text(response.data.lastUpdateTime);
+                    }
+                },
+                error: function(error) {
+                    console.error('加载统计数据失败:', error);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html> 
