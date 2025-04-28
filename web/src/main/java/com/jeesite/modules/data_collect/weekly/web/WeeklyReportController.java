@@ -59,6 +59,90 @@ public class WeeklyReportController extends BaseController {
 	public String dashboard(){
 		return "data_collect/weekly/weeklyDashboard";
 	}
+	
+	/**
+	 * 跳转到综合数据通报展示页面
+	 */
+	@RequiresPermissions("weekly:weeklyReport:view")
+	@RequestMapping(value = "dataDashboard")
+	public String dataDashboard() {
+		return "data_collect/weekly/weeklyDataDashboard";
+	}
+	
+	/**
+	 * 获取仪表盘综合统计数据
+	 */
+	@RequiresPermissions("weekly:weeklyReport:view")
+	@RequestMapping(value = "getDashboardStatistics")
+	@ResponseBody
+	public Map<String, Object> getDashboardStatistics() {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 获取当前日期
+			LocalDate now = LocalDate.now();
+			
+			// 计算本周开始日期（星期一）
+			LocalDate currentWeekStartDate = now.minusDays(now.getDayOfWeek().getValue() - 1);
+			
+			// 计算上周开始日期
+			LocalDate lastWeekStartDate = currentWeekStartDate.minusWeeks(1);
+			
+			// 格式化日期为字符串
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			String currentWeekStart = currentWeekStartDate.format(formatter);
+			String lastWeekStart = lastWeekStartDate.format(formatter);
+			
+			// 获取本周和上周数据
+			Map<String, Object> fetchData = getFetchData(currentWeekStart, lastWeekStart);
+			
+			// 组装返回数据
+			Map<String, Object> data = new HashMap<>();
+			
+			// 处理结果数据
+			if (fetchData.containsKey("currentWeekTotal")) {
+				Map<String, Object> currentWeekTotal = (Map<String, Object>) fetchData.get("currentWeekTotal");
+				
+				// 添加行政处罚数据
+				data.put("penaltyCount", currentWeekTotal.getOrDefault("administrativePenalty", 0));
+				
+				// 添加巡航次数数据
+				data.put("patrolCount", currentWeekTotal.getOrDefault("patrolCount", 0));
+				
+				// 添加船舶检查数据
+				long inspectionCount = 
+					((Number) currentWeekTotal.getOrDefault("seaShipInspectionCount", 0)).longValue() + 
+					((Number) currentWeekTotal.getOrDefault("inlandShipInspectionCount", 0)).longValue();
+				data.put("inspectionCount", inspectionCount);
+				
+				// 添加危险品船舶数据
+				data.put("hazardousCount", currentWeekTotal.getOrDefault("hazardousCargoCount", 0));
+				
+				// 添加证书办理量数据
+				long certificateCount = 
+					((Number) currentWeekTotal.getOrDefault("certificateIssuanceCount", 0)).longValue() + 
+					((Number) currentWeekTotal.getOrDefault("endorsementCount", 0)).longValue();
+				data.put("certificateCount", certificateCount);
+				
+				// 添加大型船舶进港数据
+				data.put("largeShipCount", currentWeekTotal.getOrDefault("largeShipEntryCount", 0));
+				
+				// 添加数据更新时间
+				data.put("lastUpdateTime", now.format(formatter) + " " + 
+					java.time.LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+			}
+			
+			result.put("status", "success");
+			result.put("data", data);
+		} catch (Exception e) {
+			logger.error("获取仪表盘统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取仪表盘统计数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
+
 	/**
 	 * 查询列表数据
 	 */
