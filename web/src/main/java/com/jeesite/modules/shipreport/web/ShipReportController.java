@@ -87,7 +87,47 @@ public class ShipReportController extends BaseController {
 		shipReportService.save(shipReport);
 		return renderResult(Global.TRUE, text("保存船舶报告表成功！"));
 	}
-	
+	/**
+	 * 导出数据
+	 */
+	@RequiresPermissions("shipreport:shipReport:view")
+	@RequestMapping(value = "exportData")
+	public void exportData(ShipReport shipReport, HttpServletResponse response) {
+		List<ShipReport> list = shipReportService.findList(shipReport);
+		String fileName = "船舶报告表" + DateUtils.getDate("yyyyMMddHHmmss") + ".xlsx";
+		try(ExcelExport ee = new ExcelExport("船舶报告表", ShipReport.class)){
+			ee.setDataList(list).write(response, fileName);
+		}
+	}
+
+	/**
+	 * 下载模板
+	 */
+	@RequiresPermissions("shipreport:shipReport:view")
+	@RequestMapping(value = "importTemplate")
+	public void importTemplate(HttpServletResponse response) {
+		ShipReport shipReport = new ShipReport();
+		List<ShipReport> list = ListUtils.newArrayList(shipReport);
+		String fileName = "船舶报告表模板.xlsx";
+		try(ExcelExport ee = new ExcelExport("船舶报告表", ShipReport.class, Type.IMPORT)){
+			ee.setDataList(list).write(response, fileName);
+		}
+	}
+
+	/**
+	 * 导入数据
+	 */
+	@ResponseBody
+	@RequiresPermissions("shipreport:shipReport:edit")
+	@PostMapping(value = "importData")
+	public String importData(MultipartFile file) {
+		try {
+			String message = shipReportService.importData(file);
+			return renderResult(Global.TRUE, "posfull:"+message);
+		} catch (Exception ex) {
+			return renderResult(Global.FALSE, "posfull:"+ex.getMessage());
+		}
+	}
 	/**
 	 * 删除数据
 	 */

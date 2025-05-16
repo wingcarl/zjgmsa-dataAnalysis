@@ -35,7 +35,7 @@ public class WeeklyReportController extends BaseController {
 
 	@Autowired
 	private WeeklyReportService weeklyReportService;
-	
+
 	/**
 	 * 获取数据
 	 */

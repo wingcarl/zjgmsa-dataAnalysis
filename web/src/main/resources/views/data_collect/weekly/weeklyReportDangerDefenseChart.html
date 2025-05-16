@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张家港海事局危防管理数据看板</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
+    <!-- Font Awesome - 添加图标支持 -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Custom CSS - 科技风格设计 -->
+    <style>
+        :root {
+            --primary-color: #0466c8;
+            --secondary-color: #0353a4;
+            --accent-color: #023e7d;
+            --text-color: #001845;
+            --highlight-color: #33a1fd;
+            --background-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --positive-color: #38b000;
+            --negative-color: #d90429;
+            --grid-line: rgba(4, 102, 200, 0.2);
+        }
+
+        body {
+            background-color: var(--background-color);
+            background-image: linear-gradient(to bottom, rgba(4, 102, 200, 0.05), rgba(1, 22, 56, 0.1));
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+
+        .main-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: 20px 0 30px;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        .data-card {
+            border: 1px solid rgba(4, 102, 200, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-card .label {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .data-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .data-card .change-rate {
+            font-size: 1.1em;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .change-rate.positive {
+            color: var(--positive-color);
+        }
+
+        .change-rate.negative {
+            color: var(--negative-color);
+        }
+
+        .change-rate.neutral {
+            color: #607d8b;
+        }
+
+        .custom-date-input {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .custom-date-input input {
+            margin: 0 15px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-line);
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--secondary-color);
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 表格样式优化 */
+        .table-container {
+            position: relative;
+            overflow-x: auto;
+            width: 100%;
+            margin: 20px auto 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+        }
+
+        .summary-table {
+            margin: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+        }
+
+        .summary-table th:first-child,
+        .summary-table td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: var(--card-bg);
+            z-index: 1;
+            width: 120px;
+            min-width: 120px;
+        }
+
+        .summary-table th:first-child {
+            background-color: var(--primary-color);
+        }
+
+        .summary-table th {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            vertical-align: middle;
+            padding: 12px 8px;
+            border: none;
+            white-space: nowrap;
+            font-size: 1.05rem;
+        }
+
+        .summary-table td {
+            text-align: center;
+            vertical-align: middle;
+            border-color: var(--grid-line);
+            padding: 10px 8px;
+            font-size: 1.05rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .summary-table tr:hover td {
+            background-color: rgba(4, 102, 200, 0.05);
+        }
+
+        .table-section-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .table-section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--highlight-color);
+        }
+
+        .positive-change {
+            color: var(--positive-color);
+            font-weight: 600;
+        }
+
+        .negative-change {
+            color: var(--negative-color);
+            font-weight: 600;
+        }
+
+        .neutral-change {
+            color: #607d8b;
+        }
+
+        .table-active {
+            background-color: rgba(4, 102, 200, 0.08) !important;
+        }
+
+        /* 科技风格图标 */
+        .icon-box {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        /* 科技风格图表区域 */
+        .charts-section {
+            background-color: rgba(248, 249, 250, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .charts-title {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* 调整日期选择器的响应式布局 */
+        @media (max-width: 768px) {
+            .custom-date-input {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .custom-date-input input {
+                margin: 10px 0;
+                width: 100%;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+
+        /* 返回主页按钮样式 */
+        .btn-back-home {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            border: 2px solid white;
+            border-radius: 50px;
+            padding: 8px 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        
+        .btn-back-home:hover {
+            background-color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .main-header .container .d-flex {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .btn-back-home {
+                margin-bottom: 10px;
+            }
+            
+            .main-title {
+                font-size: 22px;
+                margin: 10px 0;
+            }
+        }
+    </style>
+    <!-- jQuery 和 ECharts -->
+    <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
+    <script src="${ctxStatic}/nickjs/echarts.js"></script>
+    <!-- Scripts -->
+    <script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
+    <script src="${ctxStatic}/nickjs/sweetalert2.min.js"></script>
+</head>
+
+<body>
+<div class="main-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="btn btn-light btn-back-home">
+                <i class="fas fa-home mr-2"></i>返回主页
+            </a>
+            <h1 class="main-title">张家港海事局危防管理数据看板</h1>
+            <div style="width: 115px;"></div> <!-- 用于平衡布局的空div -->
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="custom-date-input">
+        <label for="startDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            <i class="far fa-calendar-alt icon-box"></i>开始日期：
+        </label>
+        <input type="date" id="startDate" class="form-control" style="width: auto;">
+        <label for="endDate" style="margin: 0 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            结束日期：
+        </label>
+        <input type="date" id="endDate" class="form-control" style="width: auto;">
+        <button type="button" id="fetchDataButton" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> 拉取数据
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-exclamation-triangle icon-box"></i>危防类处罚</div>
+                <div class="value" id="danger-defense-value">0</div>
+                <div class="change-rate" id="danger-defense-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-box icon-box"></i>危险品类检查</div>
+                <div class="value" id="dangerous-goods-value">0</div>
+                <div class="change-rate" id="dangerous-goods-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-water icon-box"></i>防污染类检查</div>
+                <div class="value" id="pollution-value">0</div>
+                <div class="change-rate" id="pollution-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 部门数据统计表格 -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="table-section-title"><i class="fas fa-table icon-box"></i>各部门危防数据统计表</h4>
+            <div class="table-container">
+                <table class="table table-bordered table-striped summary-table">
+                    <thead>
+                    <tr>
+                        <th rowspan="2">部门</th>
+                        <th colspan="3">危防类处罚</th>
+                        <th colspan="3">危险品类检查</th>
+                        <th colspan="3">防污染类检查</th>
+                    </tr>
+                    <tr>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                        <th>上周</th>
+                        <th>本周</th>
+                        <th>环比</th>
+                    </tr>
+                    </thead>
+                    <tbody id="department-data-body">
+                    <!-- 数据将通过JavaScript动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构危防类处罚数量</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="danger-defense-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构危险品类检查数量</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="dangerous-goods-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构防污染类检查数量</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="pollution-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>危防类处罚案由对比</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="danger-defense-case-reason-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>危险品检查项目对比</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="dangerous-goods-case-reason-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>防污染检查项目对比</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="pollution-case-reason-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
+<script src="${ctxStatic}/nickjs/popper.min.js"></script>
+<script src="${ctxStatic}/bootstrap/js/bootstrap.min.js"></script>
+<!-- SweetAlert2 为拉取数据时的消息提示 -->
+<script src="${ctxStatic}/nickjs/sweetalert2@11"></script>
+
+<script>
+    $(document).ready(function() {
+        // 初始化 ECharts 实例
+        var dangerDefenseChart = echarts.init(document.getElementById('danger-defense-chart'));
+        var dangerousGoodsChart = echarts.init(document.getElementById('dangerous-goods-chart'));
+        var pollutionChart = echarts.init(document.getElementById('pollution-chart'));
+        var dangerDefenseCaseReasonChart = echarts.init(document.getElementById('danger-defense-case-reason-chart'));
+        var dangerousGoodsCaseReasonChart = echarts.init(document.getElementById('dangerous-goods-case-reason-chart'));
+        var pollutionCaseReasonChart = echarts.init(document.getElementById('pollution-case-reason-chart'));
+
+        // 获取日期选择器和拉取数据按钮
+        var startDateInput = $('#startDate');
+        var endDateInput = $('#endDate');
+        var fetchDataButton = $('#fetchDataButton');
+
+        // 计算默认日期范围
+        function calculateDefaultDateRange() {
+            var today = new Date();
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            
+            var endDate = new Date(today);
+            var startDate = new Date(today);
+            
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
+            
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
+            
+            return {
+                start: startDate.toISOString().slice(0, 10),
+                end: endDate.toISOString().slice(0, 10)
+            };
+        }
+
+        // 设置默认日期范围
+        var defaultDates = calculateDefaultDateRange();
+        startDateInput.val(defaultDates.start);
+        endDateInput.val(defaultDates.end);
+
+        // 初始化图表
+        fetchDataAndRenderCharts();
+
+        // 日期改变事件
+        startDateInput.on('change', function() {
+            fetchDataAndRenderCharts();
+        });
+        
+        endDateInput.on('change', function() {
+            fetchDataAndRenderCharts();
+        });
+
+        // 拉取数据按钮点击事件
+        fetchDataButton.on('click', function() {
+            // 添加加载动画
+            $(this).html('<i class="fas fa-spinner fa-spin"></i> 数据加载中...');
+            $(this).prop('disabled', true);
+
+            fetchData().then(() => {
+                // 恢复按钮状态
+                $(this).html('<i class="fas fa-sync-alt"></i> 拉取数据');
+                $(this).prop('disabled', false);
+            });
+        });
+
+        function fetchData(){
+            return new Promise((resolve) => {
+                // 获取当前选择的日期范围
+                var startDate = startDateInput.val();
+                var endDate = endDateInput.val();
+
+                // 构建请求参数
+                var params = {
+                    startDate: startDate,
+                    endDate: endDate
+                }
+
+                // 发送 AJAX 请求获取数据
+                $.ajax({
+                    url: 'fetchDangerDefenseData',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: params,
+                    success: function(data) {
+                        Swal.fire({
+                            title: '成功!',
+                            text: '数据拉取成功',
+                            icon: 'success',
+                            confirmButtonText: '确定'
+                        });
+                        renderDataCards(data);
+                        renderDangerDefenseChart(data);
+                        renderDangerousGoodsChart(data);
+                        renderPollutionChart(data);
+                        renderDangerDefenseCaseReasonChart(data);
+                        renderDangerousGoodsCaseReasonChart(data);
+                        renderPollutionCaseReasonChart(data);
+                        renderDepartmentTable(data);
+                        resolve();
+                    },
+                    error: function(error){
+                        console.error('Error fetching chart data:', error);
+                        Swal.fire({
+                            title: '错误!',
+                            text: '获取数据失败，请查看控制台错误信息。',
+                            icon: 'error',
+                            confirmButtonText: '确定'
+                        });
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        function fetchDataAndRenderCharts() {
+            // 获取当前选择的日期范围
+            var startDate = startDateInput.val();
+            var endDate = endDateInput.val();
+
+            // 更新标题
+            var titleText = "张家港海事局危防管理数据看板 ("+startDate+" 至 "+ endDate+")";
+            $('.main-title').html('<i class="fas fa-shield-alt icon-box"></i>' + titleText);
+
+            // 构建请求参数
+            var params = {
+                startDate: startDate,
+                endDate: endDate
+            }
+
+            // 发送 AJAX 请求获取数据
+            $.ajax({
+                url: 'weeklyDangerDefenseChartData',
+                type: 'GET',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderDataCards(data);
+                    renderDangerDefenseChart(data);
+                    renderDangerousGoodsChart(data);
+                    renderPollutionChart(data);
+                    renderDangerDefenseCaseReasonChart(data);
+                    renderDangerousGoodsCaseReasonChart(data);
+                    renderPollutionCaseReasonChart(data);
+                    renderDepartmentTable(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching chart data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+
+        // 渲染部门数据表格
+        function renderDepartmentTable(data) {
+            var tableBody = $('#department-data-body');
+            tableBody.empty();
+
+            // 获取部门列表
+            var departments = data.categories || [];
+
+            departments.forEach(function(dept, index) {
+                var row = $('<tr></tr>');
+
+                // 添加部门名称
+                row.append('<td>' + dept + '</td>');
+
+                // 危防类处罚数据
+                var dangerDefenseLast = data.dangerDefenseData.last[index] || 0;
+                var dangerDefenseCurrent = data.dangerDefenseData.current[index] || 0;
+                var dangerDefenseRate = calculateChangeRate(dangerDefenseLast, dangerDefenseCurrent);
+
+                row.append('<td>' + dangerDefenseLast + '</td>');
+                row.append('<td>' + dangerDefenseCurrent + '</td>');
+                row.append('<td class="' + getRateClass(dangerDefenseRate) + '">' + formatRate(dangerDefenseRate) + '</td>');
+
+                // 危险品类检查数据
+                var dangerousGoodsLast = data.dangerousGoodsData.last[index] || 0;
+                var dangerousGoodsCurrent = data.dangerousGoodsData.current[index] || 0;
+                var dangerousGoodsRate = calculateChangeRate(dangerousGoodsLast, dangerousGoodsCurrent);
+
+                row.append('<td>' + dangerousGoodsLast + '</td>');
+                row.append('<td>' + dangerousGoodsCurrent + '</td>');
+                row.append('<td class="' + getRateClass(dangerousGoodsRate) + '">' + formatRate(dangerousGoodsRate) + '</td>');
+
+                // 防污染类检查数据
+                var pollutionLast = data.pollutionData.last[index] || 0;
+                var pollutionCurrent = data.pollutionData.current[index] || 0;
+                var pollutionRate = calculateChangeRate(pollutionLast, pollutionCurrent);
+
+                row.append('<td>' + pollutionLast + '</td>');
+                row.append('<td>' + pollutionCurrent + '</td>');
+                row.append('<td class="' + getRateClass(pollutionRate) + '">' + formatRate(pollutionRate) + '</td>');
+
+                tableBody.append(row);
+            });
+
+            // 添加合计行
+            addTotalRow(tableBody, data);
+        }
+
+        // 添加合计行
+        function addTotalRow(tableBody, data) {
+            var row = $('<tr class="table-active"></tr>');
+            row.append('<td><strong>合计</strong></td>');
+
+            // 计算危防类处罚合计
+            var dangerDefenseLastTotal = sumArray(data.dangerDefenseData.last);
+            var dangerDefenseCurrentTotal = sumArray(data.dangerDefenseData.current);
+            var dangerDefenseRateTotal = calculateChangeRate(dangerDefenseLastTotal, dangerDefenseCurrentTotal);
+
+            row.append('<td><strong>' + dangerDefenseLastTotal + '</strong></td>');
+            row.append('<td><strong>' + dangerDefenseCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(dangerDefenseRateTotal) + '"><strong>' + formatRate(dangerDefenseRateTotal) + '</strong></td>');
+
+            // 计算危险品类检查合计
+            var dangerousGoodsLastTotal = sumArray(data.dangerousGoodsData.last);
+            var dangerousGoodsCurrentTotal = sumArray(data.dangerousGoodsData.current);
+            var dangerousGoodsRateTotal = calculateChangeRate(dangerousGoodsLastTotal, dangerousGoodsCurrentTotal);
+
+            row.append('<td><strong>' + dangerousGoodsLastTotal + '</strong></td>');
+            row.append('<td><strong>' + dangerousGoodsCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(dangerousGoodsRateTotal) + '"><strong>' + formatRate(dangerousGoodsRateTotal) + '</strong></td>');
+
+            // 计算防污染类检查合计
+            var pollutionLastTotal = sumArray(data.pollutionData.last);
+            var pollutionCurrentTotal = sumArray(data.pollutionData.current);
+            var pollutionRateTotal = calculateChangeRate(pollutionLastTotal, pollutionCurrentTotal);
+
+            row.append('<td><strong>' + pollutionLastTotal + '</strong></td>');
+            row.append('<td><strong>' + pollutionCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(pollutionRateTotal) + '"><strong>' + formatRate(pollutionRateTotal) + '</strong></td>');
+
+            tableBody.append(row);
+        }
+
+        // 计算数组合计
+        function sumArray(arr) {
+            if (!arr) return 0;
+            return arr.reduce(function(a, b) {
+                return a + (typeof b === 'number' ? b : 0);
+            }, 0);
+        }
+
+        // 计算变化率
+        function calculateChangeRate(lastValue, currentValue) {
+            if (lastValue === 0) return currentValue > 0 ? 100 : 0;
+            return ((currentValue - lastValue) / lastValue) * 100;
+        }
+
+        // 格式化变化率
+        function formatRate(rate) {
+            if (rate === 0) return "0%";
+            return (rate > 0 ? "+" : "") + rate.toFixed(2) + "%";
+        }
+
+        // 获取变化率的CSS类
+        function getRateClass(rate) {
+            if (rate > 0) return "positive-change";
+            if (rate < 0) return "negative-change";
+            return "neutral-change";
+        }
+
+        function renderDataCards(data) {
+            // 更新指标板
+            updateDataCard("danger-defense-value", data.indicatorData.dangerDefense.value, data.indicatorData.dangerDefense.rate, "danger-defense-rate");
+            updateDataCard("dangerous-goods-value", data.indicatorData.dangerousGoods.value, data.indicatorData.dangerousGoods.rate, "dangerous-goods-rate");
+            updateDataCard("pollution-value", data.indicatorData.pollution.value, data.indicatorData.pollution.rate, "pollution-rate");
+        }
+
+        function updateDataCard(elementId, total, changeRate, changeRateId) {
+            var rate = (changeRate > 0 ? "+" : "") + changeRate.toFixed(2) + "%";
+            var changeRateElement = $("#" + changeRateId);
+            if (changeRate > 0) {
+                changeRateElement.removeClass('negative neutral').addClass('positive');
+            } else if (changeRate < 0) {
+                changeRateElement.removeClass('positive neutral').addClass('negative');
+            } else {
+                changeRateElement.removeClass('positive negative').addClass('neutral');
+            }
+            $("#" + elementId).text(total);
+            $("#" + changeRateId).text(rate);
+        }
+
+        function renderDangerDefenseChart(data) {
+            var chartOption = {
+                title: {
+                    text: '各机构危防类处罚数量',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    }
+                },
+                legend: {
+                    data: ['上周', '本周'],
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14
+                    },
+                    top: 30,
+                    left: 'center'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.categories,
+                    axisLabel: {
+                        rotate: 30,
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '上周',
+                    type: 'bar',
+                    data: data.dangerDefenseData.last,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#67C23A',
+                        fontSize: 12
+                    },
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#67C23A'
+                            }, {
+                                offset: 1, color: '#95d475'
+                            }]
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                },
+                    {
+                        name: '本周',
+                        type: 'bar',
+                        data: data.dangerDefenseData.current,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12
+                        },
+                        itemStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        }
+                    }]
+            };
+            dangerDefenseChart.setOption(chartOption);
+        }
+
+        function renderDangerousGoodsChart(data) {
+            var chartOption = {
+                title: {
+                    text: '各机构危险品类检查数量',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    }
+                },
+                legend: {
+                    data: ['上周', '本周'],
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14
+                    },
+                    top: 30,
+                    left: 'center'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.categories,
+                    axisLabel: {
+                        rotate: 30,
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '上周',
+                    type: 'bar',
+                    data: data.dangerousGoodsData.last,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#67C23A',
+                        fontSize: 12
+                    },
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#67C23A'
+                            }, {
+                                offset: 1, color: '#95d475'
+                            }]
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                },
+                    {
+                        name: '本周',
+                        type: 'bar',
+                        data: data.dangerousGoodsData.current,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12
+                        },
+                        itemStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        }
+                    }]
+            };
+            dangerousGoodsChart.setOption(chartOption);
+        }
+
+        function renderPollutionChart(data) {
+            var chartOption = {
+                title: {
+                    text: '各机构防污染类检查数量',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    }
+                },
+                legend: {
+                    data: ['上周', '本周'],
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14
+                    },
+                    top: 30,
+                    left: 'center'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.categories,
+                    axisLabel: {
+                        rotate: 30,
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '上周',
+                    type: 'bar',
+                    data: data.pollutionData.last,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#67C23A',
+                        fontSize: 12
+                    },
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#67C23A'
+                            }, {
+                                offset: 1, color: '#95d475'
+                            }]
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                },
+                    {
+                        name: '本周',
+                        type: 'bar',
+                        data: data.pollutionData.current,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#409EFF',
+                            fontSize: 12
+                        },
+                        itemStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        }
+                    }]
+            };
+            pollutionChart.setOption(chartOption);
+        }
+
+        function renderDangerDefenseCaseReasonChart(data) {
+            var chartOption = {
+                title: {
+                    text: '危防类处罚案由对比',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: data.caseReasonData.dangerDefense.map(function(item) {
+                        return item.name;
+                    }),
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 12
+                    }
+                },
+                series: [{
+                    name: '案由分布',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '18',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: data.caseReasonData.dangerDefense
+                }]
+            };
+            dangerDefenseCaseReasonChart.setOption(chartOption);
+        }
+
+        function renderDangerousGoodsCaseReasonChart(data) {
+            var chartOption = {
+                title: {
+                    text: '危险品检查项目对比',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: data.caseReasonData.dangerousGoods.map(function(item) {
+                        return item.name;
+                    }),
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 12
+                    }
+                },
+                series: [{
+                    name: '检查项目分布',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '18',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: data.caseReasonData.dangerousGoods
+                }]
+            };
+            dangerousGoodsCaseReasonChart.setOption(chartOption);
+        }
+
+        function renderPollutionCaseReasonChart(data) {
+            var chartOption = {
+                title: {
+                    text: '防污染检查项目对比',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: data.caseReasonData.pollution.map(function(item) {
+                        return item.name;
+                    }),
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 12
+                    }
+                },
+                series: [{
+                    name: '检查项目分布',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '18',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: data.caseReasonData.pollution
+                }]
+            };
+            pollutionCaseReasonChart.setOption(chartOption);
+        }
+
+        // 窗口大小变化时调整图表大小
+        $(window).resize(function() {
+            dangerDefenseChart.resize();
+            dangerousGoodsChart.resize();
+            pollutionChart.resize();
+            dangerDefenseCaseReasonChart.resize();
+            dangerousGoodsCaseReasonChart.resize();
+            pollutionCaseReasonChart.resize();
+        });
+    });
+</script>
+</body>
+
+</html> 

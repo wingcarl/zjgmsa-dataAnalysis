@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeesite.modules.data_collect.weekly.dao.WeeklyReportDangerDefenseDao">
+
+    <select id="getCategories" resultType="String">
+        SELECT DISTINCT penalty_agency 
+        FROM punish_judge 
+        WHERE penalty_agency IS NOT NULL 
+        ORDER BY penalty_agency
+    </select>
+
+    <select id="getDangerDefenseDataByDate" resultType="com.jeesite.modules.data_collect.weekly.entity.WeeklyReportDangerDefense">
+        SELECT 
+            penalty_agency as agencyName,
+            COUNT(*) as dangerDefenseCount,
+            0 as dangerousGoodsCount,
+            0 as pollutionCount,
+            #{startDate} as statisticsDate
+        FROM punish_judge
+        WHERE management_category = '危防管理'
+        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY penalty_agency
+    </select>
+
+    <select id="getDangerousGoodsDataByDate" resultType="com.jeesite.modules.data_collect.weekly.entity.WeeklyReportDangerDefense">
+        SELECT 
+            penalty_agency as agencyName,
+            0 as dangerDefenseCount,
+            COUNT(*) as dangerousGoodsCount,
+            0 as pollutionCount,
+            #{startDate} as statisticsDate
+        FROM punish_judge
+        WHERE management_category = '危防管理'
+        AND case_reason LIKE '%危险品%'
+        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY penalty_agency
+    </select>
+
+    <select id="getPollutionDataByDate" resultType="com.jeesite.modules.data_collect.weekly.entity.WeeklyReportDangerDefense">
+        SELECT 
+            penalty_agency as agencyName,
+            0 as dangerDefenseCount,
+            0 as dangerousGoodsCount,
+            COUNT(*) as pollutionCount,
+            #{startDate} as statisticsDate
+        FROM punish_judge
+        WHERE management_category = '危防管理'
+        AND case_reason LIKE '%防污染%'
+        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY penalty_agency
+    </select>
+
+    <select id="getDangerDefenseCaseReasonData" resultType="java.util.Map">
+        SELECT 
+            case_reason as name,
+            COUNT(*) as value
+        FROM punish_judge
+        WHERE management_category = '危防管理'
+        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY case_reason
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+    <select id="getDangerousGoodsCaseReasonData" resultType="java.util.Map">
+        SELECT 
+            case_reason as name,
+            COUNT(*) as value
+        FROM punish_judge
+        WHERE management_category = '危防管理'
+        AND case_reason LIKE '%危险品%'
+        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY case_reason
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+    <select id="getPollutionCaseReasonData" resultType="java.util.Map">
+        SELECT 
+            case_reason as name,
+            COUNT(*) as value
+        FROM punish_judge
+        WHERE management_category = '危防管理'
+        AND case_reason LIKE '%防污染%'
+        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY case_reason
+        ORDER BY value DESC
+        LIMIT 10
+    </select>
+
+</mapper> 
