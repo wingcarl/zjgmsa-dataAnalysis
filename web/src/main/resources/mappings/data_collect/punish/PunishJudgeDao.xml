@@ -12,4 +12,44 @@
 		ORDER BY ${sqlMap.order.toSql()}
 	</select> -->
 	
+	<!-- 获取所有违法情节选项 -->
+	<select id="findViolationCircumstances" resultType="String">
+		SELECT DISTINCT violation_circumstances
+		FROM punish_judge
+		WHERE violation_circumstances IS NOT NULL AND violation_circumstances != ''
+		ORDER BY violation_circumstances
+	</select>
+	
+	<!-- 获取所有船舶种类选项 -->
+	<select id="findShipTypes" resultType="String">
+		SELECT DISTINCT ship_type
+		FROM punish_judge
+		WHERE ship_type IS NOT NULL AND ship_type != ''
+		ORDER BY ship_type
+	</select>
+	
+	<!-- 获取所有处罚机构选项 -->
+	<select id="findPenaltyAgencies" resultType="String">
+		SELECT DISTINCT penalty_agency
+		FROM punish_judge
+		WHERE penalty_agency IS NOT NULL AND penalty_agency != ''
+		ORDER BY penalty_agency
+	</select>
+	
+	<!-- 获取所有案由选项 -->
+	<select id="findCaseReasons" resultType="String">
+		SELECT DISTINCT case_reason
+		FROM punish_judge
+		WHERE case_reason IS NOT NULL AND case_reason != ''
+		ORDER BY case_reason
+	</select>
+	
+	<!-- 获取所有业务类型选项 -->
+	<select id="findManagementCategories" resultType="String">
+		SELECT DISTINCT management_category
+		FROM punish_judge
+		WHERE management_category IS NOT NULL AND management_category != ''
+		ORDER BY management_category
+	</select>
+	
 </mapper>

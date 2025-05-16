@@ -314,6 +314,117 @@
                 margin: 10px 0;
             }
         }
+
+        /* 添加筛选区域的美化样式 */
+        .filter-section {
+            background: linear-gradient(to right, rgba(4, 102, 200, 0.05), rgba(51, 161, 253, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border: 1px solid rgba(4, 102, 200, 0.1);
+        }
+        
+        .filter-content {
+            display: none; /* 默认折叠 */
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .filter-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .filter-header .section-title {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .filter-toggle-icon {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .filter-section .form-group label {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .filter-section .form-control {
+            border-radius: 6px;
+            border: 1px solid rgba(4, 102, 200, 0.2);
+            box-shadow: none;
+            transition: all 0.3s ease;
+            width: 100%; /* 确保所有筛选框填满容器宽度 */
+        }
+        
+        .filter-section .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(4, 102, 200, 0.25);
+        }
+        
+        .filter-section .btn-primary {
+            border-radius: 6px;
+            font-weight: 600;
+            padding: 8px 20px;
+            margin-top: 24px;
+        }
+        
+        .date-range-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            margin-bottom: 15px;
+            border: 1px solid rgba(4, 102, 200, 0.1);
+        }
+        
+        .filter-row {
+            margin-bottom: 20px;
+        }
+        
+        /* 下拉选择框美化 */
+        .select2-container {
+            width: 100% !important; /* 确保Select2容器宽度填满 */
+        }
+        
+        /* 特别调整案由下拉框 */
+        #caseReason {
+            min-width: 250px; /* 设置最小宽度 */
+        }
+        
+        /* 下拉菜单设置最大宽度和文字换行 */
+        .select2-results__option {
+            white-space: normal; /* 允许文本换行 */
+            word-break: break-word; /* 在必要时断词 */
+        }
+        
+        /* 下拉选择框中显示的选中值样式 */
+        .select2-selection__rendered {
+            white-space: normal !important; /* 允许文本换行 */
+            word-break: break-word !important; /* 在必要时断词 */
+            text-overflow: initial !important; /* 覆盖select2默认的省略号 */
+            line-height: 1.3 !important; /* 调整行高以适应多行文本 */
+            padding: 5px 20px 5px 12px !important; /* 增加上下内边距 */
+        }
+        
+        /* 调整选择框高度以适应可能的多行文本 */
+        .select2-container--default .select2-selection--single {
+            height: auto !important; /* 自动调整高度 */
+            min-height: 38px;
+        }
+        
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100% !important; /* 箭头跟随容器高度 */
+        }
     </style>
     <!-- jQuery 和 ECharts -->
     <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
@@ -321,6 +432,9 @@
     <!-- Scripts -->
     <script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
     <script src="${ctxStatic}/nickjs/sweetalert2.min.js"></script>
+    <!-- 引入Select2库 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 
 <body>
@@ -337,60 +451,124 @@
 </div>
 
 <div class="container-fluid">
-    <div class="custom-date-input">
-        <label for="reportDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
-            <i class="far fa-calendar-alt icon-box"></i>选择日期：
-        </label>
-        <input type="date" id="reportDate" class="form-control" style="width: auto;">
-        <button type="button" id="fetchDataButton" class="btn btn-primary">
-            <i class="fas fa-sync-alt"></i> 拉取数据
-        </button>
+    <div class="filter-section">
+        <div class="filter-header" id="filterToggle">
+            <div class="section-title"><i class="fas fa-filter mr-2"></i>筛选条件</div>
+            <div class="filter-toggle-icon"><i class="fas fa-chevron-down"></i></div>
+        </div>
+        <div class="filter-content">
+            <div class="date-range-container">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <div class="d-flex align-items-center">
+                            <label for="startDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                                <i class="far fa-calendar-alt icon-box"></i>开始日期：
+                            </label>
+                            <input type="date" id="startDate" class="form-control" style="width: auto;">
+                            <label for="endDate" style="margin: 0 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                                结束日期：
+                            </label>
+                            <input type="date" id="endDate" class="form-control" style="width: auto;">
+                            <button type="button" id="fetchDataButton" class="btn btn-primary ml-3">
+                                <i class="fas fa-sync-alt"></i> 拉取数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="penaltyAgency">处罚机构：</label>
+                            <select id="penaltyAgency" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="seaRiverShip">船舶类型：</label>
+                            <select id="seaRiverShip" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <option value="海船">海船</option>
+                                <option value="内河船">内河船</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2"><!-- 调整案由的列宽为4 -->
+                        <div class="form-group">
+                            <label for="caseReason">案由：</label>
+                            <select id="caseReason" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-2"><!-- 相应调整业务类型的列宽为2 -->
+                        <div class="form-group">
+                            <label for="managementCategory">业务类型：</label>
+                            <select id="managementCategory" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="violationCircumstances">违法情节：</label>
+                            <select id="violationCircumstances" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="shipType">船舶种类：</label>
+                            <select id="shipType" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="minAmount">最小金额：</label>
+                            <input type="number" id="minAmount" class="form-control filter-input" placeholder="最小金额">
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="maxAmount">最大金额：</label>
+                            <input type="number" id="maxAmount" class="form-control filter-input" placeholder="最大金额">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="data-card">
                 <div class="label"><i class="fas fa-clipboard-list icon-box"></i>处罚决定数量</div>
                 <div class="value" id="penalty-decision-count-value">0</div>
                 <div class="change-rate" id="penalty-decision-count-rate">0%</div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="data-card">
                 <div class="label"><i class="fas fa-money-bill-wave icon-box"></i>处罚总金额</div>
                 <div class="value" id="penalty-amount-value">0</div>
                 <div class="change-rate" id="penalty-amount-rate">0%</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="data-card">
-                <div class="label"><i class="fas fa-exclamation-triangle icon-box"></i>违法计分</div>
-                <div class="value" id="illegal-score-value">0</div>
-                <div class="change-rate" id="illegal-score-rate">0%</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4">
-            <div class="data-card">
-                <div class="label"><i class="fas fa-ship icon-box"></i>进出港处罚</div>
-                <div class="value" id="illegal-report-value">0</div>
-                <div class="change-rate" id="illegal-report-rate">0%</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="data-card">
-                <div class="label"><i class="fas fa-broadcast-tower icon-box"></i>无线电处罚</div>
-                <div class="value" id="illegal-wireless-value">0</div>
-                <div class="change-rate" id="illegal-wireless-rate">0%</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="data-card">
-                <div class="label"><i class="fas fa-water icon-box"></i>防污染处罚</div>
-                <div class="value" id="illegal-pollute-value">0</div>
-                <div class="change-rate" id="illegal-pollute-rate">0%</div>
             </div>
         </div>
     </div>
@@ -424,8 +602,9 @@
         </div>
     </div>
 
+    <!-- 各机构处罚决定数量图表 -->
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各处罚机构处罚决定数量</h5>
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构处罚决定数量</h5>
         <div class="row">
             <div class="col-md-12">
                 <div id="punish-agency-chart" class="chart-container"></div>
@@ -433,29 +612,71 @@
         </div>
     </div>
 
+    <!-- 各机构处罚金额图表 -->
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构进出港处罚数量</h5>
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构处罚金额</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="report-illegal-chart" class="chart-container"></div>
+                <div id="penalty-amount-chart" class="chart-container"></div>
             </div>
         </div>
     </div>
 
+    <!-- 处罚案由对比图表 -->
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构无线电处罚数量</h5>
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>处罚案由对比</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="wireless-illegal-chart" class="chart-container"></div>
+                <div id="case-reason-chart" class="chart-container"></div>
             </div>
         </div>
     </div>
 
+    <!-- 处罚类别对比图表 -->
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构防污染处罚数量</h5>
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>处罚类别对比</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="pollute-illegal-chart" class="chart-container"></div>
+                <div id="management-category-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 处罚详情弹窗 -->
+    <div class="modal fade" id="penaltyDetailsModal" tabindex="-1" role="dialog" aria-labelledby="penaltyDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document" style="max-width: 95%; width: 95%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="penaltyDetailsModalLabel">处罚详情</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover" id="penaltyDetailsTable">
+                            <thead>
+                                <tr>
+                                    <th>案由</th>
+                                    <th>船舶名称</th>
+                                    <th>船舶种类</th>
+                                    <th>海船/内河船</th>
+                                    <th>处罚机构</th>
+                                    <th>处罚金额</th>
+                                    <th>处罚决定时间</th>
+                                    <th>业务类型</th>
+                                    <th>违法情节</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 数据将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
             </div>
         </div>
     </div>
@@ -471,22 +692,87 @@
     $(document).ready(function() {
         // 初始化 ECharts 实例
         var punishAgencyChart = echarts.init(document.getElementById('punish-agency-chart'));
-        var reportIllegalChart = echarts.init(document.getElementById('report-illegal-chart'));
-        var wirelessIllegalChart = echarts.init(document.getElementById('wireless-illegal-chart'));
-        var polluteIllegalChart = echarts.init(document.getElementById('pollute-illegal-chart'));
+        var penaltyAmountChart = echarts.init(document.getElementById('penalty-amount-chart'));
+        var caseReasonChart = echarts.init(document.getElementById('case-reason-chart'));
+        var managementCategoryChart = echarts.init(document.getElementById('management-category-chart'));
+
+        // 筛选条件折叠功能
+        $('#filterToggle').on('click', function() {
+            $('.filter-content').slideToggle(300);
+            $('.filter-toggle-icon i').toggleClass('fa-chevron-down fa-chevron-up');
+            
+            // 调整图表大小以适应内容变化
+            setTimeout(function() {
+                punishAgencyChart.resize();
+                penaltyAmountChart.resize();
+                caseReasonChart.resize();
+                managementCategoryChart.resize();
+            }, 350);
+        });
 
         // 获取日期选择器和拉取数据按钮
-        var dateInput = $('#reportDate');
+        var startDateInput = $('#startDate');
+        var endDateInput = $('#endDate');
         var fetchDataButton = $('#fetchDataButton');
+        
+        // 获取筛选条件元素
+        var penaltyAgencySelect = $('#penaltyAgency');
+        var seaRiverShipSelect = $('#seaRiverShip');
+        var caseReasonInput = $('#caseReason');
+        var managementCategorySelect = $('#managementCategory');
+        var violationCircumstancesSelect = $('#violationCircumstances');
+        var shipTypeSelect = $('#shipType');
+        var minAmountInput = $('#minAmount');
+        var maxAmountInput = $('#maxAmount');
 
-        // 设置默认日期为今天
-        dateInput.val(new Date().toISOString().slice(0, 10));
+        // 计算默认日期范围
+        function calculateDefaultDateRange() {
+            var today = new Date();
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            
+            var endDate = new Date(today);
+            var startDate = new Date(today);
+            
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
+            
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
+            
+            return {
+                start: startDate.toISOString().slice(0, 10),
+                end: endDate.toISOString().slice(0, 10)
+            };
+        }
+
+        // 设置默认日期范围
+        var defaultDates = calculateDefaultDateRange();
+        startDateInput.val(defaultDates.start);
+        endDateInput.val(defaultDates.end);
+
+        // 加载筛选条件选项
+        loadFilterOptions();
 
         // 初始化图表
         fetchDataAndRenderCharts();
 
+        // 筛选条件变化事件
+        $('.filter-select, .filter-input').on('change', function() {
+            fetchDataAndRenderCharts();
+        });
+
         // 日期改变事件
-        dateInput.on('change', function() {
+        startDateInput.on('change', function() {
+            fetchDataAndRenderCharts();
+        });
+        
+        endDateInput.on('change', function() {
             fetchDataAndRenderCharts();
         });
 
@@ -503,25 +789,106 @@
             });
         });
 
+        // 加载筛选条件选项
+        function loadFilterOptions() {
+            $.ajax({
+                url: 'getFilterOptions',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    // 加载违法情节选项
+                    if (data.violationCircumstances && data.violationCircumstances.length > 0) {
+                        var violationOptions = '<option value="">全部</option>';
+                        data.violationCircumstances.forEach(function(item) {
+                            violationOptions += '<option value="' + item + '">' + item + '</option>';
+                        });
+                        violationCircumstancesSelect.html(violationOptions);
+                        violationCircumstancesSelect.select2({
+                            placeholder: "请选择违法情节",
+                            allowClear: true
+                        });
+                    }
+                    
+                    // 加载船舶种类选项
+                    if (data.shipTypes && data.shipTypes.length > 0) {
+                        var shipTypeOptions = '<option value="">全部</option>';
+                        data.shipTypes.forEach(function(item) {
+                            shipTypeOptions += '<option value="' + item + '">' + item + '</option>';
+                        });
+                        shipTypeSelect.html(shipTypeOptions);
+                        shipTypeSelect.select2({
+                            placeholder: "请选择船舶种类",
+                            allowClear: true
+                        });
+                    }
+                    
+                    // 加载处罚机构选项
+                    if (data.penaltyAgencies && data.penaltyAgencies.length > 0) {
+                        var agencyOptions = '<option value="">全部</option>';
+                        data.penaltyAgencies.forEach(function(item) {
+                            agencyOptions += '<option value="' + item + '">' + item + '</option>';
+                        });
+                        penaltyAgencySelect.html(agencyOptions);
+                        penaltyAgencySelect.select2({
+                            placeholder: "请选择处罚机构",
+                            allowClear: true
+                        });
+                    }
+                    
+                    // 加载案由选项
+                    if (data.caseReasons && data.caseReasons.length > 0) {
+                        var caseReasonOptions = '<option value="">全部</option>';
+                        data.caseReasons.forEach(function(item) {
+                            caseReasonOptions += '<option value="' + item + '">' + item + '</option>';
+                        });
+                        caseReasonInput.html(caseReasonOptions);
+                        caseReasonInput.select2({
+                            placeholder: "请选择案由",
+                            allowClear: true,
+                            width: 'resolve', // 让Select2自动处理宽度
+                            templateResult: formatCaseReason,
+                            templateSelection: formatCaseReason
+                        });
+                    }
+                    
+                    // 加载业务类型选项
+                    if (data.managementCategories && data.managementCategories.length > 0) {
+                        var categoryOptions = '<option value="">全部</option>';
+                        data.managementCategories.forEach(function(item) {
+                            categoryOptions += '<option value="' + item + '">' + item + '</option>';
+                        });
+                        managementCategorySelect.html(categoryOptions);
+                        managementCategorySelect.select2({
+                            placeholder: "请选择业务类型",
+                            allowClear: true
+                        });
+                    }
+                },
+                error: function(error) {
+                    console.error('Error loading filter options:', error);
+                }
+            });
+        }
+
+        // 格式化案由文本，处理长文本显示
+        function formatCaseReason(caseReason) {
+            if (!caseReason.id) {
+                return caseReason.text;
+            }
+            
+            // 创建带有完整tooltip的选项
+            var $caseReason = $(
+                '<span title="' + caseReason.text + '">' + caseReason.text + '</span>'
+            );
+            
+            return $caseReason;
+        }
+
+        // 获取数据
         function fetchData(){
             return new Promise((resolve) => {
-                // 获取当前选择的日期
-                var selectedDate = dateInput.val();
-                var currentDate = new Date(selectedDate);
-                var currentDayOfWeek = currentDate.getDay();
-
-                // 计算上周五的日期
-                var currentWeekStartDate = new Date(currentDate);
-                currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
-
-                var lastWeekStartDate = new Date(currentWeekStartDate);
-                lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
-
-                // 构建请求参数
-                var params = {
-                    currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                    lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
-                }
+                // 获取当前选择的日期范围和筛选条件
+                var params = getQueryParams();
 
                 // 发送 AJAX 请求获取数据
                 $.ajax({
@@ -530,6 +897,7 @@
                     dataType: 'json',
                     data: params,
                     success: function(data) {
+                        console.log(data);
                         Swal.fire({
                             title: '成功!',
                             text: '数据拉取成功',
@@ -537,11 +905,11 @@
                             confirmButtonText: '确定'
                         });
                         renderDataCards(data);
-                        renderPunishAgencyChart(data);
-                        renderReportIllegalChart(data);
-                        renderWirelessIllegalChart(data);
-                        renderPolluteIllegalChart(data);
                         renderDepartmentTable(data);
+                        renderPunishAgencyChart(data);
+                        renderPenaltyAmountChart(data);
+                        renderCaseReasonChart(data);
+                        renderManagementCategoryChart(data);
                         resolve();
                     },
                     error: function(error){
@@ -558,47 +926,53 @@
             });
         }
 
+        // 获取查询参数
+        function getQueryParams() {
+            var minAmount = minAmountInput.val();
+            var maxAmount = maxAmountInput.val();
+            
+            return {
+                startDate: startDateInput.val(),
+                endDate: endDateInput.val(),
+                penaltyAgency: penaltyAgencySelect.val(),
+                seaRiverShip: seaRiverShipSelect.val(),
+                caseReason: caseReasonInput.val(),
+                managementCategory: managementCategorySelect.val(),
+                violationCircumstances: violationCircumstancesSelect.val(),
+                shipType: shipTypeSelect.val(),
+                minAmount: minAmount ? minAmount : "",
+                maxAmount: maxAmount ? maxAmount : ""
+            };
+        }
+
+        // 获取并渲染图表数据
         function fetchDataAndRenderCharts() {
-            // 获取当前选择的日期
-            var selectedDate = dateInput.val();
-
-            // 计算本周和上周的开始日期
-            var currentDate = new Date(selectedDate);
-            var currentDayOfWeek = currentDate.getDay();
-            var currentWeekStartDate = new Date(currentDate);
-            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
-
-            var lastWeekStartDate = new Date(currentWeekStartDate);
-            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
-
-            // 构建请求参数
-            var params = {
-                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
-            }
-
-            // 计算结束日期
-            var currentWeekEndDate = new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
-            var formattedStartDate = currentWeekStartDate.toISOString().slice(0, 10);
-            var formattedEndDate = currentWeekEndDate.toISOString().slice(0, 10);
+            // 获取当前选择的日期范围和筛选条件
+            var params = getQueryParams();
 
             // 更新标题
-            var titleText = "张家港海事局法制管理数据看板 ("+formattedStartDate+" 至 "+ formattedEndDate+")";
+            var titleText = "张家港海事局行政处罚数据看板 ("+params.startDate+" 至 "+ params.endDate+")";
             $('.main-title').html('<i class="fas fa-gavel icon-box"></i>' + titleText);
 
             // 发送 AJAX 请求获取数据
             $.ajax({
-                url: 'weeklyChartDataWithDate', // 使用原始URL
+                url: 'weeklyChartDataWithDate',
                 type: 'GET',
                 dataType: 'json',
                 data: params,
                 success: function(data) {
+                    console.log(data);
                     renderDataCards(data);
-                    renderPunishAgencyChart(data);
-                    renderReportIllegalChart(data);
-                    renderWirelessIllegalChart(data);
-                    renderPolluteIllegalChart(data);
                     renderDepartmentTable(data);
+                    renderPunishAgencyChart(data);
+                    renderPenaltyAmountChart(data);
+                    renderCaseReasonChart(data);
+                    renderManagementCategoryChart(data);
+                    
+                    // 动态填充处罚机构下拉框
+                    fillAgencyDropdown(data.categories);
+                    // 动态填充业务类型下拉框
+                    fillManagementCategoryDropdown(data.managementCategoryData);
                 },
                 error: function(error) {
                     console.error('Error fetching chart data:', error);
@@ -611,146 +985,49 @@
                 }
             });
         }
-
-        // 渲染部门数据表格
-        function renderDepartmentTable(data) {
-            var tableBody = $('#department-data-body');
-            tableBody.empty();
-            console.log(data)
-            // 获取部门列表
-            var departments = data.categories || [];
-
-            departments.forEach(function(dept, index) {
-                var row = $('<tr></tr>');
-
-                // 添加部门名称
-                row.append('<td>' + dept + '</td>');
-
-                // 处罚数量数据
-                var penaltyCountLast = data.penaltyAgencyCounts.last[index] || 0;
-                var penaltyCountCurrent = Array.isArray(data.penaltyAgencyCounts.current)
-                    ? (data.penaltyAgencyCounts.current[index] || 0)
-                    : (data.penaltyAgencyCounts.current[index]?.value || 0);
-                var penaltyCountRate = calculateChangeRate(penaltyCountLast, penaltyCountCurrent);
-
-                row.append('<td>' + penaltyCountLast + '</td>');
-                row.append('<td>' + penaltyCountCurrent + '</td>');
-                row.append('<td class="' + getRateClass(penaltyCountRate) + '">' + formatRate(penaltyCountRate) + '</td>');
-
-                // 处罚金额数据 - 假设数据中有penaltyAmountByAgency字段
-                // 如果没有此字段，后端需要提供相应数据
-                var penaltyAmountLast = 0;
-                var penaltyAmountCurrent = 0;
-
-                if (data.penaltyAmountByAgency) {
-                    penaltyAmountLast = data.penaltyAmountByAgency.last ? (data.penaltyAmountByAgency.last[index] || 0) : 0;
-                    penaltyAmountCurrent = data.penaltyAmountByAgency.current[index].value;
-                }
-
-                var penaltyAmountRate = calculateChangeRate(penaltyAmountLast, penaltyAmountCurrent);
-
-                // 金额显示为万元，保留2位小数
-                row.append('<td>' + (penaltyAmountLast / 10000).toFixed(2) + '</td>');
-                row.append('<td>' + (penaltyAmountCurrent / 10000).toFixed(2) + '</td>');
-                row.append('<td class="' + getRateClass(penaltyAmountRate) + '">' + formatRate(penaltyAmountRate) + '</td>');
-
-                tableBody.append(row);
+        
+        // 填充处罚机构下拉框
+        function fillAgencyDropdown(categories) {
+            if (!categories || categories.length === 0) return;
+            
+            var currentValue = penaltyAgencySelect.val();
+            var options = '<option value="">全部</option>';
+            
+            categories.forEach(function(agency) {
+                var selected = currentValue === agency ? 'selected' : '';
+                options += '<option value="' + agency + '" ' + selected + '>' + agency + '</option>';
             });
-
-            // 添加合计行
-            addTotalRow(tableBody, data);
+            
+            penaltyAgencySelect.html(options);
         }
-
-        // 添加合计行
-        function addTotalRow(tableBody, data) {
-            var row = $('<tr class="table-active"></tr>');
-            row.append('<td><strong>合计</strong></td>');
-
-            // 计算处罚数量合计
-            var penaltyCountLastTotal = sumArray(data.penaltyAgencyCounts.last);
-            var penaltyCountCurrentTotal = Array.isArray(data.penaltyAgencyCounts.current)
-                ? sumArray(data.penaltyAgencyCounts.current)
-                : sumArrayValues(data.penaltyAgencyCounts.current);
-            var penaltyCountRateTotal = calculateChangeRate(penaltyCountLastTotal, penaltyCountCurrentTotal);
-
-            row.append('<td><strong>' + penaltyCountLastTotal + '</strong></td>');
-            row.append('<td><strong>' + penaltyCountCurrentTotal + '</strong></td>');
-            row.append('<td class="' + getRateClass(penaltyCountRateTotal) + '"><strong>' + formatRate(penaltyCountRateTotal) + '</strong></td>');
-
-            // 计算处罚金额合计
-            var penaltyAmountLastTotal = 0;
-            var penaltyAmountCurrentTotal = 0;
-
-            if (data.penaltyAmountByAgency) {
-                penaltyAmountLastTotal = data.penaltyAmountByAgency.last ? sumArray(data.penaltyAmountByAgency.last) : 0;
-                penaltyAmountCurrentTotal = data.penaltyAmountByAgency.current ?
-                    (Array.isArray(data.penaltyAmountByAgency.current)
-                        ? sumArray(data.penaltyAmountByAgency.current)
-                        : sumArrayValues(data.penaltyAmountByAgency.current))
-                    : 0;
-            } else {
-                // 如果没有按部门金额数据，使用总金额
-                penaltyAmountLastTotal = data.indicatorData?.penaltyAmount?.lastValue || 0;
-                penaltyAmountCurrentTotal = data.indicatorData?.penaltyAmount?.value || 0;
-            }
-
-            var penaltyAmountRateTotal = calculateChangeRate(penaltyAmountLastTotal, penaltyAmountCurrentTotal);
-
-            // 金额显示为万元，保留2位小数
-            row.append('<td><strong>' + (penaltyAmountLastTotal / 10000).toFixed(2) + '</strong></td>');
-            row.append('<td><strong>' + (penaltyAmountCurrentTotal / 10000).toFixed(2) + '</strong></td>');
-            row.append('<td class="' + getRateClass(penaltyAmountRateTotal) + '"><strong>' + formatRate(penaltyAmountRateTotal) + '</strong></td>');
-
-            tableBody.append(row);
-        }
-
-        // 计算数组合计
-        function sumArray(arr) {
-            if (!arr) return 0;
-            return arr.reduce(function(a, b) {
-                return a + (typeof b === 'number' ? b : 0);
-            }, 0);
-        }
-
-        // 计算对象数组的值合计
-        function sumArrayValues(arr) {
-            if (!arr) return 0;
-            return arr.reduce(function(a, b) {
-                if (b && typeof b === 'object') {
-                    return a + (typeof b.value === 'number' ? b.value : 0);
-                } else {
-                    return a + (typeof b === 'number' ? b : 0);
+        
+        // 填充业务类型下拉框
+        function fillManagementCategoryDropdown(categoryData) {
+            if (!categoryData || !categoryData.data || categoryData.data.length === 0) return;
+            
+            var currentValue = managementCategorySelect.val();
+            var options = '<option value="">全部</option>';
+            var categories = [];
+            
+            // 提取业务类型
+            categoryData.data.forEach(function(item) {
+                if (item.name && !categories.includes(item.name)) {
+                    categories.push(item.name);
                 }
-            }, 0);
-        }
-
-        // 计算变化率
-        function calculateChangeRate(lastValue, currentValue) {
-            if (lastValue === 0) return currentValue > 0 ? 100 : 0;
-            return ((currentValue - lastValue) / lastValue) * 100;
-        }
-
-        // 格式化变化率
-        function formatRate(rate) {
-            if (rate === 0) return "0%";
-            return (rate > 0 ? "+" : "") + rate.toFixed(2) + "%";
-        }
-
-        // 获取变化率的CSS类
-        function getRateClass(rate) {
-            if (rate > 0) return "positive-change";
-            if (rate < 0) return "negative-change";
-            return "neutral-change";
+            });
+            
+            categories.forEach(function(category) {
+                var selected = currentValue === category ? 'selected' : '';
+                options += '<option value="' + category + '" ' + selected + '>' + category + '</option>';
+            });
+            
+            managementCategorySelect.html(options);
         }
 
         function renderDataCards(data) {
             // 更新指标板
             updateDataCard("penalty-decision-count-value", data.indicatorData.penaltyDecisionCount.value, data.indicatorData.penaltyDecisionCount.rate, "penalty-decision-count-rate");
             updateDataCard("penalty-amount-value", data.indicatorData.penaltyAmount.value, data.indicatorData.penaltyAmount.rate, "penalty-amount-rate");
-            updateDataCard("illegal-score-value", data.indicatorData.illegalScore.value, data.indicatorData.illegalScore.rate, "illegal-score-rate");
-            updateDataCard("illegal-report-value", data.indicatorData.illegalReport.value, data.indicatorData.illegalReport.rate, "illegal-report-rate");
-            updateDataCard("illegal-wireless-value", data.indicatorData.illegalWireless.value, data.indicatorData.illegalWireless.rate, "illegal-wireless-rate");
-            updateDataCard("illegal-pollute-value", data.indicatorData.illegalPollute.value, data.indicatorData.illegalPollute.rate, "illegal-pollute-rate");
         }
 
         function updateDataCard(elementId, total, changeRate, changeRateId) {
@@ -768,9 +1045,27 @@
         }
 
         function renderPunishAgencyChart(data) {
+            // 处理数据格式
+            var lastData = data.penaltyAgencyCounts?.last || [];
+            var currentData = [];
+            
+            // 处理current可能是对象数组的情况
+            if (data.penaltyAgencyCounts?.current) {
+                currentData = data.penaltyAgencyCounts.current.map(function(item) {
+                    if (typeof item === 'object' && item !== null) {
+                        return item;
+                    } else {
+                        return {
+                            value: item,
+                            changeRate: 0
+                        };
+                    }
+                });
+            }
+            
             var chartOption = {
                 title: {
-                    text: '各处罚机构处罚决定数量',
+                    text: '各机构处罚决定数量',
                     textStyle: {
                         color: '#0466c8',
                         fontWeight: 'bold',
@@ -790,6 +1085,18 @@
                     textStyle: {
                         color: '#333',
                         fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            var value = item.value;
+                            if (typeof item.value === 'object' && 'value' in item.value) {
+                                value = item.value.value;
+                            }
+                            result += colorSpan(item.color) + item.seriesName + ': ' + value + '<br/>';
+                        });
+                        return result;
                     }
                 },
                 legend: {
@@ -842,7 +1149,7 @@
                 series: [{
                     name: '上周',
                     type: 'bar',
-                    data: data.penaltyAgencyCounts.last,
+                    data: lastData,
                     label: {
                         show: true,
                         position: 'top',
@@ -862,44 +1169,77 @@
                         borderRadius: [3, 3, 0, 0]
                     }
                 },
-                    {
-                        name: '本周',
-                        type: 'bar',
-                        data: data.penaltyAgencyCounts.current,
-                        label: {
-                            show: true,
-                            position: 'top',
-                            color: '#409EFF',
-                            fontSize: 12,
-                            formatter: function(params) {
-                                if (params.data && params.data.changeRate !== undefined) {
-                                    return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
+                {
+                    name: '本周',
+                    type: 'bar',
+                    data: currentData,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#409EFF',
+                        fontSize: 12,
+                        formatter: function(params) {
+                            if (typeof params.data === 'object' && params.data !== null && 'value' in params.data) {
+                                if ('changeRate' in params.data) {
+                                    return params.data.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate.toFixed(2) + "%)";
                                 }
-                                return params.value;
+                                return params.data.value;
                             }
-                        },
-                        itemStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#409EFF'
-                                }, {
-                                    offset: 1, color: '#7ab9ff'
-                                }]
-                            },
-                            borderRadius: [3, 3, 0, 0]
+                            return params.value;
                         }
+                    },
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#409EFF'
+                            }, {
+                                offset: 1, color: '#7ab9ff'
+                            }]
+                        },
+                        borderRadius: [3, 3, 0, 0]
                     }
-                ]
+                }]
             };
+            
             punishAgencyChart.setOption(chartOption);
+            
+            // 添加点击事件
+            punishAgencyChart.off('click');
+            punishAgencyChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var agencyName = data.categories[params.dataIndex];
+                    var queryParams = getQueryParams();
+                    
+                    // 获取详细数据
+                    getPenaltyDetails(agencyName, queryParams);
+                }
+            });
         }
 
-        function renderReportIllegalChart(data) {
+        function renderPenaltyAmountChart(data) {
+            // 处理数据格式
+            var lastData = data.penaltyAmountByAgency?.last || [];
+            var currentData = [];
+            
+            // 处理current可能是对象数组的情况
+            if (data.penaltyAmountByAgency?.current) {
+                currentData = data.penaltyAmountByAgency.current.map(function(item) {
+                    if (typeof item === 'object' && item !== null) {
+                        return item;
+                    } else {
+                        return {
+                            value: item,
+                            changeRate: 0
+                        };
+                    }
+                });
+            }
+            
             var chartOption = {
                 title: {
-                    text: '各机构进出港处罚数量',
+                    text: '各机构处罚金额',
                     textStyle: {
                         color: '#0466c8',
                         fontWeight: 'bold',
@@ -919,6 +1259,20 @@
                     textStyle: {
                         color: '#333',
                         fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            // 金额转为万元显示
+                            var value = item.value;
+                            if (typeof item.value === 'object' && 'value' in item.value) {
+                                value = item.value.value;
+                            }
+                            var valueText = (value / 10000).toFixed(2) + '万元';
+                            result += colorSpan(item.color) + item.seriesName + ': ' + valueText + '<br/>';
+                        });
+                        return result;
                     }
                 },
                 legend: {
@@ -939,7 +1293,7 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: data.reportIllegalCounts.categories,
+                    data: data.categories,
                     axisLabel: {
                         rotate: 30,
                         interval: 0,
@@ -955,7 +1309,10 @@
                 yAxis: {
                     type: 'value',
                     axisLabel: {
-                        fontSize: 12
+                        fontSize: 12,
+                        formatter: function(value) {
+                            return (value / 10000).toFixed(2) + '万';
+                        }
                     },
                     axisLine: {
                         lineStyle: {
@@ -971,12 +1328,15 @@
                 series: [{
                     name: '上周',
                     type: 'bar',
-                    data: data.reportIllegalCounts.reportIllegalCounts.last,
+                    data: lastData,
                     label: {
                         show: true,
                         position: 'top',
                         color: '#67C23A',
-                        fontSize: 12
+                        fontSize: 12,
+                        formatter: function(params) {
+                            return (params.value / 10000).toFixed(2) + '万';
+                        }
                     },
                     itemStyle: {
                         color: {
@@ -994,17 +1354,21 @@
                     {
                         name: '本周',
                         type: 'bar',
-                        data: data.reportIllegalCounts.reportIllegalCounts.current,
+                        data: currentData,
                         label: {
                             show: true,
                             position: 'top',
                             color: '#409EFF',
                             fontSize: 12,
                             formatter: function(params) {
-                                if (params.data && params.data.changeRate !== undefined) {
-                                    return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
+                                if (typeof params.data === 'object' && params.data !== null && 'value' in params.data) {
+                                    var valueText = (params.data.value / 10000).toFixed(2) + '万';
+                                    if ('changeRate' in params.data) {
+                                        return valueText + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate.toFixed(2) + "%)";
+                                    }
+                                    return valueText;
                                 }
-                                return params.value;
+                                return (params.value / 10000).toFixed(2) + '万';
                             }
                         },
                         itemStyle: {
@@ -1022,13 +1386,14 @@
                     }
                 ]
             };
-            reportIllegalChart.setOption(chartOption);
+            
+            penaltyAmountChart.setOption(chartOption);
         }
 
-        function renderWirelessIllegalChart(data) {
+        function renderCaseReasonChart(data) {
             var chartOption = {
                 title: {
-                    text: '各机构无线电处罚数量',
+                    text: '处罚案由对比',
                     textStyle: {
                         color: '#0466c8',
                         fontWeight: 'bold',
@@ -1051,37 +1416,38 @@
                     }
                 },
                 legend: {
-                    data: ['上周', '本周'],
-                    textStyle: {
-                        color: '#0466c8',
-                        fontSize: 14
-                    },
-                    top: 30,
-                    left: 'center'
+                    show: false
                 },
                 grid: {
-                    left: '3%',
-                    right: '4%',
+                    left: '22%',  // 增加左侧空间以显示案由名称
+                    right: '10%',
                     bottom: '3%',
-                    top: 80,
+                    top: 60,
                     containLabel: true
                 },
-                xAxis: {
-                    type: 'category',
-                    data: data.wirelessIllegalCounts.categories,
-                    axisLabel: {
-                        rotate: 30,
-                        interval: 0,
-                        color: '#001845',
-                        fontSize: 12
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#0466c8'
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        right: 0,
+                        width: 20,
+                        start: 0,
+                        end: 100,
+                        filterMode: 'filter',
+                        showDetail: false,
+                        showDataShadow: false,
+                        handleIcon: 'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+                        handleSize: '80%',
+                        handleStyle: {
+                            color: '#0466c8',
+                            shadowBlur: 3,
+                            shadowColor: 'rgba(0, 0, 0, 0.2)',
+                            shadowOffsetX: 1,
+                            shadowOffsetY: 1
                         }
                     }
-                },
-                yAxis: {
+                ],
+                xAxis: {
                     type: 'value',
                     axisLabel: {
                         fontSize: 12
@@ -1097,66 +1463,76 @@
                         }
                     }
                 },
+                yAxis: {
+                    type: 'category',
+                    data: data.caseReasonData.data.map(function(item) { return item.name; }),
+                    axisLabel: {
+                        color: '#001845',
+                        fontSize: 12,
+                        formatter: function (value) {
+                            // 如果文本长度超过20个字符，截取前20个字符并加上省略号
+                            if (value.length > 20) {
+                                return value.substring(0, 20) + '...';
+                            }
+                            return value;
+                        },
+                        rich: {
+                            a: {
+                                lineHeight: 20,
+                                align: 'left'
+                            }
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
                 series: [{
-                    name: '上周',
+                    name: '案由',
                     type: 'bar',
-                    data: data.wirelessIllegalCounts.wirelessIllegalCounts.last,
+                    data: data.caseReasonData.data.map(function(item) { return item.value; }),
                     label: {
                         show: true,
-                        position: 'top',
-                        color: '#67C23A',
+                        position: 'right',
+                        color: '#409EFF',
                         fontSize: 12
                     },
                     itemStyle: {
                         color: {
                             type: 'linear',
-                            x: 0, y: 0, x2: 0, y2: 1,
+                            x: 0, y: 0, x2: 1, y2: 0,
                             colorStops: [{
-                                offset: 0, color: '#67C23A'
+                                offset: 0, color: '#409EFF'
                             }, {
-                                offset: 1, color: '#95d475'
+                                offset: 1, color: '#7ab9ff'
                             }]
                         },
-                        borderRadius: [3, 3, 0, 0]
+                        borderRadius: [0, 3, 3, 0]
                     }
-                },
-                    {
-                        name: '本周',
-                        type: 'bar',
-                        data: data.wirelessIllegalCounts.wirelessIllegalCounts.current,
-                        label: {
-                            show: true,
-                            position: 'top',
-                            color: '#409EFF',
-                            fontSize: 12,
-                            formatter: function(params) {
-                                if (params.data && params.data.changeRate !== undefined) {
-                                    return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
-                                }
-                                return params.value;
-                            }
-                        },
-                        itemStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#409EFF'
-                                }, {
-                                    offset: 1, color: '#7ab9ff'
-                                }]
-                            },
-                            borderRadius: [3, 3, 0, 0]
-                        }
-                    }]
+                }]
             };
-            wirelessIllegalChart.setOption(chartOption);
+            caseReasonChart.setOption(chartOption);
+            
+            // 添加点击事件
+            caseReasonChart.off('click');
+            caseReasonChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var caseReason = data.caseReasonData.data[params.dataIndex].name;
+                    var queryParams = getQueryParams();
+                    queryParams.caseReason = caseReason;
+                    
+                    // 获取详细数据
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
         }
 
-        function renderPolluteIllegalChart(data) {
+        function renderManagementCategoryChart(data) {
             var chartOption = {
                 title: {
-                    text: '各机构防污染处罚数量',
+                    text: '处罚类别对比',
                     textStyle: {
                         color: '#0466c8',
                         fontWeight: 'bold',
@@ -1166,127 +1542,279 @@
                     top: 10
                 },
                 tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'shadow'
-                    },
+                    trigger: 'item',
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     borderColor: '#0466c8',
                     borderWidth: 1,
                     textStyle: {
                         color: '#333',
                         fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var colorSpan = '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + params.color + '"></span>';
+                        return colorSpan + params.name + ': ' + params.value + ' (' + params.percent + '%)';
                     }
                 },
                 legend: {
-                    data: ['上周', '本周'],
+                    orient: 'horizontal',
+                    left: 'center',
+                    top: 50,
                     textStyle: {
                         color: '#0466c8',
                         fontSize: 14
-                    },
-                    top: 30,
-                    left: 'center'
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    top: 80,
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    data: data.polluteIllegalCounts.categories,
-                    axisLabel: {
-                        rotate: 30,
-                        interval: 0,
-                        color: '#001845',
-                        fontSize: 12
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#0466c8'
-                        }
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    axisLabel: {
-                        fontSize: 12
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#0466c8'
-                        }
-                    },
-                    splitLine: {
-                        lineStyle: {
-                            color: 'rgba(4, 102, 200, 0.1)'
-                        }
                     }
                 },
                 series: [{
-                    name: '上周',
-                    type: 'bar',
-                    data: data.polluteIllegalCounts.polluteIllegalCounts.last,
-                    label: {
-                        show: true,
-                        position: 'top',
-                        color: '#67C23A',
-                        fontSize: 12
-                    },
-                    itemStyle: {
-                        color: {
-                            type: 'linear',
-                            x: 0, y: 0, x2: 0, y2: 1,
-                            colorStops: [{
-                                offset: 0, color: '#67C23A'
-                            }, {
-                                offset: 1, color: '#95d475'
-                            }]
-                        },
-                        borderRadius: [3, 3, 0, 0]
-                    }
-                },
-                    {
-                        name: '本周',
-                        type: 'bar',
-                        data: data.polluteIllegalCounts.polluteIllegalCounts.current,
-                        label: {
-                            show: true,
-                            position: 'top',
-                            color: '#409EFF',
-                            fontSize: 12,
-                            formatter: function(params) {
-                                if (params.data && params.data.changeRate !== undefined) {
-                                    return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate + "%)";
-                                }
-                                return params.value;
-                            }
-                        },
+                    name: '类别',
+                    type: 'pie',
+                    radius: '60%',
+                    center: ['50%', '60%'],
+                    data: data.managementCategoryData.data,
+                    emphasis: {
                         itemStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#409EFF'
-                                }, {
-                                    offset: 1, color: '#7ab9ff'
-                                }]
-                            },
-                            borderRadius: [3, 3, 0, 0]
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
                         }
-                    }]
+                    }
+                }]
             };
-            polluteIllegalChart.setOption(chartOption);
+            managementCategoryChart.setOption(chartOption);
+            
+            // 添加点击事件
+            managementCategoryChart.off('click');
+            managementCategoryChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var category = params.name;
+                    var queryParams = getQueryParams();
+                    queryParams.managementCategory = category;
+                    
+                    // 获取详细数据
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
+        }
+
+        // 渲染部门数据表格
+        function renderDepartmentTable(data) {
+            var tableBody = $('#department-data-body');
+            tableBody.empty();
+            
+            // 获取部门列表
+            var departments = data.categories || [];
+
+            departments.forEach(function(dept, index) {
+                var row = $('<tr></tr>');
+
+                // 添加部门名称
+                row.append('<td>' + dept + '</td>');
+
+                // 处罚数量数据
+                var penaltyCountLast = data.penaltyAgencyCounts.last[index] || 0;
+                var penaltyCountCurrent = 0;
+                var penaltyCountRate = 0;
+                
+                // 处理current可能是对象数组的情况
+                if (data.penaltyAgencyCounts.current[index]) {
+                    if (typeof data.penaltyAgencyCounts.current[index] === 'object') {
+                        penaltyCountCurrent = data.penaltyAgencyCounts.current[index].value || 0;
+                        penaltyCountRate = data.penaltyAgencyCounts.current[index].changeRate || 0;
+                    } else {
+                        penaltyCountCurrent = data.penaltyAgencyCounts.current[index];
+                        penaltyCountRate = calculateChangeRate(penaltyCountCurrent, penaltyCountLast);
+                    }
+                }
+
+                row.append('<td>' + penaltyCountLast + '</td>');
+                row.append('<td>' + penaltyCountCurrent + '</td>');
+                row.append('<td class="' + getRateClass(penaltyCountRate) + '">' + formatRate(penaltyCountRate) + '</td>');
+
+                // 处罚金额数据
+                var penaltyAmountLast = 0;
+                var penaltyAmountCurrent = 0;
+                var penaltyAmountRate = 0;
+
+                if (data.penaltyAmountByAgency) {
+                    penaltyAmountLast = data.penaltyAmountByAgency.last ? (data.penaltyAmountByAgency.last[index] || 0) : 0;
+                    
+                    // 处理current可能是对象数组的情况
+                    if (data.penaltyAmountByAgency.current && data.penaltyAmountByAgency.current[index]) {
+                        if (typeof data.penaltyAmountByAgency.current[index] === 'object') {
+                            penaltyAmountCurrent = data.penaltyAmountByAgency.current[index].value || 0;
+                            penaltyAmountRate = data.penaltyAmountByAgency.current[index].changeRate || 0;
+                        } else {
+                            penaltyAmountCurrent = data.penaltyAmountByAgency.current[index];
+                            penaltyAmountRate = calculateChangeRate(penaltyAmountCurrent, penaltyAmountLast);
+                        }
+                    }
+                }
+
+                // 金额显示为万元，保留2位小数
+                row.append('<td>' + (penaltyAmountLast / 10000).toFixed(2) + '</td>');
+                row.append('<td>' + (penaltyAmountCurrent / 10000).toFixed(2) + '</td>');
+                row.append('<td class="' + getRateClass(penaltyAmountRate) + '">' + formatRate(penaltyAmountRate) + '</td>');
+
+                tableBody.append(row);
+            });
+
+            // 添加合计行
+            addTotalRow(tableBody, data);
+        }
+
+        // 添加合计行
+        function addTotalRow(tableBody, data) {
+            var row = $('<tr class="table-active"></tr>');
+            row.append('<td><strong>合计</strong></td>');
+
+            // 计算处罚数量合计
+            var penaltyCountLastTotal = sumArray(data.penaltyAgencyCounts.last);
+            var penaltyCountCurrentTotal = 0;
+            
+            // 处理current可能是对象数组的情况
+            if (Array.isArray(data.penaltyAgencyCounts.current)) {
+                if (data.penaltyAgencyCounts.current.length > 0 && typeof data.penaltyAgencyCounts.current[0] === 'object') {
+                    // 如果是对象数组，需要提取value值
+                    penaltyCountCurrentTotal = data.penaltyAgencyCounts.current.reduce(function(sum, item) {
+                        return sum + (item.value || 0);
+                    }, 0);
+                } else {
+                    // 如果是数值数组
+                    penaltyCountCurrentTotal = sumArray(data.penaltyAgencyCounts.current);
+                }
+            }
+            
+            var penaltyCountRateTotal = calculateChangeRate(penaltyCountCurrentTotal, penaltyCountLastTotal);
+
+            row.append('<td><strong>' + penaltyCountLastTotal + '</strong></td>');
+            row.append('<td><strong>' + penaltyCountCurrentTotal + '</strong></td>');
+            row.append('<td class="' + getRateClass(penaltyCountRateTotal) + '"><strong>' + formatRate(penaltyCountRateTotal) + '</strong></td>');
+
+            // 计算处罚金额合计
+            var penaltyAmountLastTotal = 0;
+            var penaltyAmountCurrentTotal = 0;
+
+            if (data.penaltyAmountByAgency) {
+                penaltyAmountLastTotal = data.penaltyAmountByAgency.last ? sumArray(data.penaltyAmountByAgency.last) : 0;
+                
+                // 处理current可能是对象数组的情况
+                if (data.penaltyAmountByAgency.current) {
+                    if (Array.isArray(data.penaltyAmountByAgency.current)) {
+                        if (data.penaltyAmountByAgency.current.length > 0 && typeof data.penaltyAmountByAgency.current[0] === 'object') {
+                            // 如果是对象数组，需要提取value值
+                            penaltyAmountCurrentTotal = data.penaltyAmountByAgency.current.reduce(function(sum, item) {
+                                return sum + (item.value || 0);
+                            }, 0);
+                        } else {
+                            // 如果是数值数组
+                            penaltyAmountCurrentTotal = sumArray(data.penaltyAmountByAgency.current);
+                        }
+                    }
+                }
+            } else {
+                // 如果没有按部门金额数据，使用总金额
+                penaltyAmountLastTotal = data.indicatorData?.penaltyAmount?.lastValue || 0;
+                penaltyAmountCurrentTotal = data.indicatorData?.penaltyAmount?.value || 0;
+            }
+
+            var penaltyAmountRateTotal = calculateChangeRate(penaltyAmountCurrentTotal, penaltyAmountLastTotal);
+
+            // 金额显示为万元，保留2位小数
+            row.append('<td><strong>' + (penaltyAmountLastTotal / 10000).toFixed(2) + '</strong></td>');
+            row.append('<td><strong>' + (penaltyAmountCurrentTotal / 10000).toFixed(2) + '</strong></td>');
+            row.append('<td class="' + getRateClass(penaltyAmountRateTotal) + '"><strong>' + formatRate(penaltyAmountRateTotal) + '</strong></td>');
+
+            tableBody.append(row);
+        }
+
+        // 计算数组合计
+        function sumArray(arr) {
+            if (!arr) return 0;
+            return arr.reduce(function(a, b) {
+                return a + (typeof b === 'number' ? b : 0);
+            }, 0);
+        }
+
+        // 计算变化率
+        function calculateChangeRate(lastValue, currentValue) {
+            if (lastValue === 0) return currentValue > 0 ? 100 : 0;
+            return ((currentValue - lastValue) / lastValue) * 100;
+        }
+
+        // 格式化变化率
+        function formatRate(rate) {
+            if (rate === 0) return "0%";
+            return (rate > 0 ? "+" : "") + rate.toFixed(2) + "%";
+        }
+
+        // 获取变化率的CSS类
+        function getRateClass(rate) {
+            if (rate > 0) return "positive-change";
+            if (rate < 0) return "negative-change";
+            return "neutral-change";
+        }
+
+        // 获取处罚详情数据并显示在弹窗中
+        function getPenaltyDetails(agencyName, queryParams) {
+            // 构建查询参数
+            var params = queryParams || getQueryParams();
+            
+            // 如果传入了机构名称，添加到查询参数
+            if (agencyName) {
+                params.penaltyAgency = agencyName;
+            }
+            
+            // 发送AJAX请求获取详情数据
+            $.ajax({
+                url: 'getPenaltyDetails',
+                type: 'GET',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    // 清空表格内容
+                    var tableBody = $('#penaltyDetailsTable tbody');
+                    tableBody.empty();
+                    
+                    // 填充表格数据
+                    if (data && data.length > 0) {
+                        data.forEach(function(item) {
+                            var row = $('<tr></tr>');
+                            row.append('<td>' + (item.caseReason || '-') + '</td>');
+                            row.append('<td>' + (item.shipName || '-') + '</td>');
+                            row.append('<td>' + (item.shipType || '-') + '</td>');
+                            row.append('<td>' + (item.seaRiverShip || '-') + '</td>');
+                            row.append('<td>' + (item.penaltyAgency || '-') + '</td>');
+                            row.append('<td>' + (item.penaltyAmount || '0') + '</td>');
+                            row.append('<td>' + (item.penaltyDecisionTime || '-') + '</td>');
+                            row.append('<td>' + (item.managementCategory || '-') + '</td>');
+                            row.append('<td>' + (item.violationCircumstances || '-') + '</td>');
+                            tableBody.append(row);
+                        });
+                    } else {
+                        // 如果没有数据，显示提示信息
+                        tableBody.append('<tr><td colspan="9" class="text-center">没有符合条件的处罚记录</td></tr>');
+                    }
+                    
+                    // 显示弹窗
+                    $('#penaltyDetailsModal').modal('show');
+                },
+                error: function(error) {
+                    console.error('Error fetching penalty details:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取处罚详情失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
         }
 
         // 窗口大小变化时调整图表大小
         $(window).resize(function() {
             punishAgencyChart.resize();
-            reportIllegalChart.resize();
-            wirelessIllegalChart.resize();
-            polluteIllegalChart.resize();
+            penaltyAmountChart.resize();
+            caseReasonChart.resize();
+            managementCategoryChart.resize();
         });
     });
 </script>

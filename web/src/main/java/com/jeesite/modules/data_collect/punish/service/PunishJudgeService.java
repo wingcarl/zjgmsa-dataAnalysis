@@ -134,4 +134,38 @@ public class PunishJudgeService extends CrudService<PunishJudgeDao, PunishJudge>
 		super.delete(punishJudge);
 	}
 	
+	/**
+	 * 获取所有违法情节选项
+	 */
+	public List<String> findViolationCircumstances() {
+		return dao.findViolationCircumstances();
+	}
+	
+	/**
+	 * 获取所有船舶种类选项
+	 */
+	public List<String> findShipTypes() {
+		return dao.findShipTypes();
+	}
+	
+	/**
+	 * 获取所有处罚机构选项
+	 */
+	public List<String> findPenaltyAgencies() {
+		return dao.findPenaltyAgencies();
+	}
+	
+	/**
+	 * 获取所有案由选项
+	 */
+	public List<String> findCaseReasons() {
+		return dao.findCaseReasons();
+	}
+	
+	/**
+	 * 获取所有业务类型选项
+	 */
+	public List<String> findManagementCategories() {
+		return dao.findManagementCategories();
+	}
 }

@@ -25,6 +25,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.jeesite.common.web.BaseController;
 import com.jeesite.modules.data_collect.punish.entity.PunishJudge;
 import com.jeesite.modules.data_collect.punish.service.PunishJudgeService;
+import org.apache.commons.lang3.StringUtils;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 处罚决定Controller
@@ -34,6 +38,8 @@ import com.jeesite.modules.data_collect.punish.service.PunishJudgeService;
 @Controller
 @RequestMapping(value = "${adminPath}/punish/punishJudge")
 public class PunishJudgeController extends BaseController {
+
+	private static final Logger logger = LoggerFactory.getLogger(PunishJudgeController.class);
 
 	@Autowired
 	private PunishJudgeService punishJudgeService;
@@ -151,414 +157,445 @@ public class PunishJudgeController extends BaseController {
 
 	@GetMapping("weeklyChartDataWithDate")
 	@ResponseBody
-	public Map<String, Object> getChartDataWithDate(String currentWeekStartDate, String lastWeekStartDate) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
-
-		// 查询本周的数据
-		WeeklyReport weeklyReportCurrent = new WeeklyReport();
-		LocalDate currentStartLocalDate = LocalDate.parse(currentWeekStartDate, formatter);
-		weeklyReportCurrent.setReportDate_gte(DateUtils.asDate(currentStartLocalDate));
-		weeklyReportCurrent.setReportDate_lte(DateUtils.asDate(currentStartLocalDate.plusDays(6)));
-		List<WeeklyReport> currentWeekReports = weeklyReportService.findList(weeklyReportCurrent);
-
-		// 查询上周的数据
-		WeeklyReport weeklyReportLast = new WeeklyReport();
-		LocalDate lastStartLocalDate = LocalDate.parse(lastWeekStartDate, formatter);
-		weeklyReportLast.setReportDate_gte(DateUtils.asDate(lastStartLocalDate));
-		weeklyReportLast.setReportDate_lte(DateUtils.asDate(lastStartLocalDate.plusDays(6)));
-		List<WeeklyReport> lastWeekReports = weeklyReportService.findList(weeklyReportLast);
-
-		// 首先获取所有部门列表，确保所有数据使用相同的顺序
-		List<String> categories = getAllDepartments(currentWeekReports, lastWeekReports);
-
-		// 获取图表数据 - 使用统一的部门列表
-		Map<String, Object> chartData = getPunishAgencyChartData(categories, currentWeekReports, lastWeekReports);
-
-		// 获取指标板数据
-		Map<String, Object> indicatorData = getIndicatorData(currentWeekReports, lastWeekReports);
-		chartData.put("indicatorData", indicatorData); // 将指标板数据添加到 chartData
-
-		// 获取各部门处罚金额数据 - 使用统一的部门列表
-		Map<String, Object> penaltyAmountByAgency = getPenaltyAmountByAgency(categories, currentWeekReports, lastWeekReports);
+	public Map<String, Object> getChartDataWithDate(String startDate, String endDate, String penaltyAgency, 
+												  String seaRiverShip, String caseReason, 
+												  String managementCategory, String violationCircumstances, 
+												  String minAmount, String maxAmount, String shipType) {
+		Map<String, Object> chartData = new HashMap<>();
+		
+		// 构建查询条件
+		PunishJudge punishJudge = new PunishJudge();
+		
+		// 设置时间范围
+		if (StringUtils.isNotBlank(startDate)) {
+			punishJudge.setPenaltyDecisionTime_gte(DateUtils.parseDate(startDate));
+		}
+		if (StringUtils.isNotBlank(endDate)) {
+			punishJudge.setPenaltyDecisionTime_lte(DateUtils.parseDate(endDate));
+		}
+		
+		// 设置筛选条件
+		if (StringUtils.isNotBlank(penaltyAgency)) {
+			punishJudge.setPenaltyAgency(penaltyAgency);
+		}
+		if (StringUtils.isNotBlank(seaRiverShip)) {
+			punishJudge.setSeaRiverShip(seaRiverShip);
+		}
+		if (StringUtils.isNotBlank(caseReason)) {
+			punishJudge.setCaseReason(caseReason);
+		}
+		if (StringUtils.isNotBlank(managementCategory)) {
+			punishJudge.setManagementCategory(managementCategory);
+		}
+		if (StringUtils.isNotBlank(violationCircumstances)) {
+			punishJudge.setViolationCircumstances(violationCircumstances);
+		}
+		if (StringUtils.isNotBlank(shipType)) {
+			punishJudge.setShipType(shipType);
+		}
+		
+		// 设置金额范围
+		if (StringUtils.isNotBlank(minAmount)) {
+			try {
+				punishJudge.setPenaltyAmount_gte(Double.parseDouble(minAmount));
+			} catch (NumberFormatException e) {
+				logger.warn("Invalid minAmount format: {}", minAmount);
+			}
+		}
+		if (StringUtils.isNotBlank(maxAmount)) {
+			try {
+				punishJudge.setPenaltyAmount_lte(Double.parseDouble(maxAmount));
+			} catch (NumberFormatException e) {
+				logger.warn("Invalid maxAmount format: {}", maxAmount);
+			}
+		}
+		
+		// 查询当前时间范围的数据
+		List<PunishJudge> currentPunishList = punishJudgeService.findList(punishJudge);
+		
+		// 计算上周同期的时间范围
+		PunishJudge lastPunishJudge = new PunishJudge();
+		if (StringUtils.isNotBlank(startDate) && StringUtils.isNotBlank(endDate)) {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+			LocalDate startLocalDate = LocalDate.parse(startDate, formatter);
+			LocalDate endLocalDate = LocalDate.parse(endDate, formatter);
+			LocalDate lastStartLocalDate = startLocalDate.minusDays(7);
+			LocalDate lastEndLocalDate = endLocalDate.minusDays(7);
+			
+			lastPunishJudge.setPenaltyDecisionTime_gte(DateUtils.asDate(lastStartLocalDate));
+			lastPunishJudge.setPenaltyDecisionTime_lte(DateUtils.asDate(lastEndLocalDate));
+			
+			// 复制其他筛选条件
+			if (StringUtils.isNotBlank(penaltyAgency)) {
+				lastPunishJudge.setPenaltyAgency(penaltyAgency);
+			}
+			if (StringUtils.isNotBlank(seaRiverShip)) {
+				lastPunishJudge.setSeaRiverShip(seaRiverShip);
+			}
+			if (StringUtils.isNotBlank(caseReason)) {
+				lastPunishJudge.setCaseReason(caseReason);
+			}
+			if (StringUtils.isNotBlank(managementCategory)) {
+				lastPunishJudge.setManagementCategory(managementCategory);
+			}
+			if (StringUtils.isNotBlank(violationCircumstances)) {
+				lastPunishJudge.setViolationCircumstances(violationCircumstances);
+			}
+			if (StringUtils.isNotBlank(shipType)) {
+				lastPunishJudge.setShipType(shipType);
+			}
+			if (StringUtils.isNotBlank(minAmount)) {
+				lastPunishJudge.setPenaltyAmount_gte(Double.parseDouble(minAmount));
+			}
+			if (StringUtils.isNotBlank(maxAmount)) {
+				lastPunishJudge.setPenaltyAmount_lte(Double.parseDouble(maxAmount));
+			}
+		}
+		
+		// 查询上周同期的数据
+		List<PunishJudge> lastPunishList = punishJudgeService.findList(lastPunishJudge);
+		
+		// 获取所有机构列表
+		List<String> categories = getAllPenaltyAgencies(currentPunishList, lastPunishList);
+		chartData.put("categories", categories);
+		
+		// 计算指标数据
+		Map<String, Object> indicatorData = getIndicatorDataFromPunish(currentPunishList, lastPunishList);
+		chartData.put("indicatorData", indicatorData);
+		
+		// 获取各机构处罚决定数量数据
+		Map<String, Object> penaltyAgencyCounts = getPenaltyAgencyCountsFromPunish(categories, currentPunishList, lastPunishList);
+		chartData.put("penaltyAgencyCounts", penaltyAgencyCounts);
+		
+		// 获取各机构处罚金额数据
+		Map<String, Object> penaltyAmountByAgency = getPenaltyAmountByAgencyFromPunish(categories, currentPunishList, lastPunishList);
 		chartData.put("penaltyAmountByAgency", penaltyAmountByAgency);
-
-		// 获取进出港、无线电、防污染处罚数量图表数据 - 使用统一的部门列表
-		Map<String, Object> reportIllegalChartData = getReportIllegalChartData(categories, currentWeekReports, lastWeekReports);
-		chartData.put("reportIllegalCounts", reportIllegalChartData);
-		Map<String, Object> wirelessIllegalChartData = getWirelessIllegalChartData(categories, currentWeekReports, lastWeekReports);
-		chartData.put("wirelessIllegalCounts", wirelessIllegalChartData);
-		Map<String, Object> polluteIllegalChartData = getPolluteIllegalChartData(categories, currentWeekReports, lastWeekReports);
-		chartData.put("polluteIllegalCounts", polluteIllegalChartData);
-
+		
+		// 获取案由对比数据
+		Map<String, Object> caseReasonData = getCaseReasonDataFromPunish(currentPunishList);
+		chartData.put("caseReasonData", caseReasonData);
+		
+		// 获取处罚类别对比数据
+		Map<String, Object> managementCategoryData = getManagementCategoryDataFromPunish(currentPunishList);
+		chartData.put("managementCategoryData", managementCategoryData);
+		
 		return chartData;
 	}
 
 	/**
-	 * 获取所有部门列表，确保所有数据使用统一的部门顺序
+	 * 获取所有处罚机构列表
 	 */
-	private List<String> getAllDepartments(List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
-		Set<String> departmentSet = new LinkedHashSet<>(); // 使用LinkedHashSet保持插入顺序
-
-		// 收集所有部门名称
-		for (WeeklyReport report : currentWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				departmentSet.add(report.getDepartmentId().getOfficeName());
+	private List<String> getAllPenaltyAgencies(List<PunishJudge> currentPunishList, List<PunishJudge> lastPunishList) {
+		Set<String> agencySet = new LinkedHashSet<>(); // 使用LinkedHashSet保持插入顺序
+		
+		// 收集所有机构名称
+		for (PunishJudge punish : currentPunishList) {
+			if (StringUtils.isNotBlank(punish.getPenaltyAgency())) {
+				agencySet.add(punish.getPenaltyAgency());
 			}
 		}
-
-		for (WeeklyReport report : lastWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				departmentSet.add(report.getDepartmentId().getOfficeName());
+		
+		for (PunishJudge punish : lastPunishList) {
+			if (StringUtils.isNotBlank(punish.getPenaltyAgency())) {
+				agencySet.add(punish.getPenaltyAgency());
 			}
 		}
-
-		return new ArrayList<>(departmentSet);
+		
+		return new ArrayList<>(agencySet);
 	}
 
 	/**
-	 * 获取各部门处罚金额数据 - 修改后使用统一的部门列表
+	 * 计算指标数据
 	 */
-	private Map<String, Object> getPenaltyAmountByAgency(List<String> categories, List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
+	private Map<String, Object> getIndicatorDataFromPunish(List<PunishJudge> currentPunishList, List<PunishJudge> lastPunishList) {
 		Map<String, Object> result = new HashMap<>();
-
-		// 收集本周各部门处罚金额
-		Map<String, Double> currentAgencyAmounts = new HashMap<>();
-		for (WeeklyReport report : currentWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				currentAgencyAmounts.put(agency, currentAgencyAmounts.getOrDefault(agency, 0.0) +
-						(report.getPenaltyAmount() == null ? 0.0 : report.getPenaltyAmount()));
-			}
-		}
-
-		// 收集上周各部门处罚金额
-		Map<String, Double> lastAgencyAmounts = new HashMap<>();
-		for (WeeklyReport report : lastWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				lastAgencyAmounts.put(agency, lastAgencyAmounts.getOrDefault(agency, 0.0) +
-						(report.getPenaltyAmount() == null ? 0.0 : report.getPenaltyAmount()));
-			}
-		}
-
-		// 基于统一的部门列表构建数据
-		List<Double> lastAmounts = new ArrayList<>();
-		List<Map<String, Object>> currentAmounts = new ArrayList<>();
-
-		for (String agency : categories) {
-			double lastAmount = lastAgencyAmounts.getOrDefault(agency, 0.0);
-			double currentAmount = currentAgencyAmounts.getOrDefault(agency, 0.0);
-
-			// 计算环比变化率
-			double changeRate = calculateChangeRate(currentAmount, lastAmount);
-
-			// 构建本周数据对象（包含值和环比）
-			Map<String, Object> currentData = new HashMap<>();
-			currentData.put("value", currentAmount);
-			currentData.put("changeRate", changeRate);
-
-			lastAmounts.add(lastAmount);
-			currentAmounts.add(currentData);
-		}
-
-		result.put("last", lastAmounts);
-		result.put("current", currentAmounts);
-
-		return result;
-	}
-
-	/**
-	 * 获取处罚机构图表数据 - 修改后使用统一的部门列表
-	 */
-	private Map<String, Object> getPunishAgencyChartData(List<String> categories, List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
-		Map<String, Object> chartData = new HashMap<>();
-
-		// 收集本周各部门处罚数量
-		Map<String, Long> currentAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : currentWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()));
-			}
-		}
-
-		// 收集上周各部门处罚数量
-		Map<String, Long> lastAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : lastWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()));
-			}
-		}
-
-		// 基于统一的部门列表构建数据
-		List<Long> currentCounts = new ArrayList<>();
-		List<Long> lastCounts = new ArrayList<>();
-
-		for (String agency : categories) {
-			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
-
-			long currentCount = currentAgencyCounts.getOrDefault(agency, 0L);
-			long lastCount = lastAgencyCounts.getOrDefault(agency, 0L);
-			double changeRate = calculateChangeRate(currentCount, lastCount);
-
-			Map<String, Object> currentData = new HashMap<>();
-			currentData.put("value", currentCount);
-			currentData.put("changeRate", changeRate);
-
-			currentCounts.add(currentCount);
-		}
-
-		// 添加数据到chartData
-		chartData.put("categories", categories);
-		Map<String, Object> penaltyAgencyCounts = new HashMap<>();
-		penaltyAgencyCounts.put("current", currentCounts);
-		penaltyAgencyCounts.put("last", lastCounts);
-		chartData.put("penaltyAgencyCounts", penaltyAgencyCounts);
-
-		return chartData;
-	}
-
-	/**
-	 * 获取进出港处罚数据 - 修改后使用统一的部门列表
-	 */
-	private Map<String, Object> getReportIllegalChartData(List<String> categories, List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
-		Map<String, Object> chartData = new HashMap<>();
-
-		// 收集本周各部门进出港处罚数量
-		Map<String, Long> currentAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : currentWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getReportIllegalCount() == null ? 0 : report.getReportIllegalCount()));
-			}
-		}
-
-		// 收集上周各部门进出港处罚数量
-		Map<String, Long> lastAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : lastWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getReportIllegalCount() == null ? 0 : report.getReportIllegalCount()));
-			}
-		}
-
-		// 基于统一的部门列表构建数据
-		List<Long> currentCounts = new ArrayList<>();
-		List<Long> lastCounts = new ArrayList<>();
-
-		for (String agency : categories) {
-			currentCounts.add(currentAgencyCounts.getOrDefault(agency, 0L));
-			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
-		}
-
-		// 添加数据到chartData
-		chartData.put("categories", categories);
-		Map<String, Object> reportIllegalCounts = new HashMap<>();
-		reportIllegalCounts.put("current", currentCounts);
-		reportIllegalCounts.put("last", lastCounts);
-		chartData.put("reportIllegalCounts", reportIllegalCounts);
-
-		return chartData;
-	}
-
-	/**
-	 * 获取无线电处罚数据 - 修改后使用统一的部门列表
-	 */
-	private Map<String, Object> getWirelessIllegalChartData(List<String> categories, List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
-		Map<String, Object> chartData = new HashMap<>();
-
-		// 收集本周各部门无线电处罚数量
-		Map<String, Long> currentAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : currentWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getWirelessIllegalCount() == null ? 0 : report.getWirelessIllegalCount()));
-			}
-		}
-
-		// 收集上周各部门无线电处罚数量 - 注意这里原来的代码有一个bug，应该使用WirelessIllegalCount而不是PolluteIllegalCount
-		Map<String, Long> lastAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : lastWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getWirelessIllegalCount() == null ? 0 : report.getWirelessIllegalCount())); // 修正了bug
-			}
-		}
-
-		// 基于统一的部门列表构建数据
-		List<Long> currentCounts = new ArrayList<>();
-		List<Long> lastCounts = new ArrayList<>();
-
-		for (String agency : categories) {
-			currentCounts.add(currentAgencyCounts.getOrDefault(agency, 0L));
-			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
-		}
-
-		// 添加数据到chartData
-		chartData.put("categories", categories);
-		Map<String, Object> wirelessIllegalCounts = new HashMap<>();
-		wirelessIllegalCounts.put("current", currentCounts);
-		wirelessIllegalCounts.put("last", lastCounts);
-		chartData.put("wirelessIllegalCounts", wirelessIllegalCounts);
-
-		return chartData;
-	}
-
-	/**
-	 * 获取防污染处罚数据 - 修改后使用统一的部门列表
-	 */
-	private Map<String, Object> getPolluteIllegalChartData(List<String> categories, List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
-		Map<String, Object> chartData = new HashMap<>();
-
-		// 收集本周各部门防污染处罚数量
-		Map<String, Long> currentAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : currentWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getPolluteIllegalCount() == null ? 0 : report.getPolluteIllegalCount()));
-			}
-		}
-
-		// 收集上周各部门防污染处罚数量
-		Map<String, Long> lastAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : lastWeekReports) {
-			if (report.getDepartmentId() != null && report.getDepartmentId().getOfficeName() != null) {
-				String agency = report.getDepartmentId().getOfficeName();
-				lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) +
-						(report.getPolluteIllegalCount() == null ? 0 : report.getPolluteIllegalCount()));
-			}
-		}
-
-		// 基于统一的部门列表构建数据
-		List<Long> currentCounts = new ArrayList<>();
-		List<Long> lastCounts = new ArrayList<>();
-
-		for (String agency : categories) {
-			currentCounts.add(currentAgencyCounts.getOrDefault(agency, 0L));
-			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
-		}
-
-		// 添加数据到chartData
-		chartData.put("categories", categories);
-		Map<String, Object> polluteIllegalCounts = new HashMap<>();
-		polluteIllegalCounts.put("current", currentCounts);
-		polluteIllegalCounts.put("last", lastCounts);
-		chartData.put("polluteIllegalCounts", polluteIllegalCounts);
-
-		return chartData;
-	}
-
-	private Map<String, Object> getPunishAgencyChartData(List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
-		Map<String, Object> chartData = new HashMap<>();
-
-		// Prepare categories and data lists
-		List<String> categories = new ArrayList<>();
-		List<Long> currentCounts = new ArrayList<>();
-		List<Long> lastCounts = new ArrayList<>();
-
-		// Collect current week counts
-		Map<String, Long> currentAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : currentWeekReports) {
-			String agency = report.getDepartmentId().getOfficeName();
-			currentAgencyCounts.put(agency, currentAgencyCounts.getOrDefault(agency, 0L) + (report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()));
-		}
-
-		// Collect last week counts
-		Map<String, Long> lastAgencyCounts = new HashMap<>();
-		for (WeeklyReport report : lastWeekReports) {
-			String agency = report.getDepartmentId().getOfficeName();
-			lastAgencyCounts.put(agency, lastAgencyCounts.getOrDefault(agency, 0L) + (report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()));
-		}
-
-		// Combine categories and data for chart (including agencies from both weeks)
-		for (String agency : currentAgencyCounts.keySet()) {
-			if (!categories.contains(agency)) {
-				categories.add(agency);
-			}
-		}
-		for (String agency : lastAgencyCounts.keySet()) {
-			if (!categories.contains(agency)) {
-				categories.add(agency);
-			}
-		}
-
-		// Populate data lists based on categories
-		for (String agency : categories) {
-			currentCounts.add(currentAgencyCounts.getOrDefault(agency, 0L));
-			lastCounts.add(lastAgencyCounts.getOrDefault(agency, 0L));
-		}
-
-		// Add data to the chartData map
-		chartData.put("categories", categories);
-		Map<String, Object> penaltyAgencyCounts = new HashMap<>();
-		penaltyAgencyCounts.put("current", currentCounts);
-		penaltyAgencyCounts.put("last", lastCounts);
-		chartData.put("penaltyAgencyCounts", penaltyAgencyCounts);
-
-		return chartData;
-	}
-
-	private Map<String, Object> getIndicatorData(List<WeeklyReport> currentWeekReports, List<WeeklyReport> lastWeekReports) {
-		Map<String, Object> result = new HashMap<>();
-
-		// 计算本周总数
-		long currentPenaltyDecisionCount = currentWeekReports.stream().mapToLong(report -> report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()).sum();
-		double currentPenaltyAmount = currentWeekReports.stream().mapToDouble(report -> report.getPenaltyAmount() == null ? 0 : report.getPenaltyAmount()).sum();
-		long currentIllegalScore = currentWeekReports.stream().mapToLong(report -> report.getIllegalScore() == null ? 0 : report.getIllegalScore()).sum();
-		long currentReportIllegalCount = currentWeekReports.stream().mapToLong(report -> report.getReportIllegalCount()==null ? 0:report.getReportIllegalCount()).sum();
-		long currentWirelessIllegalCount = currentWeekReports.stream().mapToLong(report -> report.getWirelessIllegalCount()==null ? 0:report.getWirelessIllegalCount()).sum();
-		long currentPolluteIllegalCount = currentWeekReports.stream().mapToLong(report -> report.getPolluteIllegalCount()==null ? 0:report.getPolluteIllegalCount()).sum();
-
-		// 计算上周总数
-		long lastPenaltyDecisionCount = lastWeekReports.stream().mapToLong(report -> report.getPenaltyDecisionCount() == null ? 0 : report.getPenaltyDecisionCount()).sum();
-		double lastPenaltyAmount = lastWeekReports.stream().mapToDouble(report -> report.getPenaltyAmount() == null ? 0 : report.getPenaltyAmount()).sum();
-		long lastIllegalScore = lastWeekReports.stream().mapToLong(report -> report.getIllegalScore() == null ? 0 : report.getIllegalScore()).sum();
-		long lastReportIllegalCount = lastWeekReports.stream().mapToLong(report -> report.getReportIllegalCount()==null ? 0:report.getReportIllegalCount()).sum();
-		long lastWirelessIllegalCount = lastWeekReports.stream().mapToLong(report -> report.getWirelessIllegalCount()==null ? 0:report.getWirelessIllegalCount()).sum();
-		long lastPolluteIllegalCount = lastWeekReports.stream().mapToLong(report -> report.getPolluteIllegalCount()==null ? 0:report.getPolluteIllegalCount()).sum();
-
+		
+		// 计算当前处罚决定数量
+		long currentPenaltyDecisionCount = currentPunishList.size();
+		
+		// 计算当前处罚总金额
+		double currentPenaltyAmount = currentPunishList.stream()
+				.mapToDouble(punish -> punish.getPenaltyAmount() == null ? 0 : punish.getPenaltyAmount())
+				.sum();
+		
+		// 计算上周处罚决定数量
+		long lastPenaltyDecisionCount = lastPunishList.size();
+		
+		// 计算上周处罚总金额
+		double lastPenaltyAmount = lastPunishList.stream()
+				.mapToDouble(punish -> punish.getPenaltyAmount() == null ? 0 : punish.getPenaltyAmount())
+				.sum();
+		
 		// 计算变化率
 		double penaltyDecisionCountRate = calculateChangeRate(currentPenaltyDecisionCount, lastPenaltyDecisionCount);
 		double penaltyAmountRate = calculateChangeRate(currentPenaltyAmount, lastPenaltyAmount);
-		double illegalScoreRate = calculateChangeRate(currentIllegalScore, lastIllegalScore);
-		double reportIllegalRate = calculateChangeRate(currentReportIllegalCount,lastReportIllegalCount);
-		double wirelessIllegalRate = calculateChangeRate(currentWirelessIllegalCount,lastWirelessIllegalCount);
-		double polluteIllegalRate = calculateChangeRate(currentPolluteIllegalCount,lastPolluteIllegalCount);
-
+		
+		// 处罚决定数量
 		result.put("penaltyDecisionCount", new HashMap<String, Object>() {{
 			put("value", currentPenaltyDecisionCount);
 			put("rate", penaltyDecisionCountRate);
 		}});
-
+		
+		// 处罚总金额
 		result.put("penaltyAmount", new HashMap<String, Object>() {{
 			put("value", currentPenaltyAmount);
 			put("rate", penaltyAmountRate);
 		}});
+		
+		return result;
+	}
 
-		result.put("illegalScore", new HashMap<String, Object>() {{
-			put("value", currentIllegalScore);
-			put("rate", illegalScoreRate);
-		}});
-		result.put("illegalReport",new HashMap<String,Object>(){{
-			put("value",currentReportIllegalCount);
-			put("rate",reportIllegalRate);
-		}});
-		result.put("illegalWireless",new HashMap<String,Object>(){{
-			put("value",currentWirelessIllegalCount);
-			put("rate",wirelessIllegalRate);
-		}});
-		result.put("illegalPollute",new HashMap<String,Object>(){{
-			put("value",currentPolluteIllegalCount);
-			put("rate",polluteIllegalRate);
-		}});
+	/**
+	 * 获取各机构处罚决定数量数据
+	 */
+	private Map<String, Object> getPenaltyAgencyCountsFromPunish(List<String> categories, List<PunishJudge> currentPunishList, List<PunishJudge> lastPunishList) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 统计当前各机构处罚数量
+		Map<String, Long> currentAgencyCounts = currentPunishList.stream()
+				.filter(punish -> StringUtils.isNotBlank(punish.getPenaltyAgency()))
+				.collect(Collectors.groupingBy(PunishJudge::getPenaltyAgency, Collectors.counting()));
+		
+		// 统计上周各机构处罚数量
+		Map<String, Long> lastAgencyCounts = lastPunishList.stream()
+				.filter(punish -> StringUtils.isNotBlank(punish.getPenaltyAgency()))
+				.collect(Collectors.groupingBy(PunishJudge::getPenaltyAgency, Collectors.counting()));
+		
+		// 基于统一的机构列表构建数据
+		List<Map<String, Object>> currentCounts = new ArrayList<>();
+		List<Long> lastCounts = new ArrayList<>();
+		
+		for (String agency : categories) {
+			long currentCount = currentAgencyCounts.getOrDefault(agency, 0L);
+			long lastCount = lastAgencyCounts.getOrDefault(agency, 0L);
+			
+			// 计算环比变化率
+			double changeRate = calculateChangeRate(currentCount, lastCount);
+			
+			// 构建当前数据对象（包含值和环比）
+			Map<String, Object> currentData = new HashMap<>();
+			currentData.put("value", currentCount);
+			currentData.put("changeRate", changeRate);
+			
+			currentCounts.add(currentData);
+			lastCounts.add(lastCount);
+		}
+		
+		result.put("current", currentCounts);
+		result.put("last", lastCounts);
+		
+		return result;
+	}
+
+	/**
+	 * 获取各机构处罚金额数据
+	 */
+	private Map<String, Object> getPenaltyAmountByAgencyFromPunish(List<String> categories, List<PunishJudge> currentPunishList, List<PunishJudge> lastPunishList) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 统计当前各机构处罚金额
+		Map<String, Double> currentAgencyAmounts = currentPunishList.stream()
+				.filter(punish -> StringUtils.isNotBlank(punish.getPenaltyAgency()))
+				.collect(Collectors.groupingBy(
+						PunishJudge::getPenaltyAgency,
+						Collectors.summingDouble(punish -> punish.getPenaltyAmount() == null ? 0 : punish.getPenaltyAmount())
+				));
+		
+		// 统计上周各机构处罚金额
+		Map<String, Double> lastAgencyAmounts = lastPunishList.stream()
+				.filter(punish -> StringUtils.isNotBlank(punish.getPenaltyAgency()))
+				.collect(Collectors.groupingBy(
+						PunishJudge::getPenaltyAgency,
+						Collectors.summingDouble(punish -> punish.getPenaltyAmount() == null ? 0 : punish.getPenaltyAmount())
+				));
+		
+		// 基于统一的机构列表构建数据
+		List<Map<String, Object>> currentAmounts = new ArrayList<>();
+		List<Double> lastAmounts = new ArrayList<>();
+		
+		for (String agency : categories) {
+			double currentAmount = currentAgencyAmounts.getOrDefault(agency, 0.0);
+			double lastAmount = lastAgencyAmounts.getOrDefault(agency, 0.0);
+			
+			// 计算环比变化率
+			double changeRate = calculateChangeRate(currentAmount, lastAmount);
+			
+			// 构建当前数据对象（包含值和环比）
+			Map<String, Object> currentData = new HashMap<>();
+			currentData.put("value", currentAmount);
+			currentData.put("changeRate", changeRate);
+			
+			currentAmounts.add(currentData);
+			lastAmounts.add(lastAmount);
+		}
+		
+		result.put("current", currentAmounts);
+		result.put("last", lastAmounts);
+		
+		return result;
+	}
+
+	/**
+	 * 获取案由对比数据
+	 */
+	private Map<String, Object> getCaseReasonDataFromPunish(List<PunishJudge> punishList) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 按案由分组并计数
+		Map<String, Long> caseReasonCounts = punishList.stream()
+				.filter(punish -> StringUtils.isNotBlank(punish.getCaseReason()))
+				.collect(Collectors.groupingBy(PunishJudge::getCaseReason, Collectors.counting()));
+		
+		// 转换为图表所需格式
+		List<Map<String, Object>> caseReasonData = new ArrayList<>();
+		for (Map.Entry<String, Long> entry : caseReasonCounts.entrySet()) {
+			Map<String, Object> item = new HashMap<>();
+			item.put("name", entry.getKey());
+			item.put("value", entry.getValue());
+			caseReasonData.add(item);
+		}
+		
+		// 按数量降序排序
+		caseReasonData.sort((a, b) -> Long.compare((Long)b.get("value"), (Long)a.get("value")));
+		
+		result.put("data", caseReasonData);
+		
+		return result;
+	}
+
+	/**
+	 * 获取处罚类别对比数据
+	 */
+	private Map<String, Object> getManagementCategoryDataFromPunish(List<PunishJudge> punishList) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 按管理类别分组并计数
+		Map<String, Long> categoryCounts = punishList.stream()
+				.filter(punish -> StringUtils.isNotBlank(punish.getManagementCategory()))
+				.collect(Collectors.groupingBy(PunishJudge::getManagementCategory, Collectors.counting()));
+		
+		// 转换为图表所需格式
+		List<Map<String, Object>> categoryData = new ArrayList<>();
+		for (Map.Entry<String, Long> entry : categoryCounts.entrySet()) {
+			Map<String, Object> item = new HashMap<>();
+			item.put("name", entry.getKey());
+			item.put("value", entry.getValue());
+			categoryData.add(item);
+		}
+		
+		result.put("data", categoryData);
+		
+		return result;
+	}
+
+	/**
+	 * 获取下拉列表选项
+	 */
+	@GetMapping("getFilterOptions")
+	@ResponseBody
+	public Map<String, Object> getFilterOptions() {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 获取所有违法情节选项
+		List<String> violationCircumstances = punishJudgeService.findViolationCircumstances();
+		result.put("violationCircumstances", violationCircumstances);
+		
+		// 获取所有船舶种类选项
+		List<String> shipTypes = punishJudgeService.findShipTypes();
+		result.put("shipTypes", shipTypes);
+		
+		// 获取所有处罚机构选项
+		List<String> penaltyAgencies = punishJudgeService.findPenaltyAgencies();
+		result.put("penaltyAgencies", penaltyAgencies);
+		
+		// 获取所有案由选项
+		List<String> caseReasons = punishJudgeService.findCaseReasons();
+		result.put("caseReasons", caseReasons);
+		
+		// 获取所有业务类型选项
+		List<String> managementCategories = punishJudgeService.findManagementCategories();
+		result.put("managementCategories", managementCategories);
+		
+		return result;
+	}
+
+	/**
+	 * 获取机构处罚详情
+	 */
+	@GetMapping("getPenaltyDetails")
+	@ResponseBody
+	public List<Map<String, Object>> getPenaltyDetails(String startDate, String endDate, String penaltyAgency, 
+                                     String seaRiverShip, String caseReason, 
+                                     String managementCategory, String violationCircumstances, 
+                                     String minAmount, String maxAmount, String shipType) {
+		// 构建查询条件
+		PunishJudge punishJudge = new PunishJudge();
+		
+		// 设置时间范围
+		if (StringUtils.isNotBlank(startDate)) {
+			punishJudge.setPenaltyDecisionTime_gte(DateUtils.parseDate(startDate));
+		}
+		if (StringUtils.isNotBlank(endDate)) {
+			punishJudge.setPenaltyDecisionTime_lte(DateUtils.parseDate(endDate));
+		}
+		
+		// 设置机构
+		if (StringUtils.isNotBlank(penaltyAgency)) {
+			punishJudge.setPenaltyAgency(penaltyAgency);
+		}
+		
+		// 设置其他筛选条件
+		if (StringUtils.isNotBlank(seaRiverShip)) {
+			punishJudge.setSeaRiverShip(seaRiverShip);
+		}
+		if (StringUtils.isNotBlank(caseReason)) {
+			punishJudge.setCaseReason(caseReason);
+		}
+		if (StringUtils.isNotBlank(managementCategory)) {
+			punishJudge.setManagementCategory(managementCategory);
+		}
+		if (StringUtils.isNotBlank(violationCircumstances)) {
+			punishJudge.setViolationCircumstances(violationCircumstances);
+		}
+		if (StringUtils.isNotBlank(shipType)) {
+			punishJudge.setShipType(shipType);
+		}
+		
+		// 设置金额范围
+		if (StringUtils.isNotBlank(minAmount)) {
+			try {
+				punishJudge.setPenaltyAmount_gte(Double.parseDouble(minAmount));
+			} catch (NumberFormatException e) {
+				logger.warn("Invalid minAmount format: {}", minAmount);
+			}
+		}
+		if (StringUtils.isNotBlank(maxAmount)) {
+			try {
+				punishJudge.setPenaltyAmount_lte(Double.parseDouble(maxAmount));
+			} catch (NumberFormatException e) {
+				logger.warn("Invalid maxAmount format: {}", maxAmount);
+			}
+		}
+		
+		// 查询数据
+		List<PunishJudge> punishList = punishJudgeService.findList(punishJudge);
+		
+		// 转换为前端所需格式
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (PunishJudge punish : punishList) {
+			Map<String, Object> item = new HashMap<>();
+			item.put("caseReason", punish.getCaseReason());
+			item.put("shipName", punish.getShipName());
+			item.put("shipType", punish.getShipType());
+			item.put("seaRiverShip", punish.getSeaRiverShip());
+			item.put("penaltyAgency", punish.getPenaltyAgency());
+			item.put("penaltyAmount", punish.getPenaltyAmount());
+			item.put("penaltyDecisionTime", DateUtils.formatDate(punish.getPenaltyDecisionTime(), "yyyy-MM-dd"));
+			item.put("managementCategory", punish.getManagementCategory());
+			item.put("violationCircumstances", punish.getViolationCircumstances());
+			result.add(item);
+		}
+		
 		return result;
 	}
 
@@ -567,5 +604,15 @@ public class PunishJudgeController extends BaseController {
 			return 0;
 		}
 		return (double) Math.round(((double) (current - last) / last) * 10000) / 100;
+	}
+
+	@GetMapping("fetchData")
+	@ResponseBody
+	public Map<String, Object> fetchData(String startDate, String endDate, String penaltyAgency, 
+                                     String seaRiverShip, String caseReason, 
+                                     String managementCategory, String violationCircumstances, 
+                                     String minAmount, String maxAmount, String shipType) {
+		return getChartDataWithDate(startDate, endDate, penaltyAgency, seaRiverShip, caseReason,
+                               managementCategory, violationCircumstances, minAmount, maxAmount, shipType);
 	}
 }

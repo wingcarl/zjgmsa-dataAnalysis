@@ -126,6 +126,12 @@ public class PunishJudge extends DataEntity<PunishJudge> {
 	private String violationLocation;		// 违法发生地点
 	private String penaltyObjectLocation;		// 处罚对象所在地
 
+	// 查询范围条件
+	private Date penaltyDecisionTime_gte;		// 处罚决定时间-起始
+	private Date penaltyDecisionTime_lte;		// 处罚决定时间-结束
+	private Double penaltyAmount_gte;		// 处罚金额-最小值
+	private Double penaltyAmount_lte;		// 处罚金额-最大值
+
 	@ExcelFields({
 		@ExcelField(title="处罚类型", attrName="penaltyType", align=Align.CENTER, sort=20),
 		@ExcelField(title="水域类别", attrName="waterCategory", align=Align.CENTER, sort=30),
@@ -604,6 +610,7 @@ public class PunishJudge extends DataEntity<PunishJudge> {
 	}
 
 	public void setPenaltyDecisionTime_gte(Date penaltyDecisionTime) {
+		this.penaltyDecisionTime_gte = penaltyDecisionTime;
 		sqlMap.getWhere().and("penalty_decision_time", QueryType.GTE, penaltyDecisionTime);
 	}
 	
@@ -612,7 +619,26 @@ public class PunishJudge extends DataEntity<PunishJudge> {
 	}
 
 	public void setPenaltyDecisionTime_lte(Date penaltyDecisionTime) {
+		this.penaltyDecisionTime_lte = penaltyDecisionTime;
 		sqlMap.getWhere().and("penalty_decision_time", QueryType.LTE, penaltyDecisionTime);
+	}
+	
+	public Double getPenaltyAmount_gte() {
+		return penaltyAmount_gte;
+	}
+
+	public void setPenaltyAmount_gte(Double penaltyAmount_gte) {
+		this.penaltyAmount_gte = penaltyAmount_gte;
+		sqlMap.getWhere().and("penalty_amount", QueryType.GTE, penaltyAmount_gte);
+	}
+
+	public Double getPenaltyAmount_lte() {
+		return penaltyAmount_lte;
+	}
+
+	public void setPenaltyAmount_lte(Double penaltyAmount_lte) {
+		this.penaltyAmount_lte = penaltyAmount_lte;
+		sqlMap.getWhere().and("penalty_amount", QueryType.LTE, penaltyAmount_lte);
 	}
 	
 }
