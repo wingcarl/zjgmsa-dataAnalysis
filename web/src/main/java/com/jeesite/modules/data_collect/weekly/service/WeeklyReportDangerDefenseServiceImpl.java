@@ -92,6 +92,21 @@ public class WeeklyReportDangerDefenseServiceImpl extends CrudService<WeeklyRepo
     public List<Map<String, Object>> getPollutionCaseReasonData(String startDate, String endDate) {
         return dao.getPollutionCaseReasonData(startDate, endDate);
     }
+    
+    @Override
+    public List<Map<String, Object>> getDangerousGoodsDetailData(String agency, String startDate, String endDate) {
+        return dao.getDangerousGoodsDetailData(agency, startDate, endDate);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getPollutionDetailData(String agency, String startDate, String endDate) {
+        return dao.getPollutionDetailData(agency, startDate, endDate);
+    }
+
+    @Override
+    public List<Map<String, Object>> getDangerDefenseDetailData(String agency, String startDate, String endDate) {
+        return dao.getDangerDefenseDetailData(agency, startDate, endDate);
+    }
 
     private Map<String, Object> getIndicatorData(String currentWeekStartDate, String lastWeekStartDate) {
         Map<String, Object> indicatorData = new HashMap<>();

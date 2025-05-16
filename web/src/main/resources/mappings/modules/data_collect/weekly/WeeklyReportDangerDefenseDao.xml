@@ -24,30 +24,59 @@
 
     <select id="getDangerousGoodsDataByDate" resultType="com.jeesite.modules.data_collect.weekly.entity.WeeklyReportDangerDefense">
         SELECT 
-            penalty_agency as agencyName,
+            CASE 
+                WHEN inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元') THEN '张家港港区海事处'
+                WHEN inspection_unit IN ('东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元') THEN '张家港锦丰海事处'
+                WHEN inspection_unit IN ('福姜沙快反处置中心', '七号快反执法单元') THEN '海巡执法支队'
+                WHEN inspection_unit IN ('保税区快反处置中心', '四号快反执法单元') THEN '张家港港区海事处保税区海巡执法大队'
+                WHEN inspection_unit = '张家港海事局' THEN '张家港海事局'
+                ELSE inspection_unit
+            END as agencyName,
             0 as dangerDefenseCount,
             COUNT(*) as dangerousGoodsCount,
             0 as pollutionCount,
             #{startDate} as statisticsDate
-        FROM punish_judge
-        WHERE management_category = '危防管理'
-        AND case_reason LIKE '%危险品%'
-        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
-        GROUP BY penalty_agency
+        FROM dynamic_enforcement_data
+        WHERE major_item_name IN ('船舶载运固体散装货物现场监督检查', '船载包装危险货物/污染危害性货物现场监督检查', '船载散装液体危险货物/污染危害性货物现场监督检查')
+        AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY 
+            CASE 
+                WHEN inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元') THEN '张家港港区海事处'
+                WHEN inspection_unit IN ('东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元') THEN '张家港锦丰海事处'
+                WHEN inspection_unit IN ('福姜沙快反处置中心', '七号快反执法单元') THEN '海巡执法支队'
+                WHEN inspection_unit IN ('保税区快反处置中心', '四号快反执法单元') THEN '张家港港区海事处保税区海巡执法大队'
+                WHEN inspection_unit = '张家港海事局' THEN '张家港海事局'
+                ELSE inspection_unit
+            END
     </select>
 
     <select id="getPollutionDataByDate" resultType="com.jeesite.modules.data_collect.weekly.entity.WeeklyReportDangerDefense">
         SELECT 
-            penalty_agency as agencyName,
+            CASE 
+                WHEN inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元') THEN '张家港港区海事处'
+                WHEN inspection_unit IN ('东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元') THEN '张家港锦丰海事处'
+                WHEN inspection_unit IN ('福姜沙快反处置中心', '七号快反执法单元') THEN '海巡执法支队'
+                WHEN inspection_unit IN ('保税区快反处置中心', '四号快反执法单元') THEN '张家港港区海事处保税区海巡执法大队'
+                WHEN inspection_unit = '张家港海事局' THEN '张家港海事局'
+                ELSE inspection_unit
+            END as agencyName,
             0 as dangerDefenseCount,
             0 as dangerousGoodsCount,
             COUNT(*) as pollutionCount,
             #{startDate} as statisticsDate
-        FROM punish_judge
-        WHERE management_category = '危防管理'
-        AND case_reason LIKE '%防污染%'
-        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
-        GROUP BY penalty_agency
+        FROM dynamic_enforcement_data
+        WHERE major_item_name IN ('船舶使用岸电监督检查', '船舶油污损害赔偿基金现场稽查', '船舶燃油质量监督检查', 
+                                '船舶能耗数据和碳强度监督管理', '船舶防污染作业现场检查', '船舶防污染证书、文书检查')
+        AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY 
+            CASE 
+                WHEN inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元') THEN '张家港港区海事处'
+                WHEN inspection_unit IN ('东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元') THEN '张家港锦丰海事处'
+                WHEN inspection_unit IN ('福姜沙快反处置中心', '七号快反执法单元') THEN '海巡执法支队'
+                WHEN inspection_unit IN ('保税区快反处置中心', '四号快反执法单元') THEN '张家港港区海事处保税区海巡执法大队'
+                WHEN inspection_unit = '张家港海事局' THEN '张家港海事局'
+                ELSE inspection_unit
+            END
     </select>
 
     <select id="getDangerDefenseCaseReasonData" resultType="java.util.Map">
@@ -64,28 +93,83 @@
 
     <select id="getDangerousGoodsCaseReasonData" resultType="java.util.Map">
         SELECT 
-            case_reason as name,
+            major_item_name as name,
             COUNT(*) as value
-        FROM punish_judge
-        WHERE management_category = '危防管理'
-        AND case_reason LIKE '%危险品%'
-        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
-        GROUP BY case_reason
+        FROM dynamic_enforcement_data
+        WHERE major_item_name IN ('船舶载运固体散装货物现场监督检查', '船载包装危险货物/污染危害性货物现场监督检查', '船载散装液体危险货物/污染危害性货物现场监督检查')
+        AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY major_item_name
         ORDER BY value DESC
         LIMIT 10
     </select>
 
     <select id="getPollutionCaseReasonData" resultType="java.util.Map">
         SELECT 
-            case_reason as name,
+            major_item_name as name,
             COUNT(*) as value
-        FROM punish_judge
-        WHERE management_category = '危防管理'
-        AND case_reason LIKE '%防污染%'
-        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
-        GROUP BY case_reason
+        FROM dynamic_enforcement_data
+        WHERE major_item_name IN ('船舶使用岸电监督检查', '船舶油污损害赔偿基金现场稽查', '船舶燃油质量监督检查', 
+                                '船舶能耗数据和碳强度监督管理', '船舶防污染作业现场检查', '船舶防污染证书、文书检查')
+        AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY major_item_name
         ORDER BY value DESC
         LIMIT 10
+    </select>
+    
+    <select id="getDangerousGoodsDetailData" resultType="java.util.Map">
+        SELECT 
+            DATE_FORMAT(inspection_time, '%Y-%m-%d') as inspectionDate,
+            major_item_name as itemName,
+            inspection_target as shipName,
+            inspection_result as result
+        FROM dynamic_enforcement_data
+        WHERE major_item_name IN ('船舶载运固体散装货物现场监督检查', '船载包装危险货物/污染危害性货物现场监督检查', '船载散装液体危险货物/污染危害性货物现场监督检查')
+        AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        AND (
+            (#{agency} = '张家港港区海事处' AND inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元'))
+            OR (#{agency} = '张家港锦丰海事处' AND inspection_unit IN ('东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元'))
+            OR (#{agency} = '海巡执法支队' AND inspection_unit IN ('福姜沙快反处置中心', '七号快反执法单元'))
+            OR (#{agency} = '张家港港区海事处保税区海巡执法大队' AND inspection_unit IN ('保税区快反处置中心', '四号快反执法单元'))
+            OR (#{agency} = '张家港海事局' AND inspection_unit = '张家港海事局')
+            OR (#{agency} = inspection_unit)
+        )
+        ORDER BY inspection_time DESC
+    </select>
+    
+    <select id="getPollutionDetailData" resultType="java.util.Map">
+        SELECT 
+            DATE_FORMAT(inspection_time, '%Y-%m-%d') as inspectionDate,
+            major_item_name as itemName,
+            inspection_target as shipName,
+            inspection_result as result
+        FROM dynamic_enforcement_data
+        WHERE major_item_name IN ('船舶使用岸电监督检查', '船舶油污损害赔偿基金现场稽查', '船舶燃油质量监督检查', 
+                                '船舶能耗数据和碳强度监督管理', '船舶防污染作业现场检查', '船舶防污染证书、文书检查')
+        AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        AND (
+            (#{agency} = '张家港港区海事处' AND inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元'))
+            OR (#{agency} = '张家港锦丰海事处' AND inspection_unit IN ('东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元'))
+            OR (#{agency} = '海巡执法支队' AND inspection_unit IN ('福姜沙快反处置中心', '七号快反执法单元'))
+            OR (#{agency} = '张家港港区海事处保税区海巡执法大队' AND inspection_unit IN ('保税区快反处置中心', '四号快反执法单元'))
+            OR (#{agency} = '张家港海事局' AND inspection_unit = '张家港海事局')
+            OR (#{agency} = inspection_unit)
+        )
+        ORDER BY inspection_time DESC
+    </select>
+    
+    <select id="getDangerDefenseDetailData" resultType="java.util.Map">
+        SELECT 
+            case_reason as caseReason,
+            ship_name as shipName,
+            sea_river_ship as shipType,
+            penalty_agency as penaltyAgency,
+            penalty_amount as penaltyAmount,
+            DATE_FORMAT(penalty_decision_time, '%Y-%m-%d') as penaltyDecisionTime
+        FROM punish_judge
+        WHERE management_category = '危防管理'
+        AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        AND penalty_agency = #{agency}
+        ORDER BY penalty_decision_time DESC
     </select>
 
 </mapper> 

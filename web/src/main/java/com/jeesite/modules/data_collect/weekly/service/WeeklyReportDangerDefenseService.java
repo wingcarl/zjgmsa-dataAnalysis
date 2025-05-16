@@ -45,4 +45,19 @@ public interface WeeklyReportDangerDefenseService {
      * 获取防污染案由数据
      */
     List<Map<String, Object>> getPollutionCaseReasonData(String startDate, String endDate);
+    
+    /**
+     * 获取指定机构的危险品检查详细数据
+     */
+    List<Map<String, Object>> getDangerousGoodsDetailData(String agency, String startDate, String endDate);
+    
+    /**
+     * 获取指定机构的防污染检查详细数据
+     */
+    List<Map<String, Object>> getPollutionDetailData(String agency, String startDate, String endDate);
+    
+    /**
+     * 获取指定机构的危防类处罚详细数据
+     */
+    List<Map<String, Object>> getDangerDefenseDetailData(String agency, String startDate, String endDate);
 } 

@@ -75,4 +75,28 @@ public interface WeeklyReportDangerDefenseDao extends CrudDao<WeeklyReportDanger
      * 获取防污染检查总数
      */
     int getPollutionCount(@Param("date") String date);
+
+    /**
+     * 获取指定机构的危险品检查详细数据
+     * @param agency 机构名称
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     */
+    List<Map<String, Object>> getDangerousGoodsDetailData(@Param("agency") String agency, @Param("startDate") String startDate, @Param("endDate") String endDate);
+    
+    /**
+     * 获取指定机构的防污染检查详细数据
+     * @param agency 机构名称
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     */
+    List<Map<String, Object>> getPollutionDetailData(@Param("agency") String agency, @Param("startDate") String startDate, @Param("endDate") String endDate);
+
+    /**
+     * 获取指定机构的危防类处罚详细数据
+     * @param agency 机构名称
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     */
+    List<Map<String, Object>> getDangerDefenseDetailData(@Param("agency") String agency, @Param("startDate") String startDate, @Param("endDate") String endDate);
 } 

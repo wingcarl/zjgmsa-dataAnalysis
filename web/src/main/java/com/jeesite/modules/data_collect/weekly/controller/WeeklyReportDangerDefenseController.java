@@ -123,6 +123,33 @@ public class WeeklyReportDangerDefenseController extends BaseController {
     }
     
     /**
+     * 获取指定机构的危险品检查详细数据
+     */
+    @RequestMapping(value = "getDangerousGoodsDetailData")
+    @ResponseBody
+    public List<Map<String, Object>> getDangerousGoodsDetailData(String agency, String startDate, String endDate) {
+        return weeklyReportDangerDefenseService.getDangerousGoodsDetailData(agency, startDate, endDate);
+    }
+    
+    /**
+     * 获取指定机构的防污染检查详细数据
+     */
+    @RequestMapping(value = "getPollutionDetailData")
+    @ResponseBody
+    public List<Map<String, Object>> getPollutionDetailData(String agency, String startDate, String endDate) {
+        return weeklyReportDangerDefenseService.getPollutionDetailData(agency, startDate, endDate);
+    }
+    
+    /**
+     * 获取指定机构的危防类处罚详细数据
+     */
+    @RequestMapping(value = "getDangerDefenseDetailData")
+    @ResponseBody
+    public List<Map<String, Object>> getDangerDefenseDetailData(String agency, String startDate, String endDate) {
+        return weeklyReportDangerDefenseService.getDangerDefenseDetailData(agency, startDate, endDate);
+    }
+    
+    /**
      * 根据机构提取对应的指标值
      */
     private List<Integer> extractValuesByAgency(List<WeeklyReportDangerDefense> dataList, List<String> categories, String type) {
