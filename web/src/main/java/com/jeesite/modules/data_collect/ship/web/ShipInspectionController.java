@@ -1,6 +1,11 @@
 package com.jeesite.modules.data_collect.ship.web;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.Date;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.jeesite.common.config.Global;
 import com.jeesite.common.collect.ListUtils;
@@ -130,8 +136,126 @@ public class ShipInspectionController extends BaseController {
 		}
 	}
 
+	/**
+	 * 获取船舶检查数据统计 - 用于周数据看板
+	 */
+	@GetMapping("getInspectionStatisticsData")
+	@ResponseBody
+	public Map<String, Object> getInspectionStatisticsData(String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			// 创建查询条件 - 海船安检
+			ShipInspection seaShipQuery = new ShipInspection();
+			seaShipQuery.setInspectionType("初查");
+			seaShipQuery.setShipType("海船");
+			if (startDateObj != null) {
+				seaShipQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				seaShipQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 创建查询条件 - 内河船安检
+			ShipInspection riverShipQuery = new ShipInspection();
+			riverShipQuery.setInspectionType("初查");
+			riverShipQuery.setShipType("内河船");
+			if (startDateObj != null) {
+				riverShipQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				riverShipQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 执行查询
+			List<ShipInspection> seaShipList = shipInspectionService.findList(seaShipQuery);
+			List<ShipInspection> riverShipList = shipInspectionService.findList(riverShipQuery);
+			
+			// 去重统计 - 海船安检
+			Map<String, List<ShipInspection>> seaShipMap = seaShipList.stream()
+				.collect(Collectors.groupingBy(ship -> 
+					ship.getShipNameCn() + "_" + 
+					DateUtils.formatDate(ship.getInspectionDate(), "yyyy-MM-dd") + "_" + 
+					ship.getInspectionAgency()
+				));
+			
+			// 去重统计 - 内河船安检
+			Map<String, List<ShipInspection>> riverShipMap = riverShipList.stream()
+				.collect(Collectors.groupingBy(ship -> 
+					ship.getShipNameCn() + "_" + 
+					DateUtils.formatDate(ship.getInspectionDate(), "yyyy-MM-dd") + "_" + 
+					ship.getInspectionAgency()
+				));
+			
+			// 统计结果
+			long seaShipCount = seaShipMap.size();
+			long riverShipCount = riverShipMap.size();
+			
+			// 统计缺陷
+			long seaShipDefectCount = seaShipMap.values().stream()
+				.mapToLong(list -> list.stream()
+					.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
+					.sum())
+				.sum();
+			
+			long riverShipDefectCount = riverShipMap.values().stream()
+				.mapToLong(list -> list.stream()
+					.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
+					.sum())
+				.sum();
+			
+			// 统计滞留
+			long seaShipDetainedCount = seaShipMap.values().stream()
+				.filter(list -> list.stream()
+					.anyMatch(ship -> "是".equals(ship.getDetained())))
+				.count();
+			
+			long riverShipDetainedCount = riverShipMap.values().stream()
+				.filter(list -> list.stream()
+					.anyMatch(ship -> "是".equals(ship.getDetained())))
+				.count();
+			
+			// 按机构统计
+			Map<String, Long> agencySeaShipCounts = new HashMap<>();
+			for (List<ShipInspection> shipList : seaShipMap.values()) {
+				if (!shipList.isEmpty()) {
+					String agency = shipList.get(0).getInspectionAgency();
+					agencySeaShipCounts.put(agency, agencySeaShipCounts.getOrDefault(agency, 0L) + 1);
+				}
+			}
+			
+			Map<String, Long> agencyRiverShipCounts = new HashMap<>();
+			for (List<ShipInspection> shipList : riverShipMap.values()) {
+				if (!shipList.isEmpty()) {
+					String agency = shipList.get(0).getInspectionAgency();
+					agencyRiverShipCounts.put(agency, agencyRiverShipCounts.getOrDefault(agency, 0L) + 1);
+				}
+			}
+			
+			// 组装返回数据
+			result.put("seaShipCount", seaShipCount);
+			result.put("riverShipCount", riverShipCount);
+			result.put("seaShipDefectCount", seaShipDefectCount);
+			result.put("riverShipDefectCount", riverShipDefectCount);
+			result.put("seaShipDetainedCount", seaShipDetainedCount);
+			result.put("riverShipDetainedCount", riverShipDetainedCount);
+			result.put("agencySeaShipCounts", agencySeaShipCounts);
+			result.put("agencyRiverShipCounts", agencyRiverShipCounts);
+			
+			result.put("status", "success");
+		} catch (Exception e) {
+			logger.error("获取船舶检查统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
 
-	
 	/**
 	 * 删除数据
 	 */

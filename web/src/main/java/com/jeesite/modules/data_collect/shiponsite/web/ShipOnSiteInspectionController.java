@@ -1,6 +1,10 @@
 package com.jeesite.modules.data_collect.shiponsite.web;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.jeesite.common.config.Global;
 import com.jeesite.common.collect.ListUtils;
@@ -139,6 +144,83 @@ public class ShipOnSiteInspectionController extends BaseController {
 	public String delete(ShipOnSiteInspection shipOnSiteInspection) {
 		shipOnSiteInspectionService.delete(shipOnSiteInspection);
 		return renderResult(Global.TRUE, text("删除船舶现场监督检查表成功！"));
+	}
+	
+	/**
+	 * 获取船舶现场监督检查数据统计 - 用于周数据看板
+	 */
+	@GetMapping("getOnSiteInspectionStatisticsData")
+	@ResponseBody
+	public Map<String, Object> getOnSiteInspectionStatisticsData(String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			// 创建查询条件
+			ShipOnSiteInspection onSiteQuery = new ShipOnSiteInspection();
+			onSiteQuery.setInitialOrRecheck("初查");
+			if (startDateObj != null) {
+				onSiteQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				onSiteQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 执行查询
+			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findList(onSiteQuery);
+			
+			// 去重统计
+			Map<String, List<ShipOnSiteInspection>> onSiteMap = onSiteList.stream()
+				.collect(Collectors.groupingBy(inspection -> 
+					inspection.getShipNameCn() + "_" + 
+					DateUtils.formatDate(inspection.getInspectionDate(), "yyyy-MM-dd") + "_" + 
+					inspection.getInspectionAgency()
+				));
+			
+			// 统计监督数量
+			long onSiteCount = onSiteMap.size();
+			
+			// 统计异常数量
+			long abnormalCount = onSiteMap.values().stream()
+				.filter(list -> list.stream()
+					.anyMatch(inspection -> "是".equals(inspection.getIssueFound())))
+				.count();
+			
+			// 按机构统计
+			Map<String, Long> agencyOnSiteCounts = new HashMap<>();
+			Map<String, Long> agencyAbnormalCounts = new HashMap<>();
+			
+			for (List<ShipOnSiteInspection> inspectionList : onSiteMap.values()) {
+				if (!inspectionList.isEmpty()) {
+					ShipOnSiteInspection inspection = inspectionList.get(0);
+					String agency = inspection.getInspectionAgency();
+					agencyOnSiteCounts.put(agency, agencyOnSiteCounts.getOrDefault(agency, 0L) + 1);
+					
+					boolean hasIssue = inspectionList.stream()
+						.anyMatch(insp -> "是".equals(insp.getIssueFound()));
+					
+					if (hasIssue) {
+						agencyAbnormalCounts.put(agency, agencyAbnormalCounts.getOrDefault(agency, 0L) + 1);
+					}
+				}
+			}
+			
+			// 组装返回数据
+			result.put("onSiteCount", onSiteCount);
+			result.put("abnormalCount", abnormalCount);
+			result.put("agencyOnSiteCounts", agencyOnSiteCounts);
+			result.put("agencyAbnormalCounts", agencyAbnormalCounts);
+			result.put("status", "success");
+		} catch (Exception e) {
+			logger.error("获取船舶现场监督检查统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
 	}
 	
 }

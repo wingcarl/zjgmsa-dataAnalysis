@@ -1,6 +1,9 @@
 package com.jeesite.modules.data_collect.psc.web;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.jeesite.common.config.Global;
 import com.jeesite.common.collect.ListUtils;
@@ -139,6 +143,69 @@ public class PscInspectionController extends BaseController {
 	public String delete(PscInspection pscInspection) {
 		pscInspectionService.delete(pscInspection);
 		return renderResult(Global.TRUE, text("删除PSC Inspection Table成功！"));
+	}
+	
+	/**
+	 * 获取PSC检查数据统计 - 用于周数据看板
+	 */
+	@GetMapping("getPscStatisticsData")
+	@ResponseBody
+	public Map<String, Object> getPscStatisticsData(String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			// 创建查询条件
+			PscInspection pscQuery = new PscInspection();
+			pscQuery.setType("INITIAL");
+			pscQuery.setPort("Zhangjiagang");
+			if (startDateObj != null) {
+				pscQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				pscQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 执行查询
+			List<PscInspection> pscList = pscInspectionService.findList(pscQuery);
+			
+			// 统计PSC检查数量
+			long pscCount = pscList.size();
+			
+			// 统计PSC缺陷数量
+			long pscDefectCount = pscList.stream()
+				.mapToLong(psc -> {
+					if (psc.getDeficiencies() != null && !psc.getDeficiencies().isEmpty()) {
+						try {
+							return Long.parseLong(psc.getDeficiencies());
+						} catch (NumberFormatException e) {
+							return 0;
+						}
+					}
+					return 0;
+				})
+				.sum();
+			
+			// 统计PSC滞留数量
+			long pscDetentionCount = pscList.stream()
+				.filter(psc -> "Y".equals(psc.getDetention()))
+				.count();
+			
+			// 组装返回数据
+			result.put("pscCount", pscCount);
+			result.put("pscDefectCount", pscDefectCount);
+			result.put("pscDetentionCount", pscDetentionCount);
+			result.put("status", "success");
+		} catch (Exception e) {
+			logger.error("获取PSC检查统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
 	}
 	
 }
