@@ -1336,12 +1336,12 @@
                         var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
                         var result = params[0].name + '<br/>';
                         params.forEach(item => {
-                            if (item.seriesName.includes('本期')) {
+                            if (item.seriesName.includes('上期')) {
                                 result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
                             }
                         });
                         params.forEach(item => {
-                            if (item.seriesName.includes('上期')) {
+                            if (item.seriesName.includes('本期')) {
                                 result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
                             }
                         });
@@ -1349,19 +1349,19 @@
                     }
                 },
                 legend: {
-                    data: ['检查数量(本期)', '检查数量(上期)', '缺陷数量(本期)', '缺陷数量(上期)', '滞留数量(本期)', '滞留数量(上期)'],
+                    data: ['检查数量(上期)', '检查数量(本期)', '缺陷数量(上期)', '缺陷数量(本期)', '滞留数量(上期)', '滞留数量(本期)'],
                     textStyle: {
                         color: '#0466c8'
                     },
                     top: 40,
                     left: 'center',
                     selected: {
-                        '检查数量(本期)': true,
                         '检查数量(上期)': true,
-                        '缺陷数量(本期)': false,
+                        '检查数量(本期)': true,
                         '缺陷数量(上期)': false,
-                        '滞留数量(本期)': false,
-                        '滞留数量(上期)': false
+                        '缺陷数量(本期)': false,
+                        '滞留数量(上期)': true,
+                        '滞留数量(本期)': true
                     }
                 },
                 grid: {
@@ -1391,29 +1391,13 @@
                         }
                     }
                 },
+                barCategoryGap: '30%',  // 类目间柱形距离
+                barGap: '10%',          // 同一类目下柱形间距离
                 series: [
-                    {
-                        name: '检查数量(本期)',
-                        type: 'bar',
-                        stack: '本期',
-                        data: seaShipCounts.current,
-                        itemStyle: {
-                            color: '#409EFF'
-                        },
-                        barGap: '20%',
-                        barCategoryGap: '40%',
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        label: {
-                            show: true,
-                            position: 'top'
-                        }
-                    },
                     {
                         name: '检查数量(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期检查',
                         data: seaShipCounts.last,
                         itemStyle: {
                             color: '#409EFF',
@@ -1428,25 +1412,35 @@
                         }
                     },
                     {
-                        name: '缺陷数量(本期)',
+                        name: '检查数量(本期)',
                         type: 'bar',
-                        stack: '本期',
-                        data: seaShipDefectCounts.current,
+                        stack: '本期检查',
+                        data: seaShipCounts.current,
                         itemStyle: {
-                            color: '#67C23A'
+                            color: '#409EFF'
                         },
                         emphasis: {
                             focus: 'series'
                         },
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = seaShipCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
                         }
                     },
                     {
                         name: '缺陷数量(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期缺陷',
                         data: seaShipDefectCounts.last,
                         itemStyle: {
                             color: '#67C23A',
@@ -1461,25 +1455,35 @@
                         }
                     },
                     {
-                        name: '滞留数量(本期)',
+                        name: '缺陷数量(本期)',
                         type: 'bar',
-                        stack: '本期',
-                        data: seaShipDetainedCounts.current,
+                        stack: '本期缺陷',
+                        data: seaShipDefectCounts.current,
                         itemStyle: {
-                            color: '#E6A23C'
+                            color: '#67C23A'
                         },
                         emphasis: {
                             focus: 'series'
                         },
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = seaShipDefectCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
                         }
                     },
                     {
                         name: '滞留数量(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期滞留',
                         data: seaShipDetainedCounts.last,
                         itemStyle: {
                             color: '#E6A23C',
@@ -1492,54 +1496,37 @@
                             show: true,
                             position: 'top'
                         }
+                    },
+                    {
+                        name: '滞留数量(本期)',
+                        type: 'bar',
+                        stack: '本期滞留',
+                        data: seaShipDetainedCounts.current,
+                        itemStyle: {
+                            color: '#E6A23C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = seaShipDetainedCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
+                        }
                     }
                 ]
             };
             
             departmentSeaShipChart.setOption(chartOption);
-            
-            // 添加点击事件，切换展示的数据类型
-            departmentSeaShipChart.off('legendselectchanged');
-            departmentSeaShipChart.on('legendselectchanged', function(params) {
-                var selected = params.selected;
-                var option = departmentSeaShipChart.getOption();
-                
-                // 如果检查数量被选中，则禁用缺陷数量和滞留数量
-                if (selected['检查数量(本期)'] || selected['检查数量(上期)']) {
-                    option.legend[0].selected = {
-                        '检查数量(本期)': true,
-                        '检查数量(上期)': true,
-                        '缺陷数量(本期)': false,
-                        '缺陷数量(上期)': false,
-                        '滞留数量(本期)': false,
-                        '滞留数量(上期)': false
-                    };
-                }
-                // 如果缺陷数量被选中，则禁用检查数量和滞留数量
-                else if (selected['缺陷数量(本期)'] || selected['缺陷数量(上期)']) {
-                    option.legend[0].selected = {
-                        '检查数量(本期)': false,
-                        '检查数量(上期)': false,
-                        '缺陷数量(本期)': true,
-                        '缺陷数量(上期)': true,
-                        '滞留数量(本期)': false,
-                        '滞留数量(上期)': false
-                    };
-                }
-                // 如果滞留数量被选中，则禁用检查数量和缺陷数量
-                else if (selected['滞留数量(本期)'] || selected['滞留数量(上期)']) {
-                    option.legend[0].selected = {
-                        '检查数量(本期)': false,
-                        '检查数量(上期)': false,
-                        '缺陷数量(本期)': false,
-                        '缺陷数量(上期)': false,
-                        '滞留数量(本期)': true,
-                        '滞留数量(上期)': true
-                    };
-                }
-                
-                departmentSeaShipChart.setOption(option);
-            });
         }
 
         // 渲染各部门内河船安检图表
@@ -1564,12 +1551,12 @@
                         var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
                         var result = params[0].name + '<br/>';
                         params.forEach(item => {
-                            if (item.seriesName.includes('本期')) {
+                            if (item.seriesName.includes('上期')) {
                                 result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
                             }
                         });
                         params.forEach(item => {
-                            if (item.seriesName.includes('上期')) {
+                            if (item.seriesName.includes('本期')) {
                                 result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
                             }
                         });
@@ -1577,19 +1564,19 @@
                     }
                 },
                 legend: {
-                    data: ['检查数量(本期)', '检查数量(上期)', '缺陷数量(本期)', '缺陷数量(上期)', '滞留数量(本期)', '滞留数量(上期)'],
+                    data: ['检查数量(上期)', '检查数量(本期)', '缺陷数量(上期)', '缺陷数量(本期)', '滞留数量(上期)', '滞留数量(本期)'],
                     textStyle: {
                         color: '#0466c8'
                     },
                     top: 40,
                     left: 'center',
                     selected: {
-                        '检查数量(本期)': true,
                         '检查数量(上期)': true,
-                        '缺陷数量(本期)': false,
+                        '检查数量(本期)': true,
                         '缺陷数量(上期)': false,
-                        '滞留数量(本期)': false,
-                        '滞留数量(上期)': false
+                        '缺陷数量(本期)': false,
+                        '滞留数量(上期)': true,
+                        '滞留数量(本期)': true
                     }
                 },
                 grid: {
@@ -1619,29 +1606,13 @@
                         }
                     }
                 },
+                barCategoryGap: '30%',  // 类目间柱形距离
+                barGap: '10%',          // 同一类目下柱形间距离
                 series: [
-                    {
-                        name: '检查数量(本期)',
-                        type: 'bar',
-                        stack: '本期',
-                        data: riverShipCounts.current,
-                        itemStyle: {
-                            color: '#67C23A'
-                        },
-                        barGap: '20%',
-                        barCategoryGap: '40%',
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        label: {
-                            show: true,
-                            position: 'top'
-                        }
-                    },
                     {
                         name: '检查数量(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期检查',
                         data: riverShipCounts.last,
                         itemStyle: {
                             color: '#67C23A',
@@ -1656,25 +1627,35 @@
                         }
                     },
                     {
-                        name: '缺陷数量(本期)',
+                        name: '检查数量(本期)',
                         type: 'bar',
-                        stack: '本期',
-                        data: riverShipDefectCounts.current,
+                        stack: '本期检查',
+                        data: riverShipCounts.current,
                         itemStyle: {
-                            color: '#409EFF'
+                            color: '#67C23A'
                         },
                         emphasis: {
                             focus: 'series'
                         },
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = riverShipCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
                         }
                     },
                     {
                         name: '缺陷数量(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期缺陷',
                         data: riverShipDefectCounts.last,
                         itemStyle: {
                             color: '#409EFF',
@@ -1689,25 +1670,35 @@
                         }
                     },
                     {
-                        name: '滞留数量(本期)',
+                        name: '缺陷数量(本期)',
                         type: 'bar',
-                        stack: '本期',
-                        data: riverShipDetainedCounts.current,
+                        stack: '本期缺陷',
+                        data: riverShipDefectCounts.current,
                         itemStyle: {
-                            color: '#E6A23C'
+                            color: '#409EFF'
                         },
                         emphasis: {
                             focus: 'series'
                         },
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = riverShipDefectCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
                         }
                     },
                     {
                         name: '滞留数量(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期滞留',
                         data: riverShipDetainedCounts.last,
                         itemStyle: {
                             color: '#E6A23C',
@@ -1720,54 +1711,37 @@
                             show: true,
                             position: 'top'
                         }
+                    },
+                    {
+                        name: '滞留数量(本期)',
+                        type: 'bar',
+                        stack: '本期滞留',
+                        data: riverShipDetainedCounts.current,
+                        itemStyle: {
+                            color: '#E6A23C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = riverShipDetainedCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
+                        }
                     }
                 ]
             };
             
             departmentRiverShipChart.setOption(chartOption);
-            
-            // 添加点击事件，切换展示的数据类型
-            departmentRiverShipChart.off('legendselectchanged');
-            departmentRiverShipChart.on('legendselectchanged', function(params) {
-                var selected = params.selected;
-                var option = departmentRiverShipChart.getOption();
-                
-                // 如果检查数量被选中，则禁用缺陷数量和滞留数量
-                if (selected['检查数量(本期)'] || selected['检查数量(上期)']) {
-                    option.legend[0].selected = {
-                        '检查数量(本期)': true,
-                        '检查数量(上期)': true,
-                        '缺陷数量(本期)': false,
-                        '缺陷数量(上期)': false,
-                        '滞留数量(本期)': false,
-                        '滞留数量(上期)': false
-                    };
-                }
-                // 如果缺陷数量被选中，则禁用检查数量和滞留数量
-                else if (selected['缺陷数量(本期)'] || selected['缺陷数量(上期)']) {
-                    option.legend[0].selected = {
-                        '检查数量(本期)': false,
-                        '检查数量(上期)': false,
-                        '缺陷数量(本期)': true,
-                        '缺陷数量(上期)': true,
-                        '滞留数量(本期)': false,
-                        '滞留数量(上期)': false
-                    };
-                }
-                // 如果滞留数量被选中，则禁用检查数量和缺陷数量
-                else if (selected['滞留数量(本期)'] || selected['滞留数量(上期)']) {
-                    option.legend[0].selected = {
-                        '检查数量(本期)': false,
-                        '检查数量(上期)': false,
-                        '缺陷数量(本期)': false,
-                        '缺陷数量(上期)': false,
-                        '滞留数量(本期)': true,
-                        '滞留数量(上期)': true
-                    };
-                }
-                
-                departmentRiverShipChart.setOption(option);
-            });
         }
 
         // 渲染各部门现场监督图表
@@ -1792,12 +1766,12 @@
                         var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
                         var result = params[0].name + '<br/>';
                         params.forEach(item => {
-                            if (item.seriesName.includes('本期')) {
+                            if (item.seriesName.includes('上期')) {
                                 result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
                             }
                         });
                         params.forEach(item => {
-                            if (item.seriesName.includes('上期')) {
+                            if (item.seriesName.includes('本期')) {
                                 result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
                             }
                         });
@@ -1805,17 +1779,17 @@
                     }
                 },
                 legend: {
-                    data: ['监督总数(本期)', '监督总数(上期)', '异常数量(本期)', '异常数量(上期)'],
+                    data: ['监督总数(上期)', '监督总数(本期)', '异常数量(上期)', '异常数量(本期)'],
                     textStyle: {
                         color: '#0466c8'
                     },
                     top: 40,
                     left: 'center',
                     selected: {
-                        '监督总数(本期)': true,
                         '监督总数(上期)': true,
-                        '异常数量(本期)': false,
-                        '异常数量(上期)': false
+                        '监督总数(本期)': true,
+                        '异常数量(上期)': true,
+                        '异常数量(本期)': true
                     }
                 },
                 grid: {
@@ -1845,29 +1819,13 @@
                         }
                     }
                 },
+                barCategoryGap: '30%',  // 类目间柱形距离
+                barGap: '10%',          // 同一类目下柱形间距离
                 series: [
-                    {
-                        name: '监督总数(本期)',
-                        type: 'bar',
-                        stack: '本期',
-                        data: onSiteCounts.current,
-                        itemStyle: {
-                            color: '#E6A23C'
-                        },
-                        barGap: '20%',
-                        barCategoryGap: '40%',
-                        emphasis: {
-                            focus: 'series'
-                        },
-                        label: {
-                            show: true,
-                            position: 'top'
-                        }
-                    },
                     {
                         name: '监督总数(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期检查',
                         data: onSiteCounts.last,
                         itemStyle: {
                             color: '#E6A23C',
@@ -1882,25 +1840,35 @@
                         }
                     },
                     {
-                        name: '异常数量(本期)',
+                        name: '监督总数(本期)',
                         type: 'bar',
-                        stack: '本期',
-                        data: abnormalCounts.current,
+                        stack: '本期检查',
+                        data: onSiteCounts.current,
                         itemStyle: {
-                            color: '#F56C6C'
+                            color: '#E6A23C'
                         },
                         emphasis: {
                             focus: 'series'
                         },
                         label: {
                             show: true,
-                            position: 'top'
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = onSiteCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
                         }
                     },
                     {
                         name: '异常数量(上期)',
                         type: 'bar',
-                        stack: '上期',
+                        stack: '上期缺陷',
                         data: abnormalCounts.last,
                         itemStyle: {
                             color: '#F56C6C',
@@ -1913,39 +1881,37 @@
                             show: true,
                             position: 'top'
                         }
+                    },
+                    {
+                        name: '异常数量(本期)',
+                        type: 'bar',
+                        stack: '本期缺陷',
+                        data: abnormalCounts.current,
+                        itemStyle: {
+                            color: '#F56C6C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = abnormalCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
+                        }
                     }
                 ]
             };
             
             departmentOnSiteChart.setOption(chartOption);
-            
-            // 添加点击事件，切换展示的数据类型
-            departmentOnSiteChart.off('legendselectchanged');
-            departmentOnSiteChart.on('legendselectchanged', function(params) {
-                var selected = params.selected;
-                var option = departmentOnSiteChart.getOption();
-                
-                // 如果监督总数被选中，则禁用异常数量
-                if (selected['监督总数(本期)'] || selected['监督总数(上期)']) {
-                    option.legend[0].selected = {
-                        '监督总数(本期)': true,
-                        '监督总数(上期)': true,
-                        '异常数量(本期)': false,
-                        '异常数量(上期)': false
-                    };
-                }
-                // 如果异常数量被选中，则禁用监督总数
-                else if (selected['异常数量(本期)'] || selected['异常数量(上期)']) {
-                    option.legend[0].selected = {
-                        '监督总数(本期)': false,
-                        '监督总数(上期)': false,
-                        '异常数量(本期)': true,
-                        '异常数量(上期)': true
-                    };
-                }
-                
-                departmentOnSiteChart.setOption(option);
-            });
         }
 
         // 窗口大小变化时调整图表大小

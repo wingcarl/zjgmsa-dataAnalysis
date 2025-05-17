@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>张家港海事局动态执法数据看板</title>
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
     <!-- Font Awesome - 添加图标支持 -->
     <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
     <!-- Custom CSS - 科技风格设计 -->
@@ -351,6 +351,40 @@
                 margin: 10px 0;
             }
         }
+
+        .filter-section {
+            background: linear-gradient(to right, rgba(4, 102, 200, 0.05), rgba(51, 161, 253, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border: 1px solid rgba(4, 102, 200, 0.1);
+        }
+        
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .filter-header .section-title {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .date-range-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            margin-bottom: 15px;
+            border: 1px solid rgba(4, 102, 200, 0.1);
+        }
     </style>
     <!-- jQuery 和 ECharts -->
     <!-- jQuery 和 ECharts -->
@@ -375,12 +409,15 @@
 
 <div class="container-fluid">
     <div class="custom-date-input">
-        <label for="reportDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
-            <i class="far fa-calendar-alt icon-box"></i>选择日期：
+        <label style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            <i class="far fa-calendar-alt icon-box"></i>选择时间段：
         </label>
-        <input type="date" id="reportDate" class="form-control" style="width: auto;">
-        <button type="button" id="fetchDataButton" class="btn btn-primary">
-            <i class="fas fa-sync-alt"></i> 拉取数据
+        <label for="startDate" style="margin-right: 5px;">开始时间:</label>
+        <input type="date" id="startDate" class="form-control" style="width: auto;">
+        <label for="endDate" style="margin: 0 5px 0 15px;">结束时间:</label>
+        <input type="date" id="endDate" class="form-control" style="width: auto;">
+        <button type="button" id="fetchDataButton" class="btn btn-primary" style="margin-left: 15px;">
+            <i class="fas fa-sync-alt"></i> 查询数据
         </button>
     </div>
 
@@ -388,14 +425,14 @@
     <div class="row">
         <div class="col-md-4">
             <div class="data-card">
-                <div class="label"><i class="fas fa-ship icon-box"></i>海巡艇巡航发现异常</div>
+                <div class="label"><i class="fas fa-ship icon-box"></i>现场巡航发现异常</div>
                 <div class="value" id="patrol-boat-abnormal-value">0</div>
                 <div class="change-rate" id="patrol-boat-abnormal-rate">0%</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="data-card">
-                <div class="label"><i class="fas fa-gavel icon-box"></i>海巡艇巡航立案调查</div>
+                <div class="label"><i class="fas fa-gavel icon-box"></i>现场巡航立案调查</div>
                 <div class="value" id="patrol-boat-investigation-value">0</div>
                 <div class="change-rate" id="patrol-boat-investigation-rate">0%</div>
             </div>
@@ -442,7 +479,7 @@
                     <thead>
                     <tr>
                         <th rowspan="3">部门</th>
-                        <th colspan="6">海巡艇巡航</th>
+                        <th colspan="6">现场巡航</th>
                         <th colspan="6">电子巡航</th>
                         <th colspan="6">无人机巡航</th>
                     </tr>
@@ -455,23 +492,23 @@
                         <th colspan="3">立案调查</th>
                     </tr>
                     <tr>
-                        <th>上周</th>
-                        <th>本周</th>
+                        <th>上期</th>
+                        <th>本期</th>
                         <th>环比</th>
-                        <th>上周</th>
-                        <th>本周</th>
+                        <th>上期</th>
+                        <th>本期</th>
                         <th>环比</th>
-                        <th>上周</th>
-                        <th>本周</th>
+                        <th>上期</th>
+                        <th>本期</th>
                         <th>环比</th>
-                        <th>上周</th>
-                        <th>本周</th>
+                        <th>上期</th>
+                        <th>本期</th>
                         <th>环比</th>
-                        <th>上周</th>
-                        <th>本周</th>
+                        <th>上期</th>
+                        <th>本期</th>
                         <th>环比</th>
-                        <th>上周</th>
-                        <th>本周</th>
+                        <th>上期</th>
+                        <th>本期</th>
                         <th>环比</th>
                     </tr>
                     </thead>
@@ -484,55 +521,28 @@
     </div>
 
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-ship icon-box"></i>海巡艇巡航发现异常统计</h5>
+        <h5 class="charts-title"><i class="fas fa-ship icon-box"></i>现场巡航统计</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="patrol-boat-abnormal-chart" class="chart-container"></div>
+                <div id="field-patrol-chart" class="chart-container"></div>
             </div>
         </div>
     </div>
 
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-gavel icon-box"></i>海巡艇巡航立案调查统计</h5>
+        <h5 class="charts-title"><i class="fas fa-desktop icon-box"></i>电子巡航统计</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="patrol-boat-investigation-chart" class="chart-container"></div>
+                <div id="electronic-patrol-chart" class="chart-container"></div>
             </div>
         </div>
     </div>
 
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-desktop icon-box"></i>电子巡航发现异常统计</h5>
+        <h5 class="charts-title"><i class="fas fa-drone icon-box"></i>无人机巡航统计</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="electronic-patrol-abnormal-chart" class="chart-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-search icon-box"></i>电子巡航立案调查统计</h5>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="electronic-patrol-investigation-chart" class="chart-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-drone icon-box"></i>无人机巡航发现异常统计</h5>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="drone-patrol-abnormal-chart" class="chart-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-clipboard-list icon-box"></i>无人机巡航立案调查统计</h5>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="drone-patrol-investigation-chart" class="chart-container"></div>
+                <div id="drone-patrol-chart" class="chart-container"></div>
             </div>
         </div>
     </div>
@@ -545,28 +555,58 @@
 
 <script>
     $(document).ready(function() {
-        // 初始化 ECharts 实例
-        var patrolBoatAbnormalChart = echarts.init(document.getElementById('patrol-boat-abnormal-chart'));
-        var patrolBoatInvestigationChart = echarts.init(document.getElementById('patrol-boat-investigation-chart'));
-        var electronicPatrolAbnormalChart = echarts.init(document.getElementById('electronic-patrol-abnormal-chart'));
-        var electronicPatrolInvestigationChart = echarts.init(document.getElementById('electronic-patrol-investigation-chart'));
-        var dronePatrolAbnormalChart = echarts.init(document.getElementById('drone-patrol-abnormal-chart'));
-        var dronePatrolInvestigationChart = echarts.init(document.getElementById('drone-patrol-investigation-chart'));
+        // 初始化 ECharts 实例 - 将相关图表合并
+        var fieldPatrolChart = echarts.init(document.getElementById('field-patrol-chart'));
+        var electronicPatrolChart = echarts.init(document.getElementById('electronic-patrol-chart'));
+        var dronePatrolChart = echarts.init(document.getElementById('drone-patrol-chart'));
 
         // 获取日期选择器和拉取数据按钮
-        var dateInput = $('#reportDate');
+        var startDateInput = $('#startDate');
+        var endDateInput = $('#endDate');
         var fetchDataButton = $('#fetchDataButton');
 
-        // 设置默认日期为今天
-        dateInput.val(new Date().toISOString().slice(0, 10));
+        // 设置默认日期（上周五到本周四）
+        setDefaultDates();
 
         // 初始化图表
-        fetchDataAndRenderCharts();
+        fetchDataAndRenderCharts().then(() => {
+            // 恢复按钮状态
+            $(fetchDataButton).html('<i class="fas fa-sync-alt"></i> 查询数据');
+            $(fetchDataButton).prop('disabled', false);
+        });
 
         // 日期改变事件
-        dateInput.on('change', function() {
-            fetchDataAndRenderCharts();
+        startDateInput.on('change', function() {
+            // 可以保持这里的自动触发或者注释掉，由用户手动点击查询按钮
+            // fetchDataAndRenderCharts();
         });
+        
+        endDateInput.on('change', function() {
+            // 可以保持这里的自动触发或者注释掉，由用户手动点击查询按钮
+            // fetchDataAndRenderCharts();
+        });
+
+        // 设置默认日期范围（上周五到本周四）
+        function setDefaultDates() {
+            var today = new Date();
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            
+            // 计算到上周五的天数
+            var daysToLastFriday = (dayOfWeek + 2) % 7;
+            if (daysToLastFriday === 0) daysToLastFriday = 7; // 如果今天是周五，则取上周五
+            
+            // 上周五
+            var lastFriday = new Date(today);
+            lastFriday.setDate(today.getDate() - daysToLastFriday);
+            
+            // 本周四
+            var thisThursday = new Date(lastFriday);
+            thisThursday.setDate(lastFriday.getDate() + 6);
+            
+            // 格式化日期为YYYY-MM-DD
+            startDateInput.val(formatDate(lastFriday));
+            endDateInput.val(formatDate(thisThursday));
+        }
 
         // 拉取数据按钮点击事件
         fetchDataButton.on('click', function() {
@@ -574,52 +614,51 @@
             $(this).html('<i class="fas fa-spinner fa-spin"></i> 数据加载中...');
             $(this).prop('disabled', true);
 
-            fetchData().then(() => {
+            fetchDataAndRenderCharts().then(() => {
                 // 恢复按钮状态
-                $(this).html('<i class="fas fa-sync-alt"></i> 拉取数据');
+                $(this).html('<i class="fas fa-sync-alt"></i> 查询数据');
                 $(this).prop('disabled', false);
             });
         });
 
-        function fetchData() {
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        function fetchDataAndRenderCharts() {
             return new Promise((resolve) => {
-                // 获取当前选择的日期
-                var selectedDate = dateInput.val();
-                var currentDate = new Date(selectedDate);
-                var currentDayOfWeek = currentDate.getDay();
-
-                // 计算本周和上周的开始日期
-                var currentWeekStartDate = new Date(currentDate);
-                currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
-
-                var lastWeekStartDate = new Date(currentWeekStartDate);
-                lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+                // 获取当前选择的开始和结束日期
+                var startDate = startDateInput.val();
+                var endDate = endDateInput.val();
 
                 // 构建请求参数
                 var params = {
-                    currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                    lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
+                    startDate: startDate,
+                    endDate: endDate
                 }
+
+                // 更新标题
+                var titleText = "张家港海事局动态执法数据看板 (" + startDate + " 至 " + endDate + ")";
+                $('.main-title').html('<i class="fas fa-ship icon-box"></i>' + titleText);
 
                 // 发送 AJAX 请求获取数据
                 $.ajax({
-                    url: 'fetchData',
-                    type: 'GET',
+                    url: '${ctx}/dynamic/dynamicEnforcementData/getDynamicEnforcementData',
+                    type: 'POST',
                     dataType: 'json',
                     data: params,
                     success: function(data) {
-                        Swal.fire({
-                            title: '成功!',
-                            text: '数据拉取成功',
-                            icon: 'success',
-                            confirmButtonText: '确定'
-                        });
-                        renderCharts(data);
-                        renderDataCards(data);
-                        renderDataTables(data);
+                        // 使用适配器转换数据格式，以适配图表和卡片
+                        var adaptedData = adaptDataFormat(data);
+                        renderCharts(adaptedData);
+                        renderDataCards(adaptedData);
+                        renderDataTables(adaptedData);
                         resolve();
                     },
-                    error: function(error){
+                    error: function(error) {
                         console.error('Error fetching chart data:', error);
                         Swal.fire({
                             title: '错误!',
@@ -633,55 +672,116 @@
             });
         }
 
-        function fetchDataAndRenderCharts() {
-            // 获取当前选择的日期
-            var selectedDate = dateInput.val();
+        // 适配数据格式，将后端返回的数据转换为前端需要的格式
+        function adaptDataFormat(rawData) {
+            var adaptedData = {
+                categories: ["港区海事处", "锦丰海事处", "保税区海巡执法大队", "海巡执法支队"],
+                patrolBoatAbnormalDiscoveryCurrent: [],
+                patrolBoatAbnormalDiscoveryLast: [],
+                patrolBoatInvestigationCasesCurrent: [],
+                patrolBoatInvestigationCasesLast: [],
+                electronicPatrolAbnormalDiscoveryCurrent: [],
+                electronicPatrolAbnormalDiscoveryLast: [],
+                electronicPatrolInvestigationCasesCurrent: [],
+                electronicPatrolInvestigationCasesLast: [],
+                droneAbnormalDiscoveryCurrent: [],
+                droneAbnormalDiscoveryLast: [],
+                droneInvestigationCasesCurrent: [],
+                droneInvestigationCasesLast: [],
+                currentData: {},
+                previousData: {}
+            };
 
-            // 计算本周和上周的开始日期
-            var currentDate = new Date(selectedDate);
-            var currentDayOfWeek = currentDate.getDay();
-            var currentWeekStartDate = new Date(currentDate);
-            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
-
-            var lastWeekStartDate = new Date(currentWeekStartDate);
-            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
-
-            // 构建请求参数
-            var params = {
-                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
+            // 复制数据，但排除张家港海事局
+            for (var dept in rawData.currentData) {
+                if (dept !== "张家港海事局") {
+                    adaptedData.currentData[dept] = rawData.currentData[dept];
+                }
+            }
+            
+            for (var dept in rawData.previousData) {
+                if (dept !== "张家港海事局") {
+                    adaptedData.previousData[dept] = rawData.previousData[dept];
+                }
             }
 
-            // 计算结束日期
-            var currentWeekEndDate = new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
-            var formattedStartDate = currentWeekStartDate.toISOString().slice(0, 10);
-            var formattedEndDate = currentWeekEndDate.toISOString().slice(0, 10);
+            // 处理每个部门的数据
+            adaptedData.categories.forEach(function(dept) {
+                var currentDeptData = rawData.currentData[dept];
+                var previousDeptData = rawData.previousData[dept];
 
-            // 更新标题
-            var titleText = "张家港海事局动态执法数据看板 ("+formattedStartDate+" 至 "+ formattedEndDate+")";
-            $('.main-title').html('<i class="fas fa-ship icon-box"></i>' + titleText);
+                if (currentDeptData && previousDeptData) {
+                    // 计算环比变化率
+                    function calcChangeRate(current, previous) {
+                        if (previous === 0) return current > 0 ? 100 : 0;
+                        return ((current - previous) / previous) * 100;
+                    }
 
-            // 发送 AJAX 请求获取数据
-            $.ajax({
-                url: 'chartDataWithDate', // 使用原始URL
-                type: 'GET',
-                dataType: 'json',
-                data: params,
-                success: function(data) {
-                    renderCharts(data);
-                    renderDataCards(data);
-                    renderDataTables(data);
-                },
-                error: function(error) {
-                    console.error('Error fetching chart data:', error);
-                    Swal.fire({
-                        title: '错误!',
-                        text: '获取数据失败，请查看控制台错误信息。',
-                        icon: 'error',
-                        confirmButtonText: '确定'
-                    });
+                    // 为每个指标添加环比变化率
+                    function createDataWithRate(current, previous) {
+                        return {
+                            value: current,
+                            changeRate: calcChangeRate(current, previous)
+                        };
+                    }
+
+                    // 现场巡航发现异常
+                    adaptedData.patrolBoatAbnormalDiscoveryCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.fieldPatrolAbnormal, 
+                            previousDeptData.fieldPatrolAbnormal
+                        )
+                    );
+                    adaptedData.patrolBoatAbnormalDiscoveryLast.push(previousDeptData.fieldPatrolAbnormal);
+
+                    // 现场巡航立案调查
+                    adaptedData.patrolBoatInvestigationCasesCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.fieldPatrolCase, 
+                            previousDeptData.fieldPatrolCase
+                        )
+                    );
+                    adaptedData.patrolBoatInvestigationCasesLast.push(previousDeptData.fieldPatrolCase);
+
+                    // 电子巡航发现异常
+                    adaptedData.electronicPatrolAbnormalDiscoveryCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.electronicPatrolAbnormal, 
+                            previousDeptData.electronicPatrolAbnormal
+                        )
+                    );
+                    adaptedData.electronicPatrolAbnormalDiscoveryLast.push(previousDeptData.electronicPatrolAbnormal);
+
+                    // 电子巡航立案调查
+                    adaptedData.electronicPatrolInvestigationCasesCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.electronicPatrolCase, 
+                            previousDeptData.electronicPatrolCase
+                        )
+                    );
+                    adaptedData.electronicPatrolInvestigationCasesLast.push(previousDeptData.electronicPatrolCase);
+
+                    // 无人机巡航发现异常
+                    adaptedData.droneAbnormalDiscoveryCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.dronePatrolAbnormal, 
+                            previousDeptData.dronePatrolAbnormal
+                        )
+                    );
+                    adaptedData.droneAbnormalDiscoveryLast.push(previousDeptData.dronePatrolAbnormal);
+
+                    // 无人机巡航立案调查
+                    adaptedData.droneInvestigationCasesCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.dronePatrolCase, 
+                            previousDeptData.dronePatrolCase
+                        )
+                    );
+                    adaptedData.droneInvestigationCasesLast.push(previousDeptData.dronePatrolCase);
                 }
             });
+
+            return adaptedData;
         }
 
         // 渲染数据卡片
@@ -695,178 +795,128 @@
                 return 0;
             }
 
-            // 计算变化率
-            function calculateChangeRate(current, previous) {
-                if (previous === 0) return current > 0 ? 100 : 0;
-                return ((current - previous) / previous) * 100;
+            // 获取张家港海事局的数据
+            var zhangJiaGangData = data.currentData["张家港海事局"];
+            var zhangJiaGangPrevData = data.previousData["张家港海事局"];
+
+            if (zhangJiaGangData && zhangJiaGangPrevData) {
+                // 更新各卡片数据
+                // 现场巡航发现异常
+                updateCardWithRate("patrol-boat-abnormal-value", "patrol-boat-abnormal-rate", 
+                    zhangJiaGangData.fieldPatrolAbnormal, 
+                    zhangJiaGangPrevData.fieldPatrolAbnormal);
+                
+                // 现场巡航立案调查
+                updateCardWithRate("patrol-boat-investigation-value", "patrol-boat-investigation-rate", 
+                    zhangJiaGangData.fieldPatrolCase, 
+                    zhangJiaGangPrevData.fieldPatrolCase);
+                
+                // 电子巡航发现异常
+                updateCardWithRate("electronic-patrol-abnormal-value", "electronic-patrol-abnormal-rate", 
+                    zhangJiaGangData.electronicPatrolAbnormal, 
+                    zhangJiaGangPrevData.electronicPatrolAbnormal);
+                
+                // 电子巡航立案调查
+                updateCardWithRate("electronic-patrol-investigation-value", "electronic-patrol-investigation-rate", 
+                    zhangJiaGangData.electronicPatrolCase, 
+                    zhangJiaGangPrevData.electronicPatrolCase);
+                
+                // 无人机巡航发现异常
+                updateCardWithRate("drone-patrol-abnormal-value", "drone-patrol-abnormal-rate", 
+                    zhangJiaGangData.dronePatrolAbnormal, 
+                    zhangJiaGangPrevData.dronePatrolAbnormal);
+                
+                // 无人机巡航立案调查
+                updateCardWithRate("drone-patrol-investigation-value", "drone-patrol-investigation-rate", 
+                    zhangJiaGangData.dronePatrolCase, 
+                    zhangJiaGangPrevData.dronePatrolCase);
             }
-
-            // 更新卡片值和变化率
-            function updateCard(valueId, rateId, currentData, lastData) {
-                const currentTotal = calculateTotal(currentData);
-                const lastTotal = calculateTotal(lastData);
-                const changeRate = calculateChangeRate(currentTotal, lastTotal);
-
-                $("#" + valueId).text(currentTotal);
-
-                const rateText = (changeRate > 0 ? "+" : "") + changeRate.toFixed(2) + "%";
-                const rateElement = $("#" + rateId);
-
-                rateElement.text(rateText);
-
-                if (changeRate > 0) {
-                    rateElement.removeClass('negative neutral').addClass('positive');
-                } else if (changeRate < 0) {
-                    rateElement.removeClass('positive neutral').addClass('negative');
-                } else {
-                    rateElement.removeClass('positive negative').addClass('neutral');
-                }
-            }
-
-            // 更新各项数据卡片
-            updateCard(
-                "patrol-boat-abnormal-value",
-                "patrol-boat-abnormal-rate",
-                data.patrolBoatAbnormalDiscoveryCurrent,
-                data.patrolBoatAbnormalDiscoveryLast
-            );
-
-            updateCard(
-                "patrol-boat-investigation-value",
-                "patrol-boat-investigation-rate",
-                data.patrolBoatInvestigationCasesCurrent,
-                data.patrolBoatInvestigationCasesLast
-            );
-
-            updateCard(
-                "electronic-patrol-abnormal-value",
-                "electronic-patrol-abnormal-rate",
-                data.electronicPatrolAbnormalDiscoveryCurrent,
-                data.electronicPatrolAbnormalDiscoveryLast
-            );
-
-            updateCard(
-                "electronic-patrol-investigation-value",
-                "electronic-patrol-investigation-rate",
-                data.electronicPatrolInvestigationCasesCurrent,
-                data.electronicPatrolInvestigationCasesLast
-            );
-
-            updateCard(
-                "drone-patrol-abnormal-value",
-                "drone-patrol-abnormal-rate",
-                data.droneAbnormalDiscoveryCurrent,
-                data.droneAbnormalDiscoveryLast
-            );
-
-            updateCard(
-                "drone-patrol-investigation-value",
-                "drone-patrol-investigation-rate",
-                data.droneInvestigationCasesCurrent,
-                data.droneInvestigationCasesLast
-            );
         }
 
-        // 渲染数据表格 - 使用合并表格
+        // 辅助函数：更新卡片及其环比率
+        function updateCardWithRate(valueId, rateId, currentValue, previousValue) {
+            // 更新数值
+            $("#" + valueId).text(currentValue);
+            
+            // 计算并更新环比率
+            var rate = calculateChangeRate(currentValue, previousValue);
+            var rateText = formatRate(rate);
+            var rateClass = getRateClass(rate);
+            
+            $("#" + rateId).text("环比 " + rateText);
+            $("#" + rateId).attr("class", "change-rate " + rateClass);
+        }
+
+        // 渲染合并的巡航数据表格
         function renderDataTables(data) {
-            renderCombinedPatrolTable(data);
-        }
-
-        // 修复渲染合并的巡航数据表格函数
-        function renderCombinedPatrolTable(data) {
             const tableBody = $('#patrol-data-body');
             tableBody.empty();
 
-// 获取部门列表
-            const departments = data.categories || [];
+            // 获取部门列表
+            const departments = data.categories || ["港区海事处", "锦丰海事处", "保税区海巡执法大队", "海巡执法支队"];
 
-// 为每个部门创建行 - 改用传统字符串连接
-            departments.forEach(function(department, index) {
+            // 为每个部门创建行
+            departments.forEach(function(department) {
+                if (!data.currentData[department] || !data.previousData[department]) return;
+                
+                const currentData = data.currentData[department];
+                const previousData = data.previousData[department];
+                
                 const row = $('<tr></tr>');
 
-// 添加部门名称 - 改用传统字符串连接
+                // 添加部门名称
                 row.append('<td>' + department + '</td>');
 
-// 1. 海巡艇发现异常数据
-                const patrolBoatAbnormalLastValue = data.patrolBoatAbnormalDiscoveryLast ? data.patrolBoatAbnormalDiscoveryLast[index] || 0 : 0;
-                const patrolBoatAbnormalCurrentValue = data.patrolBoatAbnormalDiscoveryCurrent ?
-                    (typeof data.patrolBoatAbnormalDiscoveryCurrent[index] === 'object' ?
-                        data.patrolBoatAbnormalDiscoveryCurrent[index]?.value || 0 :
-                        data.patrolBoatAbnormalDiscoveryCurrent[index] || 0) : 0;
-
+                // 1. 现场巡航发现异常数据
+                const patrolBoatAbnormalLastValue = previousData.fieldPatrolAbnormal;
+                const patrolBoatAbnormalCurrentValue = currentData.fieldPatrolAbnormal;
                 const patrolBoatAbnormalChangeRate = calculateChangeRate(patrolBoatAbnormalCurrentValue, patrolBoatAbnormalLastValue);
 
-// 改用传统字符串连接
                 row.append('<td>' + patrolBoatAbnormalLastValue + '</td>');
                 row.append('<td>' + patrolBoatAbnormalCurrentValue + '</td>');
                 row.append('<td class="' + getRateClass(patrolBoatAbnormalChangeRate) + '">' + formatRate(patrolBoatAbnormalChangeRate) + '</td>');
 
-// 2. 海巡艇立案调查数据
-                const patrolBoatInvestigationLastValue = data.patrolBoatInvestigationCasesLast ? data.patrolBoatInvestigationCasesLast[index] || 0 : 0;
-                const patrolBoatInvestigationCurrentValue = data.patrolBoatInvestigationCasesCurrent ?
-                    (typeof data.patrolBoatInvestigationCasesCurrent[index] === 'object' ?
-                        data.patrolBoatInvestigationCasesCurrent[index]?.value || 0 :
-                        data.patrolBoatInvestigationCasesCurrent[index] || 0) : 0;
-
+                // 2. 现场巡航立案调查数据
+                const patrolBoatInvestigationLastValue = previousData.fieldPatrolCase;
+                const patrolBoatInvestigationCurrentValue = currentData.fieldPatrolCase;
                 const patrolBoatInvestigationChangeRate = calculateChangeRate(patrolBoatInvestigationCurrentValue, patrolBoatInvestigationLastValue);
 
-// 改用传统字符串连接
                 row.append('<td>' + patrolBoatInvestigationLastValue + '</td>');
                 row.append('<td>' + patrolBoatInvestigationCurrentValue + '</td>');
                 row.append('<td class="' + getRateClass(patrolBoatInvestigationChangeRate) + '">' + formatRate(patrolBoatInvestigationChangeRate) + '</td>');
 
-// 3. 电子巡航发现异常数据
-                const electronicAbnormalLastValue = data.electronicPatrolAbnormalDiscoveryLast ? data.electronicPatrolAbnormalDiscoveryLast[index] || 0 : 0;
-                const electronicAbnormalCurrentValue = data.electronicPatrolAbnormalDiscoveryCurrent ?
-                    (typeof data.electronicPatrolAbnormalDiscoveryCurrent[index] === 'object' ?
-                        data.electronicPatrolAbnormalDiscoveryCurrent[index]?.value || 0 :
-                        data.electronicPatrolAbnormalDiscoveryCurrent[index] || 0) : 0;
-
+                // 3. 电子巡航发现异常数据
+                const electronicAbnormalLastValue = previousData.electronicPatrolAbnormal;
+                const electronicAbnormalCurrentValue = currentData.electronicPatrolAbnormal;
                 const electronicAbnormalChangeRate = calculateChangeRate(electronicAbnormalCurrentValue, electronicAbnormalLastValue);
 
-// 改用传统字符串连接
                 row.append('<td>' + electronicAbnormalLastValue + '</td>');
                 row.append('<td>' + electronicAbnormalCurrentValue + '</td>');
                 row.append('<td class="' + getRateClass(electronicAbnormalChangeRate) + '">' + formatRate(electronicAbnormalChangeRate) + '</td>');
 
-// 4. 电子巡航立案调查数据
-                const electronicInvestigationLastValue = data.electronicPatrolInvestigationCasesLast ? data.electronicPatrolInvestigationCasesLast[index] || 0 : 0;
-                const electronicInvestigationCurrentValue = data.electronicPatrolInvestigationCasesCurrent ?
-                    (typeof data.electronicPatrolInvestigationCasesCurrent[index] === 'object' ?
-                        data.electronicPatrolInvestigationCasesCurrent[index]?.value || 0 :
-                        data.electronicPatrolInvestigationCasesCurrent[index] || 0) : 0;
-
+                // 4. 电子巡航立案调查数据
+                const electronicInvestigationLastValue = previousData.electronicPatrolCase;
+                const electronicInvestigationCurrentValue = currentData.electronicPatrolCase;
                 const electronicInvestigationChangeRate = calculateChangeRate(electronicInvestigationCurrentValue, electronicInvestigationLastValue);
 
-// 改用传统字符串连接
                 row.append('<td>' + electronicInvestigationLastValue + '</td>');
                 row.append('<td>' + electronicInvestigationCurrentValue + '</td>');
                 row.append('<td class="' + getRateClass(electronicInvestigationChangeRate) + '">' + formatRate(electronicInvestigationChangeRate) + '</td>');
 
-// 5. 无人机巡航发现异常数据
-                const droneAbnormalLastValue = data.droneAbnormalDiscoveryLast ? data.droneAbnormalDiscoveryLast[index] || 0 : 0;
-                const droneAbnormalCurrentValue = data.droneAbnormalDiscoveryCurrent ?
-                    (typeof data.droneAbnormalDiscoveryCurrent[index] === 'object' ?
-                        data.droneAbnormalDiscoveryCurrent[index]?.value || 0 :
-                        data.droneAbnormalDiscoveryCurrent[index] || 0) : 0;
-
+                // 5. 无人机巡航发现异常数据
+                const droneAbnormalLastValue = previousData.dronePatrolAbnormal;
+                const droneAbnormalCurrentValue = currentData.dronePatrolAbnormal;
                 const droneAbnormalChangeRate = calculateChangeRate(droneAbnormalCurrentValue, droneAbnormalLastValue);
 
-// 改用传统字符串连接
                 row.append('<td>' + droneAbnormalLastValue + '</td>');
                 row.append('<td>' + droneAbnormalCurrentValue + '</td>');
                 row.append('<td class="' + getRateClass(droneAbnormalChangeRate) + '">' + formatRate(droneAbnormalChangeRate) + '</td>');
 
-// 6. 无人机巡航立案调查数据
-                const droneInvestigationLastValue = data.droneInvestigationCasesLast ? data.droneInvestigationCasesLast[index] || 0 : 0;
-                const droneInvestigationCurrentValue = data.droneInvestigationCasesCurrent ?
-                    (typeof data.droneInvestigationCasesCurrent[index] === 'object' ?
-                        data.droneInvestigationCasesCurrent[index]?.value || 0 :
-                        data.droneInvestigationCasesCurrent[index] || 0) : 0;
-
+                // 6. 无人机巡航立案调查数据
+                const droneInvestigationLastValue = previousData.dronePatrolCase;
+                const droneInvestigationCurrentValue = currentData.dronePatrolCase;
                 const droneInvestigationChangeRate = calculateChangeRate(droneInvestigationCurrentValue, droneInvestigationLastValue);
 
-// 改用传统字符串连接
                 row.append('<td>' + droneInvestigationLastValue + '</td>');
                 row.append('<td>' + droneInvestigationCurrentValue + '</td>');
                 row.append('<td class="' + getRateClass(droneInvestigationChangeRate) + '">' + formatRate(droneInvestigationChangeRate) + '</td>');
@@ -874,92 +924,93 @@
                 tableBody.append(row);
             });
 
-// 添加合计行
-            addCombinedPatrolTotalRow(tableBody, data);
+            // 添加合计行
+            addTotalRow(tableBody, data);
         }
 
-// 添加合并的巡航数据合计行 - 同样修改为传统字符串连接
-        function addCombinedPatrolTotalRow(tableBody, data) {
-// 计算总计 - 保持不变
-            function sumArray(arr) {
-                if (!arr) return 0;
-                return arr.reduce((sum, item) => {
-                    if (typeof item === 'object' && item) {
-                        return sum + (item.value || 0);
-                    }
-                    return sum + (typeof item === 'number' ? item : 0);
-                }, 0);
-            }
+        // 添加合计行
+        function addTotalRow(tableBody, data) {
+            const zhangJiaGangData = data.currentData["张家港海事局"];
+            const zhangJiaGangPrevData = data.previousData["张家港海事局"];
 
-// 计算各项总数
-// 1. 海巡艇数据
-            const patrolBoatAbnormalLastTotal = sumArray(data.patrolBoatAbnormalDiscoveryLast);
-            const patrolBoatAbnormalCurrentTotal = sumArray(data.patrolBoatAbnormalDiscoveryCurrent);
-            const patrolBoatInvestigationLastTotal = sumArray(data.patrolBoatInvestigationCasesLast);
-            const patrolBoatInvestigationCurrentTotal = sumArray(data.patrolBoatInvestigationCasesCurrent);
+            if (!zhangJiaGangData || !zhangJiaGangPrevData) return;
 
-// 2. 电子巡航数据
-            const electronicAbnormalLastTotal = sumArray(data.electronicPatrolAbnormalDiscoveryLast);
-            const electronicAbnormalCurrentTotal = sumArray(data.electronicPatrolAbnormalDiscoveryCurrent);
-            const electronicInvestigationLastTotal = sumArray(data.electronicPatrolInvestigationCasesLast);
-            const electronicInvestigationCurrentTotal = sumArray(data.electronicPatrolInvestigationCasesCurrent);
+            // 计算各项变化率
+            const fieldPatrolAbnormalRate = calculateChangeRate(
+                zhangJiaGangData.fieldPatrolAbnormal,
+                zhangJiaGangPrevData.fieldPatrolAbnormal
+            );
 
-// 3. 无人机巡航数据
-            const droneAbnormalLastTotal = sumArray(data.droneAbnormalDiscoveryLast);
-            const droneAbnormalCurrentTotal = sumArray(data.droneAbnormalDiscoveryCurrent);
-            const droneInvestigationLastTotal = sumArray(data.droneInvestigationCasesLast);
-            const droneInvestigationCurrentTotal = sumArray(data.droneInvestigationCasesCurrent);
+            const fieldPatrolCaseRate = calculateChangeRate(
+                zhangJiaGangData.fieldPatrolCase,
+                zhangJiaGangPrevData.fieldPatrolCase
+            );
 
-// 计算变化率
-            const patrolBoatAbnormalChangeRate = calculateChangeRate(patrolBoatAbnormalCurrentTotal, patrolBoatAbnormalLastTotal);
-            const patrolBoatInvestigationChangeRate = calculateChangeRate(patrolBoatInvestigationCurrentTotal, patrolBoatInvestigationLastTotal);
-            const electronicAbnormalChangeRate = calculateChangeRate(electronicAbnormalCurrentTotal, electronicAbnormalLastTotal);
-            const electronicInvestigationChangeRate = calculateChangeRate(electronicInvestigationCurrentTotal, electronicInvestigationLastTotal);
-            const droneAbnormalChangeRate = calculateChangeRate(droneAbnormalCurrentTotal, droneAbnormalLastTotal);
-            const droneInvestigationChangeRate = calculateChangeRate(droneInvestigationCurrentTotal, droneInvestigationLastTotal);
+            const electronicPatrolAbnormalRate = calculateChangeRate(
+                zhangJiaGangData.electronicPatrolAbnormal,
+                zhangJiaGangPrevData.electronicPatrolAbnormal
+            );
 
-// 创建合计行
+            const electronicPatrolCaseRate = calculateChangeRate(
+                zhangJiaGangData.electronicPatrolCase,
+                zhangJiaGangPrevData.electronicPatrolCase
+            );
+
+            const dronePatrolAbnormalRate = calculateChangeRate(
+                zhangJiaGangData.dronePatrolAbnormal,
+                zhangJiaGangPrevData.dronePatrolAbnormal
+            );
+
+            const dronePatrolCaseRate = calculateChangeRate(
+                zhangJiaGangData.dronePatrolCase,
+                zhangJiaGangPrevData.dronePatrolCase
+            );
+
+            // 创建合计行
             const totalRow = $('<tr class="table-active"></tr>');
+
+            // 添加合计标题
             totalRow.append('<td><strong>合计</strong></td>');
 
-// 1. 添加海巡艇发现异常总计 - 改用传统字符串连接
-            totalRow.append('<td><strong>' + patrolBoatAbnormalLastTotal + '</strong></td>');
-            totalRow.append('<td><strong>' + patrolBoatAbnormalCurrentTotal + '</strong></td>');
-            totalRow.append('<td class="' + getRateClass(patrolBoatAbnormalChangeRate) + '"><strong>' + formatRate(patrolBoatAbnormalChangeRate) + '</strong></td>');
+            // 1. 现场巡航发现异常
+            totalRow.append('<td><strong>' + zhangJiaGangPrevData.fieldPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td><strong>' + zhangJiaGangData.fieldPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(fieldPatrolAbnormalRate) + '"><strong>' + formatRate(fieldPatrolAbnormalRate) + '</strong></td>');
 
-// 2. 添加海巡艇立案调查总计 - 改用传统字符串连接
-            totalRow.append('<td><strong>' + patrolBoatInvestigationLastTotal + '</strong></td>');
-            totalRow.append('<td><strong>' + patrolBoatInvestigationCurrentTotal + '</strong></td>');
-            totalRow.append('<td class="' + getRateClass(patrolBoatInvestigationChangeRate) + '"><strong>' + formatRate(patrolBoatInvestigationChangeRate) + '</strong></td>');
+            // 2. 现场巡航立案调查
+            totalRow.append('<td><strong>' + zhangJiaGangPrevData.fieldPatrolCase + '</strong></td>');
+            totalRow.append('<td><strong>' + zhangJiaGangData.fieldPatrolCase + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(fieldPatrolCaseRate) + '"><strong>' + formatRate(fieldPatrolCaseRate) + '</strong></td>');
 
-// 3. 添加电子巡航发现异常总计 - 改用传统字符串连接
-            totalRow.append('<td><strong>' + electronicAbnormalLastTotal + '</strong></td>');
-            totalRow.append('<td><strong>' + electronicAbnormalCurrentTotal + '</strong></td>');
-            totalRow.append('<td class="' + getRateClass(electronicAbnormalChangeRate) + '"><strong>' + formatRate(electronicAbnormalChangeRate) + '</strong></td>');
+            // 3. 电子巡航发现异常
+            totalRow.append('<td><strong>' + zhangJiaGangPrevData.electronicPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td><strong>' + zhangJiaGangData.electronicPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(electronicPatrolAbnormalRate) + '"><strong>' + formatRate(electronicPatrolAbnormalRate) + '</strong></td>');
 
-// 4. 添加电子巡航立案调查总计 - 改用传统字符串连接
-            totalRow.append('<td><strong>' + electronicInvestigationLastTotal + '</strong></td>');
-            totalRow.append('<td><strong>' + electronicInvestigationCurrentTotal + '</strong></td>');
-            totalRow.append('<td class="' + getRateClass(electronicInvestigationChangeRate) + '"><strong>' + formatRate(electronicInvestigationChangeRate) + '</strong></td>');
+            // 4. 电子巡航立案调查
+            totalRow.append('<td><strong>' + zhangJiaGangPrevData.electronicPatrolCase + '</strong></td>');
+            totalRow.append('<td><strong>' + zhangJiaGangData.electronicPatrolCase + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(electronicPatrolCaseRate) + '"><strong>' + formatRate(electronicPatrolCaseRate) + '</strong></td>');
 
-// 5. 添加无人机巡航发现异常总计 - 改用传统字符串连接
-            totalRow.append('<td><strong>' + droneAbnormalLastTotal + '</strong></td>');
-            totalRow.append('<td><strong>' + droneAbnormalCurrentTotal + '</strong></td>');
-            totalRow.append('<td class="' + getRateClass(droneAbnormalChangeRate) + '"><strong>' + formatRate(droneAbnormalChangeRate) + '</strong></td>');
+            // 5. 无人机巡航发现异常
+            totalRow.append('<td><strong>' + zhangJiaGangPrevData.dronePatrolAbnormal + '</strong></td>');
+            totalRow.append('<td><strong>' + zhangJiaGangData.dronePatrolAbnormal + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(dronePatrolAbnormalRate) + '"><strong>' + formatRate(dronePatrolAbnormalRate) + '</strong></td>');
 
-// 6. 添加无人机巡航立案调查总计 - 改用传统字符串连接
-            totalRow.append('<td><strong>' + droneInvestigationLastTotal + '</strong></td>');
-            totalRow.append('<td><strong>' + droneInvestigationCurrentTotal + '</strong></td>');
-            totalRow.append('<td class="' + getRateClass(droneInvestigationChangeRate) + '"><strong>' + formatRate(droneInvestigationChangeRate) + '</strong></td>');
+            // 6. 无人机巡航立案调查
+            totalRow.append('<td><strong>' + zhangJiaGangPrevData.dronePatrolCase + '</strong></td>');
+            totalRow.append('<td><strong>' + zhangJiaGangData.dronePatrolCase + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(dronePatrolCaseRate) + '"><strong>' + formatRate(dronePatrolCaseRate) + '</strong></td>');
 
             tableBody.append(totalRow);
         }
 
-
         // 计算变化率
-        function calculateChangeRate(currentValue, lastValue) {
-            if (lastValue === 0) return currentValue > 0 ? 100 : 0;
-            return ((currentValue - lastValue) / lastValue) * 100;
+        function calculateChangeRate(currentValue, previousValue) {
+            if (previousValue === 0) {
+                return currentValue > 0 ? 100 : 0;
+            }
+            return ((currentValue - previousValue) / previousValue) * 100;
         }
 
         // 格式化变化率显示
@@ -977,205 +1028,265 @@
 
         // 渲染图表
         function renderCharts(data) {
-            // 图表共用的基础配置
-            const baseOption = {
+            // 基础图表配置
+            var baseOption = {
                 tooltip: {
                     trigger: 'axis',
                     axisPointer: {
                         type: 'shadow'
-                    },
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    borderColor: '#0466c8',
-                    borderWidth: 1,
-                    textStyle: {
-                        color: '#333',
-                        fontSize: 14
-                    },
-                    formatter: function(params) {
-                        let tooltipText = params[0].name;
-                        params.forEach(function(item) {
-                            tooltipText += "<br/>" + item.seriesName + ": " + item.value;
-                            if (item.data && item.data.changeRate !== undefined) {
-                                tooltipText += " (" + (item.data.changeRate > 0 ? "+" : "") + item.data.changeRate.toFixed(2) + "%)";
-                            }
-                        });
-                        return tooltipText;
                     }
                 },
                 legend: {
-                    data: ['上周', '本周'],
-                    textStyle: {
-                        color: '#0466c8',
-                        fontSize: 14
-                    },
-                    top: 30,
-                    left: 'center'
+                    top: 10
                 },
                 grid: {
                     left: '3%',
                     right: '4%',
-                    bottom: '15%',
-                    top: 80,
+                    bottom: '3%',
                     containLabel: true
                 },
                 xAxis: {
                     type: 'category',
-                    data: data.categories || [],
+                    data: data.categories || ["港区海事处", "锦丰海事处", "保税区海巡执法大队", "海巡执法支队"],
                     axisLabel: {
-                        rotate: 30,
                         interval: 0,
-                        color: '#001845',
-                        fontSize: 12
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#0466c8'
-                        }
+                        rotate: 30
                     }
                 },
                 yAxis: {
-                    type: 'value',
-                    axisLabel: {
-                        fontSize: 12
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#0466c8'
-                        }
-                    },
-                    splitLine: {
-                        lineStyle: {
-                            color: 'rgba(4, 102, 200, 0.1)'
-                        }
-                    }
+                    type: 'value'
                 }
             };
 
-            // 图表配置生成函数
-            function createChartOption(titleText, currentData, lastData, chartColor) {
-                const option = JSON.parse(JSON.stringify(baseOption)); // 深拷贝
-
-                option.title = {
-                    text: titleText,
-                    textStyle: {
-                        color: '#0466c8',
-                        fontWeight: 'bold',
-                        fontSize: 16
-                    },
-                    left: 'center',
-                    top: 10
-                };
-
-                option.series = [
+            // 1. 现场巡航统计图表
+            fieldPatrolChart.setOption(Object.assign({}, baseOption, {
+                title: {
+                    text: '现场巡航统计',
+                    left: 'center'
+                },
+                legend: {
+                    data: ['上期发现异常', '本期发现异常', '上期立案调查', '本期立案调查'],
+                    top: 30
+                },
+                series: [
                     {
-                        name: '上周',
+                        name: '上期发现异常',
                         type: 'bar',
-                        data: lastData || [],
+                        data: data.patrolBoatAbnormalDiscoveryLast,
                         label: {
                             show: true,
-                            position: 'top',
-                            color: '#67C23A',
-                            fontSize: 12
-                        },
-                        itemStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#67C23A'
-                                }, {
-                                    offset: 1, color: '#95d475'
-                                }]
-                            },
-                            borderRadius: [3, 3, 0, 0]
+                            position: 'top'
                         }
                     },
                     {
-                        name: '本周',
+                        name: '本期发现异常',
                         type: 'bar',
-                        data: currentData || [],
-                        label: {
-                            show: true,
-                            position: 'top',
-                            color: chartColor,
-                            fontSize: 12,
-                            formatter: function(params) {
-                                if (params.data && params.data.changeRate !== undefined) {
-                                    return params.value + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate.toFixed(2) + "%)";
+                        data: data.patrolBoatAbnormalDiscoveryCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: '#64B5F6'
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
                                 }
-                                return params.value;
-                            }
-                        },
-                        itemStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: chartColor
-                                }, {
-                                    offset: 1, color: chartColor.replace(')', ', 0.7)')
-                                }]
-                            },
-                            borderRadius: [3, 3, 0, 0]
+                            };
+                        })
+                    },
+                    {
+                        name: '上期立案调查',
+                        type: 'bar',
+                        data: data.patrolBoatInvestigationCasesLast,
+                        label: {
+                            show: true,
+                            position: 'top'
                         }
+                    },
+                    {
+                        name: '本期立案调查',
+                        type: 'bar',
+                        data: data.patrolBoatInvestigationCasesCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: '#81C784'
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
                     }
-                ];
+                ]
+            }));
+            
+            // 2. 电子巡航统计图表
+            electronicPatrolChart.setOption(Object.assign({}, baseOption, {
+                title: {
+                    text: '电子巡航统计',
+                    left: 'center'
+                },
+                legend: {
+                    data: ['上期发现异常', '本期发现异常', '上期立案调查', '本期立案调查'],
+                    top: 30
+                },
+                series: [
+                    {
+                        name: '上期发现异常',
+                        type: 'bar',
+                        data: data.electronicPatrolAbnormalDiscoveryLast,
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期发现异常',
+                        type: 'bar',
+                        data: data.electronicPatrolAbnormalDiscoveryCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: '#FFB74D'
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    },
+                    {
+                        name: '上期立案调查',
+                        type: 'bar',
+                        data: data.electronicPatrolInvestigationCasesLast,
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期立案调查',
+                        type: 'bar',
+                        data: data.electronicPatrolInvestigationCasesCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: '#E57373'
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    }
+                ]
+            }));
+            
+            // 3. 无人机巡航统计图表
+            dronePatrolChart.setOption(Object.assign({}, baseOption, {
+                title: {
+                    text: '无人机巡航统计',
+                    left: 'center'
+                },
+                legend: {
+                    data: ['上期发现异常', '本期发现异常', '上期立案调查', '本期立案调查'],
+                    top: 30
+                },
+                series: [
+                    {
+                        name: '上期发现异常',
+                        type: 'bar',
+                        data: data.droneAbnormalDiscoveryLast,
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期发现异常',
+                        type: 'bar',
+                        data: data.droneAbnormalDiscoveryCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: '#BA68C8'
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    },
+                    {
+                        name: '上期立案调查',
+                        type: 'bar',
+                        data: data.droneInvestigationCasesLast,
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期立案调查',
+                        type: 'bar',
+                        data: data.droneInvestigationCasesCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: '#4DD0E1'
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    }
+                ]
+            }));
+        }
 
-                return option;
-            }
-
-            // 设置各图表的选项
-            patrolBoatAbnormalChart.setOption(createChartOption(
-                '海巡艇巡航发现异常',
-                data.patrolBoatAbnormalDiscoveryCurrent,
-                data.patrolBoatAbnormalDiscoveryLast,
-                '#64B5F6'
-            ));
-
-            patrolBoatInvestigationChart.setOption(createChartOption(
-                '海巡艇巡航立案调查',
-                data.patrolBoatInvestigationCasesCurrent,
-                data.patrolBoatInvestigationCasesLast,
-                '#81C784'
-            ));
-
-            electronicPatrolAbnormalChart.setOption(createChartOption(
-                '电子巡航发现异常',
-                data.electronicPatrolAbnormalDiscoveryCurrent,
-                data.electronicPatrolAbnormalDiscoveryLast,
-                '#FFB74D'
-            ));
-
-            electronicPatrolInvestigationChart.setOption(createChartOption(
-                '电子巡航立案调查',
-                data.electronicPatrolInvestigationCasesCurrent,
-                data.electronicPatrolInvestigationCasesLast,
-                '#E57373'
-            ));
-
-            dronePatrolAbnormalChart.setOption(createChartOption(
-                '无人机巡航发现异常',
-                data.droneAbnormalDiscoveryCurrent,
-                data.droneAbnormalDiscoveryLast,
-                '#BA68C8'
-            ));
-
-            dronePatrolInvestigationChart.setOption(createChartOption(
-                '无人机巡航立案调查',
-                data.droneInvestigationCasesCurrent,
-                data.droneInvestigationCasesLast,
-                '#4DD0E1'
-            ));
+        // 获取环比率标签颜色
+        function getRateLabelColor(rate) {
+            if (rate > 0) return '#38b000'; // 正值为绿色
+            if (rate < 0) return '#d90429'; // 负值为红色
+            return '#607d8b'; // 零值为灰色
         }
 
         // 窗口大小变化时调整图表大小
         $(window).resize(function() {
-            patrolBoatAbnormalChart.resize();
-            patrolBoatInvestigationChart.resize();
-            electronicPatrolAbnormalChart.resize();
-            electronicPatrolInvestigationChart.resize();
-            dronePatrolAbnormalChart.resize();
-            dronePatrolInvestigationChart.resize();
+            fieldPatrolChart.resize();
+            electronicPatrolChart.resize();
+            dronePatrolChart.resize();
         });
     });
 </script>

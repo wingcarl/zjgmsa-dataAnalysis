@@ -141,117 +141,163 @@ public class DynamicEnforcementDataController extends BaseController {
 		dynamicEnforcementDataService.delete(dynamicEnforcementData);
 		return renderResult(Global.TRUE, text("删除动态执法数据成功！"));
 	}
+
+	/**
+	 * 动态执法图表页面
+	 */
 	@RequestMapping(value = "chart")
-	public String chart(){
+	public String chart() {
 		return "data_collect/dynamic/dynamicChart";
 	}
-	@GetMapping("chartDataWithDate")
+
+	/**
+	 * 获取动态执法数据
+	 */
+	@RequestMapping(value = "getDynamicEnforcementData")
 	@ResponseBody
-	public Map<String, Object> getChartDataWithDate(String currentWeekStartDate, String lastWeekStartDate) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
-
-		// 查询本周的数据
-		WeeklyReport weeklyReportCurrent = new WeeklyReport();
-		LocalDate currentStartLocalDate = LocalDate.parse(currentWeekStartDate, formatter);
-		weeklyReportCurrent.setReportDate_gte(DateUtils.asDate(currentStartLocalDate));
-		weeklyReportCurrent.setReportDate_lte(DateUtils.asDate(currentStartLocalDate.plusDays(6)));
-		List<WeeklyReport> currentWeekReports = weeklyReportService.findList(weeklyReportCurrent);
-
-		// 查询上周的数据
-		WeeklyReport weeklyReportLast = new WeeklyReport();
-		LocalDate lastStartLocalDate = LocalDate.parse(lastWeekStartDate, formatter);
-		weeklyReportLast.setReportDate_gte(DateUtils.asDate(lastStartLocalDate));
-		weeklyReportLast.setReportDate_lte(DateUtils.asDate(lastStartLocalDate.plusDays(6)));
-		List<WeeklyReport> lastWeekReports = weeklyReportService.findList(weeklyReportLast);
-
-		// 将数据分组
-		Map<String, Long> currentPatrolBoatAbnormalDiscovery = new HashMap<>();
-		Map<String, Long> currentPatrolBoatInvestigationCases = new HashMap<>();
-		Map<String, Long> currentDroneAbnormalDiscovery = new HashMap<>();
-		Map<String, Long> currentDroneInvestigationCases = new HashMap<>();
-		Map<String, Long> currentElectronicPatrolAbnormalDiscovery = new HashMap<>();
-		Map<String, Long> currentElectronicPatrolInvestigationCases = new HashMap<>();
-
-		Map<String, Long> lastPatrolBoatAbnormalDiscovery = new HashMap<>();
-		Map<String, Long> lastPatrolBoatInvestigationCases = new HashMap<>();
-		Map<String, Long> lastDroneAbnormalDiscovery = new HashMap<>();
-		Map<String, Long> lastDroneInvestigationCases = new HashMap<>();
-		Map<String, Long> lastElectronicPatrolAbnormalDiscovery = new HashMap<>();
-		Map<String, Long> lastElectronicPatrolInvestigationCases = new HashMap<>();
-
-
-		List<String> categories = new ArrayList<>();
-
-		processData(currentWeekReports, currentPatrolBoatAbnormalDiscovery, currentPatrolBoatInvestigationCases,
-				currentDroneAbnormalDiscovery, currentDroneInvestigationCases, currentElectronicPatrolAbnormalDiscovery,
-				currentElectronicPatrolInvestigationCases, categories);
-		processData(lastWeekReports, lastPatrolBoatAbnormalDiscovery, lastPatrolBoatInvestigationCases,
-				lastDroneAbnormalDiscovery, lastDroneInvestigationCases, lastElectronicPatrolAbnormalDiscovery,
-				lastElectronicPatrolInvestigationCases, categories);
-
-		// 处理图表数据
+	public Map<String, Object> getDynamicEnforcementData(String startDate, String endDate) {
 		Map<String, Object> result = new HashMap<>();
-		result.put("categories", new ArrayList<>(new HashSet<>(categories)));
-
-		addChartData(result, "patrolBoatAbnormalDiscovery", currentPatrolBoatAbnormalDiscovery, lastPatrolBoatAbnormalDiscovery, categories);
-		addChartData(result, "patrolBoatInvestigationCases", currentPatrolBoatInvestigationCases, lastPatrolBoatInvestigationCases, categories);
-		addChartData(result, "droneAbnormalDiscovery", currentDroneAbnormalDiscovery, lastDroneAbnormalDiscovery, categories);
-		addChartData(result, "droneInvestigationCases", currentDroneInvestigationCases, lastDroneInvestigationCases, categories);
-		addChartData(result, "electronicPatrolAbnormalDiscovery", currentElectronicPatrolAbnormalDiscovery, lastElectronicPatrolAbnormalDiscovery, categories);
-		addChartData(result, "electronicPatrolInvestigationCases", currentElectronicPatrolInvestigationCases, lastElectronicPatrolInvestigationCases, categories);
-
+		
+		// 参数处理，默认为上周五到本周四
+		LocalDate today = LocalDate.now();
+		LocalDate lastFriday = today.minusDays(today.getDayOfWeek().getValue() + 2) // 回到上周五
+				.plusDays(today.getDayOfWeek().getValue() <= 5 ? 0 : 7); // 如果今天是周末，则取上上周五
+		LocalDate thisThursday = lastFriday.plusDays(6); // 本周四
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(lastFriday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(thisThursday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 计算上一个周期
+		long periodDays = (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000) + 1;
+		Date lastStart = new Date(start.getTime() - periodDays * 24 * 60 * 60 * 1000);
+		Date lastEnd = new Date(start.getTime() - 24 * 60 * 60 * 1000);
+		
+		// 获取当前周期数据
+		Map<String, Map<String, Object>> currentData = calculateEnforcementData(start, end);
+		// 获取上一周期数据
+		Map<String, Map<String, Object>> previousData = calculateEnforcementData(lastStart, lastEnd);
+		
+		result.put("currentData", currentData);
+		result.put("previousData", previousData);
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		
 		return result;
 	}
 
-	private void processData(List<WeeklyReport> reports, Map<String, Long> patrolBoatAbnormalDiscovery,
-							 Map<String, Long> patrolBoatInvestigationCases, Map<String, Long> droneAbnormalDiscovery,
-							 Map<String, Long> droneInvestigationCases, Map<String, Long> electronicPatrolAbnormalDiscovery,
-							 Map<String, Long> electronicPatrolInvestigationCases, List<String> categories) {
-		for (WeeklyReport report : reports) {
-			String departmentName = report.getDepartmentId().getOfficeName();
-			categories.add(departmentName);
-
-			patrolBoatAbnormalDiscovery.put(departmentName, patrolBoatAbnormalDiscovery.getOrDefault(departmentName, 0L) +
-					(report.getPatrolBoatAbnormalDiscovery() == null ? 0 : report.getPatrolBoatAbnormalDiscovery()));
-			patrolBoatInvestigationCases.put(departmentName, patrolBoatInvestigationCases.getOrDefault(departmentName, 0L) +
-					(report.getPatrolBoatInvestigationCases() == null ? 0 : report.getPatrolBoatInvestigationCases()));
-			droneAbnormalDiscovery.put(departmentName, droneAbnormalDiscovery.getOrDefault(departmentName, 0L) +
-					(report.getDroneAbnormalDiscovery() == null ? 0 : report.getDroneAbnormalDiscovery()));
-			droneInvestigationCases.put(departmentName, droneInvestigationCases.getOrDefault(departmentName, 0L) +
-					(report.getDroneInvestigationCases() == null ? 0 : report.getDroneInvestigationCases()));
-			electronicPatrolAbnormalDiscovery.put(departmentName, electronicPatrolAbnormalDiscovery.getOrDefault(departmentName, 0L) +
-					(report.getElectronicPatrolAbnormalDiscovery() == null ? 0 : report.getElectronicPatrolAbnormalDiscovery()));
-			electronicPatrolInvestigationCases.put(departmentName, electronicPatrolInvestigationCases.getOrDefault(departmentName, 0L) +
-					(report.getElectronicPatrolInvestigationCases() == null ? 0 : report.getElectronicPatrolInvestigationCases()));
-		}
-	}
-
-	private void addChartData(Map<String, Object> result, String baseName, Map<String, Long> currentData,
-							  Map<String, Long> lastData, List<String> categories) {
-		List<Object> currentList = new ArrayList<>();
-		List<Object> lastList = new ArrayList<>();
-
-		Set<String> allCats = new HashSet<>(categories);
-		for (String cat : allCats) {
-			Long currentVal = currentData.getOrDefault(cat, 0L);
-			Long lastVal = lastData.getOrDefault(cat, 0L);
-
-			double changeRate = 0;
-			if (lastVal != 0) {
-				changeRate = (double) Math.round(((double) (currentVal - lastVal) / lastVal) * 10000) / 100;
+	/**
+	 * 计算动态执法数据统计
+	 */
+	private Map<String, Map<String, Object>> calculateEnforcementData(Date startDate, Date endDate) {
+		// 部门映射配置
+		Map<String, String> departmentMapping = new HashMap<>();
+		departmentMapping.put("西港区快反处置中心", "港区海事处");
+		departmentMapping.put("六号快反执法单元", "港区海事处");
+		departmentMapping.put("五号快反执法单元", "港区海事处");
+		departmentMapping.put("东港区快反处置中心", "锦丰海事处");
+		departmentMapping.put("一号快反执法单元", "锦丰海事处");
+		departmentMapping.put("二号快反执法单元", "锦丰海事处");
+		departmentMapping.put("三号快反执法单元", "锦丰海事处");
+		departmentMapping.put("保税区快反处置中心", "保税区海巡执法大队");
+		departmentMapping.put("四号快反执法单元", "保税区海巡执法大队");
+		departmentMapping.put("福姜沙快反处置中心", "海巡执法支队");
+		departmentMapping.put("七号快反执法单元", "海巡执法支队");
+		
+		// 初始化结果集
+		Map<String, Map<String, Object>> results = new HashMap<>();
+		results.put("张家港海事局", createEmptyResultMap());
+		results.put("港区海事处", createEmptyResultMap());
+		results.put("锦丰海事处", createEmptyResultMap());
+		results.put("保税区海巡执法大队", createEmptyResultMap());
+		results.put("海巡执法支队", createEmptyResultMap());
+		
+		// 获取查询时间范围内的所有数据
+		DynamicEnforcementData query = new DynamicEnforcementData();
+		query.setInspectionTime_gte(startDate);
+		query.setInspectionTime_lte(endDate);
+		List<DynamicEnforcementData> dataList = dynamicEnforcementDataService.findList(query);
+		
+		// 遍历数据并统计
+		for (DynamicEnforcementData data : dataList) {
+			// 获取部门，应用映射规则
+			String department = data.getInspectionUnit();
+			String mappedDepartment = departmentMapping.containsKey(department) ? 
+					departmentMapping.get(department) : department;
+			
+			// 如果不是指定的五个部门之一，则跳过
+			if (!results.containsKey(mappedDepartment)) {
+				continue;
 			}
-
-			final double finalChangeRate = changeRate;
-			final Long finalCurrentVal = currentVal;
-			currentList.add(new HashMap<String, Object>() {{
-				put("value", finalCurrentVal);
-				put("changeRate", finalChangeRate);
-			}});
-			lastList.add(lastVal);
+			
+			// 获取该部门的统计结果
+			Map<String, Object> deptResult = results.get(mappedDepartment);
+			Map<String, Object> totalResult = results.get("张家港海事局");
+			
+			// 判断巡航类型和结果
+			String cruiseTaskName = data.getCruiseTaskName();
+			String inspectionResult = data.getInspectionResult();
+			
+			// 现场巡航（海巡艇或执法车）
+			if (cruiseTaskName != null && (cruiseTaskName.contains("海巡艇") || cruiseTaskName.contains("执法车"))) {
+				// 发现异常
+				if ("异常".equals(inspectionResult) || "立案调查".equals(inspectionResult)) {
+					deptResult.put("fieldPatrolAbnormal", ((Long)deptResult.get("fieldPatrolAbnormal")) + 1);
+					totalResult.put("fieldPatrolAbnormal", ((Long)totalResult.get("fieldPatrolAbnormal")) + 1);
+				}
+				// 立案调查
+				if ("立案调查".equals(inspectionResult)) {
+					deptResult.put("fieldPatrolCase", ((Long)deptResult.get("fieldPatrolCase")) + 1);
+					totalResult.put("fieldPatrolCase", ((Long)totalResult.get("fieldPatrolCase")) + 1);
+				}
+			}
+			
+			// 电子巡航
+			if (cruiseTaskName != null && cruiseTaskName.contains("电子")) {
+				// 发现异常
+				if ("异常".equals(inspectionResult) || "立案调查".equals(inspectionResult)) {
+					deptResult.put("electronicPatrolAbnormal", ((Long)deptResult.get("electronicPatrolAbnormal")) + 1);
+					totalResult.put("electronicPatrolAbnormal", ((Long)totalResult.get("electronicPatrolAbnormal")) + 1);
+				}
+				// 立案调查
+				if ("立案调查".equals(inspectionResult)) {
+					deptResult.put("electronicPatrolCase", ((Long)deptResult.get("electronicPatrolCase")) + 1);
+					totalResult.put("electronicPatrolCase", ((Long)totalResult.get("electronicPatrolCase")) + 1);
+				}
+			}
+			
+			// 无人机巡航
+			if (cruiseTaskName != null && cruiseTaskName.contains("无人机")) {
+				// 发现异常
+				if ("异常".equals(inspectionResult) || "立案调查".equals(inspectionResult)) {
+					deptResult.put("dronePatrolAbnormal", ((Long)deptResult.get("dronePatrolAbnormal")) + 1);
+					totalResult.put("dronePatrolAbnormal", ((Long)totalResult.get("dronePatrolAbnormal")) + 1);
+				}
+				// 立案调查
+				if ("立案调查".equals(inspectionResult)) {
+					deptResult.put("dronePatrolCase", ((Long)deptResult.get("dronePatrolCase")) + 1);
+					totalResult.put("dronePatrolCase", ((Long)totalResult.get("dronePatrolCase")) + 1);
+				}
+			}
 		}
-
-		result.put(baseName + "Current", currentList);
-		result.put(baseName + "Last", lastList);
+		
+		return results;
 	}
-	
+
+	/**
+	 * 创建空的结果Map
+	 */
+	private Map<String, Object> createEmptyResultMap() {
+		Map<String, Object> resultMap = new HashMap<>();
+		resultMap.put("fieldPatrolAbnormal", 0L);     // 现场巡航发现异常
+		resultMap.put("fieldPatrolCase", 0L);         // 现场巡航立案调查
+		resultMap.put("electronicPatrolAbnormal", 0L); // 电子巡航发现异常
+		resultMap.put("electronicPatrolCase", 0L);     // 电子巡航立案调查
+		resultMap.put("dronePatrolAbnormal", 0L);      // 无人机巡航发现异常
+		resultMap.put("dronePatrolCase", 0L);          // 无人机巡航立案调查
+		return resultMap;
+	}
 }

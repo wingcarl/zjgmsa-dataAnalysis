@@ -197,15 +197,23 @@ public class ShipInspectionController extends BaseController {
 			
 			// 统计缺陷
 			long seaShipDefectCount = seaShipMap.values().stream()
-				.mapToLong(list -> list.stream()
-					.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
-					.sum())
+				.mapToLong(list -> {
+					if (!list.isEmpty()) {
+						ShipInspection ship = list.get(0);
+						return ship.getDefectCount() != null ? ship.getDefectCount() : 0;
+					}
+					return 0;
+				})
 				.sum();
 			
 			long riverShipDefectCount = riverShipMap.values().stream()
-				.mapToLong(list -> list.stream()
-					.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
-					.sum())
+				.mapToLong(list -> {
+					if (!list.isEmpty()) {
+						ShipInspection ship = list.get(0);
+						return ship.getDefectCount() != null ? ship.getDefectCount() : 0;
+					}
+					return 0;
+				})
 				.sum();
 			
 			// 统计滞留

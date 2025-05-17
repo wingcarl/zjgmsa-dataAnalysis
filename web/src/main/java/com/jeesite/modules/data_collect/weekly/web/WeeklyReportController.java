@@ -1135,15 +1135,25 @@ public class WeeklyReportController extends BaseController {
 			
 			// 统计缺陷
 			long seaShipDefectCount = seaShipMap.values().stream()
-				.mapToLong(list -> list.stream()
-					.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
-					.sum())
+				.mapToLong(list -> {
+					// 只取每组中的第一条记录的缺陷数量，避免重复计算
+					if (!list.isEmpty()) {
+						ShipInspection ship = list.get(0);
+						return ship.getDefectCount() != null ? ship.getDefectCount() : 0;
+					}
+					return 0;
+				})
 				.sum();
 			
 			long riverShipDefectCount = riverShipMap.values().stream()
-				.mapToLong(list -> list.stream()
-					.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
-					.sum())
+				.mapToLong(list -> {
+					// 只取每组中的第一条记录的缺陷数量，避免重复计算
+					if (!list.isEmpty()) {
+						ShipInspection ship = list.get(0);
+						return ship.getDefectCount() != null ? ship.getDefectCount() : 0;
+					}
+					return 0;
+				})
 				.sum();
 			
 			// 统计滞留
@@ -1185,15 +1195,14 @@ public class WeeklyReportController extends BaseController {
 				if (!entry.getValue().isEmpty()) {
 					String agency = entry.getValue().get(0).getInspectionAgency();
 					
-					// 统计缺陷数
-					long defectCount = entry.getValue().stream()
-						.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
-						.sum();
+					// 统计缺陷数 - 只取第一条记录的缺陷数量
+					ShipInspection ship = entry.getValue().get(0);
+					long defectCount = ship.getDefectCount() != null ? ship.getDefectCount() : 0;
 					agencySeaShipDefectCounts.put(agency, agencySeaShipDefectCounts.getOrDefault(agency, 0L) + defectCount);
 					
 					// 统计滞留数
 					boolean hasDetained = entry.getValue().stream()
-						.anyMatch(ship -> "是".equals(ship.getDetained()));
+						.anyMatch(s -> "是".equals(s.getDetained()));
 					if (hasDetained) {
 						agencySeaShipDetainedCounts.put(agency, agencySeaShipDetainedCounts.getOrDefault(agency, 0L) + 1);
 					}
@@ -1205,15 +1214,14 @@ public class WeeklyReportController extends BaseController {
 				if (!entry.getValue().isEmpty()) {
 					String agency = entry.getValue().get(0).getInspectionAgency();
 					
-					// 统计缺陷数
-					long defectCount = entry.getValue().stream()
-						.mapToLong(ship -> ship.getDefectCount() != null ? ship.getDefectCount() : 0)
-						.sum();
+					// 统计缺陷数 - 只取第一条记录的缺陷数量
+					ShipInspection ship = entry.getValue().get(0);
+					long defectCount = ship.getDefectCount() != null ? ship.getDefectCount() : 0;
 					agencyRiverShipDefectCounts.put(agency, agencyRiverShipDefectCounts.getOrDefault(agency, 0L) + defectCount);
 					
 					// 统计滞留数
 					boolean hasDetained = entry.getValue().stream()
-						.anyMatch(ship -> "是".equals(ship.getDetained()));
+						.anyMatch(s -> "是".equals(s.getDetained()));
 					if (hasDetained) {
 						agencyRiverShipDetainedCounts.put(agency, agencyRiverShipDetainedCounts.getOrDefault(agency, 0L) + 1);
 					}
