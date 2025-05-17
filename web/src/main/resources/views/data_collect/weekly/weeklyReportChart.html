@@ -635,41 +635,41 @@
                                 </tr>
                                 <tr>
                                     <!-- 海船安检 -->
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
                                     <!-- 内河船安检 -->
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
                                     <!-- PSC检查 -->
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
                                     <!-- 现场监督 -->
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
-                                    <th>上周</th>
-                                    <th>本周</th>
+                                    <th>上期</th>
+                                    <th>本期</th>
                                     <th>环比</th>
                                 </tr>
                             </thead>
@@ -1025,9 +1025,9 @@
                 row.append(createRateCell(agency.riverShipDefectRate || 0));
                 
                 // 内河船安检数据（滞留数量）
-                row.append('<td><strong>' + prevRiverShipDetainedCount + '</strong></td>');
-                row.append('<td><strong>' + (data.riverShipDetainedCount || 0) + '</strong></td>');
-                row.append(createRateCell(data.riverShipDetainedRate || 0, true));
+                row.append('<td>' + prevRiverShipDetainedCount + '</td>');
+                row.append('<td>' + (agency.riverShipDetainedCount || 0) + '</td>');
+                row.append(createRateCell(agency.riverShipDetainedRate || 0));
                 
                 // PSC检查数据
                 var prevPscCount = 0;
@@ -1217,37 +1217,105 @@
                 return item.agency;
             });
             
+            // 获取上期数据
+            var prevData = {
+                agencySeaShipCounts: data.prevShipData ? data.prevShipData.agencySeaShipCounts || {} : {},
+                agencySeaShipDefectCounts: data.prevShipData ? data.prevShipData.agencySeaShipDefectCounts || {} : {},
+                agencySeaShipDetainedCounts: data.prevShipData ? data.prevShipData.agencySeaShipDetainedCounts || {} : {},
+                agencyRiverShipCounts: data.prevShipData ? data.prevShipData.agencyRiverShipCounts || {} : {},
+                agencyRiverShipDefectCounts: data.prevShipData ? data.prevShipData.agencyRiverShipDefectCounts || {} : {},
+                agencyRiverShipDetainedCounts: data.prevShipData ? data.prevShipData.agencyRiverShipDetainedCounts || {} : {},
+                agencyOnSiteCounts: data.prevOnSiteData ? data.prevOnSiteData.agencyOnSiteCounts || {} : {},
+                agencyAbnormalCounts: data.prevOnSiteData ? data.prevOnSiteData.agencyAbnormalCounts || {} : {}
+            };
+            
             // 海船安检数据
-            var seaShipCounts = agencyDataList.map(function(item) {
-                return item.seaShipCount || 0;
-            });
+            var seaShipCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.seaShipCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencySeaShipCounts[agency] || 0;
+                })
+            };
+            
+            var seaShipDefectCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.seaShipDefectCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencySeaShipDefectCounts[agency] || 0;
+                })
+            };
+            
+            var seaShipDetainedCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.seaShipDetainedCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencySeaShipDetainedCounts[agency] || 0;
+                })
+            };
             
             // 内河船安检数据
-            var riverShipCounts = agencyDataList.map(function(item) {
-                return item.riverShipCount || 0;
-            });
+            var riverShipCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.riverShipCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencyRiverShipCounts[agency] || 0;
+                })
+            };
+            
+            var riverShipDefectCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.riverShipDefectCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencyRiverShipDefectCounts[agency] || 0;
+                })
+            };
+            
+            var riverShipDetainedCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.riverShipDetainedCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencyRiverShipDetainedCounts[agency] || 0;
+                })
+            };
             
             // 现场监督数据
-            var onSiteCounts = agencyDataList.map(function(item) {
-                return item.onSiteCount || 0;
-            });
+            var onSiteCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.onSiteCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencyOnSiteCounts[agency] || 0;
+                })
+            };
             
-            var abnormalCounts = agencyDataList.map(function(item) {
-                return item.abnormalCount || 0;
-            });
+            var abnormalCounts = {
+                current: agencyDataList.map(function(item) {
+                    return item.abnormalCount || 0;
+                }),
+                last: agencies.map(function(agency) {
+                    return prevData.agencyAbnormalCounts[agency] || 0;
+                })
+            };
             
             // 渲染各部门海船安检图表
-            renderDepartmentSeaShipChart(agencies, seaShipCounts);
+            renderDepartmentSeaShipChart(agencies, seaShipCounts, seaShipDefectCounts, seaShipDetainedCounts, data);
             
             // 渲染各部门内河船安检图表
-            renderDepartmentRiverShipChart(agencies, riverShipCounts);
+            renderDepartmentRiverShipChart(agencies, riverShipCounts, riverShipDefectCounts, riverShipDetainedCounts, data);
             
             // 渲染各部门现场监督图表
-            renderDepartmentOnSiteChart(agencies, onSiteCounts, abnormalCounts);
+            renderDepartmentOnSiteChart(agencies, onSiteCounts, abnormalCounts, data);
         }
 
         // 渲染各部门海船安检图表
-        function renderDepartmentSeaShipChart(agencies, seaShipCounts) {
+        function renderDepartmentSeaShipChart(agencies, seaShipCounts, seaShipDefectCounts, seaShipDetainedCounts, data) {
             var chartOption = {
                 title: {
                     text: '各部门海船安检情况',
@@ -1263,13 +1331,44 @@
                     trigger: 'axis',
                     axisPointer: {
                         type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            if (item.seriesName.includes('本期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        params.forEach(item => {
+                            if (item.seriesName.includes('上期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['检查数量(本期)', '检查数量(上期)', '缺陷数量(本期)', '缺陷数量(上期)', '滞留数量(本期)', '滞留数量(上期)'],
+                    textStyle: {
+                        color: '#0466c8'
+                    },
+                    top: 40,
+                    left: 'center',
+                    selected: {
+                        '检查数量(本期)': true,
+                        '检查数量(上期)': true,
+                        '缺陷数量(本期)': false,
+                        '缺陷数量(上期)': false,
+                        '滞留数量(本期)': false,
+                        '滞留数量(上期)': false
                     }
                 },
                 grid: {
                     left: '3%',
                     right: '4%',
                     bottom: '3%',
-                    top: 60,
+                    top: 100,
                     containLabel: true
                 },
                 xAxis: {
@@ -1294,13 +1393,101 @@
                 },
                 series: [
                     {
-                        name: '海船安检数量',
+                        name: '检查数量(本期)',
                         type: 'bar',
-                        data: seaShipCounts,
+                        stack: '本期',
+                        data: seaShipCounts.current,
                         itemStyle: {
                             color: '#409EFF'
                         },
-                        barWidth: '40%',
+                        barGap: '20%',
+                        barCategoryGap: '40%',
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '检查数量(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: seaShipCounts.last,
+                        itemStyle: {
+                            color: '#409EFF',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '缺陷数量(本期)',
+                        type: 'bar',
+                        stack: '本期',
+                        data: seaShipDefectCounts.current,
+                        itemStyle: {
+                            color: '#67C23A'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '缺陷数量(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: seaShipDefectCounts.last,
+                        itemStyle: {
+                            color: '#67C23A',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '滞留数量(本期)',
+                        type: 'bar',
+                        stack: '本期',
+                        data: seaShipDetainedCounts.current,
+                        itemStyle: {
+                            color: '#E6A23C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '滞留数量(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: seaShipDetainedCounts.last,
+                        itemStyle: {
+                            color: '#E6A23C',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
                         label: {
                             show: true,
                             position: 'top'
@@ -1310,10 +1497,53 @@
             };
             
             departmentSeaShipChart.setOption(chartOption);
+            
+            // 添加点击事件，切换展示的数据类型
+            departmentSeaShipChart.off('legendselectchanged');
+            departmentSeaShipChart.on('legendselectchanged', function(params) {
+                var selected = params.selected;
+                var option = departmentSeaShipChart.getOption();
+                
+                // 如果检查数量被选中，则禁用缺陷数量和滞留数量
+                if (selected['检查数量(本期)'] || selected['检查数量(上期)']) {
+                    option.legend[0].selected = {
+                        '检查数量(本期)': true,
+                        '检查数量(上期)': true,
+                        '缺陷数量(本期)': false,
+                        '缺陷数量(上期)': false,
+                        '滞留数量(本期)': false,
+                        '滞留数量(上期)': false
+                    };
+                }
+                // 如果缺陷数量被选中，则禁用检查数量和滞留数量
+                else if (selected['缺陷数量(本期)'] || selected['缺陷数量(上期)']) {
+                    option.legend[0].selected = {
+                        '检查数量(本期)': false,
+                        '检查数量(上期)': false,
+                        '缺陷数量(本期)': true,
+                        '缺陷数量(上期)': true,
+                        '滞留数量(本期)': false,
+                        '滞留数量(上期)': false
+                    };
+                }
+                // 如果滞留数量被选中，则禁用检查数量和缺陷数量
+                else if (selected['滞留数量(本期)'] || selected['滞留数量(上期)']) {
+                    option.legend[0].selected = {
+                        '检查数量(本期)': false,
+                        '检查数量(上期)': false,
+                        '缺陷数量(本期)': false,
+                        '缺陷数量(上期)': false,
+                        '滞留数量(本期)': true,
+                        '滞留数量(上期)': true
+                    };
+                }
+                
+                departmentSeaShipChart.setOption(option);
+            });
         }
 
         // 渲染各部门内河船安检图表
-        function renderDepartmentRiverShipChart(agencies, riverShipCounts) {
+        function renderDepartmentRiverShipChart(agencies, riverShipCounts, riverShipDefectCounts, riverShipDetainedCounts, data) {
             var chartOption = {
                 title: {
                     text: '各部门内河船安检情况',
@@ -1329,13 +1559,44 @@
                     trigger: 'axis',
                     axisPointer: {
                         type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            if (item.seriesName.includes('本期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        params.forEach(item => {
+                            if (item.seriesName.includes('上期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['检查数量(本期)', '检查数量(上期)', '缺陷数量(本期)', '缺陷数量(上期)', '滞留数量(本期)', '滞留数量(上期)'],
+                    textStyle: {
+                        color: '#0466c8'
+                    },
+                    top: 40,
+                    left: 'center',
+                    selected: {
+                        '检查数量(本期)': true,
+                        '检查数量(上期)': true,
+                        '缺陷数量(本期)': false,
+                        '缺陷数量(上期)': false,
+                        '滞留数量(本期)': false,
+                        '滞留数量(上期)': false
                     }
                 },
                 grid: {
                     left: '3%',
                     right: '4%',
                     bottom: '3%',
-                    top: 60,
+                    top: 100,
                     containLabel: true
                 },
                 xAxis: {
@@ -1360,13 +1621,101 @@
                 },
                 series: [
                     {
-                        name: '内河船安检数量',
+                        name: '检查数量(本期)',
                         type: 'bar',
-                        data: riverShipCounts,
+                        stack: '本期',
+                        data: riverShipCounts.current,
                         itemStyle: {
                             color: '#67C23A'
                         },
-                        barWidth: '40%',
+                        barGap: '20%',
+                        barCategoryGap: '40%',
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '检查数量(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: riverShipCounts.last,
+                        itemStyle: {
+                            color: '#67C23A',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '缺陷数量(本期)',
+                        type: 'bar',
+                        stack: '本期',
+                        data: riverShipDefectCounts.current,
+                        itemStyle: {
+                            color: '#409EFF'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '缺陷数量(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: riverShipDefectCounts.last,
+                        itemStyle: {
+                            color: '#409EFF',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '滞留数量(本期)',
+                        type: 'bar',
+                        stack: '本期',
+                        data: riverShipDetainedCounts.current,
+                        itemStyle: {
+                            color: '#E6A23C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '滞留数量(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: riverShipDetainedCounts.last,
+                        itemStyle: {
+                            color: '#E6A23C',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
                         label: {
                             show: true,
                             position: 'top'
@@ -1376,274 +1725,227 @@
             };
             
             departmentRiverShipChart.setOption(chartOption);
-        }
-
-        // 渲染部门数据表格
-        function renderDepartmentTable(data) {
-            var tableBody = $('#department-data-body');
-            tableBody.empty();
             
-            // 获取部门数据列表
-            var agencyDataList = data.agencyDataList || [];
-            
-            agencyDataList.forEach(function(agency) {
-                var row = $('<tr></tr>');
+            // 添加点击事件，切换展示的数据类型
+            departmentRiverShipChart.off('legendselectchanged');
+            departmentRiverShipChart.on('legendselectchanged', function(params) {
+                var selected = params.selected;
+                var option = departmentRiverShipChart.getOption();
                 
-                // 添加部门名称
-                row.append('<td>' + agency.agency + '</td>');
-                
-                // 获取上周数据
-                var prevSeaShipCount = 0;
-                var prevSeaShipDefectCount = 0;
-                var prevSeaShipDetainedCount = 0;
-                
-                if (data.prevShipData) {
-                    prevSeaShipCount = data.prevShipData.agencySeaShipCounts ? (data.prevShipData.agencySeaShipCounts[agency.agency] || 0) : 0;
-                    prevSeaShipDefectCount = data.prevShipData.agencySeaShipDefectCounts ? (data.prevShipData.agencySeaShipDefectCounts[agency.agency] || 0) : 0;
-                    prevSeaShipDetainedCount = data.prevShipData.agencySeaShipDetainedCounts ? (data.prevShipData.agencySeaShipDetainedCounts[agency.agency] || 0) : 0;
+                // 如果检查数量被选中，则禁用缺陷数量和滞留数量
+                if (selected['检查数量(本期)'] || selected['检查数量(上期)']) {
+                    option.legend[0].selected = {
+                        '检查数量(本期)': true,
+                        '检查数量(上期)': true,
+                        '缺陷数量(本期)': false,
+                        '缺陷数量(上期)': false,
+                        '滞留数量(本期)': false,
+                        '滞留数量(上期)': false
+                    };
+                }
+                // 如果缺陷数量被选中，则禁用检查数量和滞留数量
+                else if (selected['缺陷数量(本期)'] || selected['缺陷数量(上期)']) {
+                    option.legend[0].selected = {
+                        '检查数量(本期)': false,
+                        '检查数量(上期)': false,
+                        '缺陷数量(本期)': true,
+                        '缺陷数量(上期)': true,
+                        '滞留数量(本期)': false,
+                        '滞留数量(上期)': false
+                    };
+                }
+                // 如果滞留数量被选中，则禁用检查数量和缺陷数量
+                else if (selected['滞留数量(本期)'] || selected['滞留数量(上期)']) {
+                    option.legend[0].selected = {
+                        '检查数量(本期)': false,
+                        '检查数量(上期)': false,
+                        '缺陷数量(本期)': false,
+                        '缺陷数量(上期)': false,
+                        '滞留数量(本期)': true,
+                        '滞留数量(上期)': true
+                    };
                 }
                 
-                // 海船安检数据（检查数量）
-                row.append('<td>' + prevSeaShipCount + '</td>');
-                row.append('<td>' + (agency.seaShipCount || 0) + '</td>');
-                row.append(createRateCell(agency.seaShipCountRate || 0));
-                
-                // 海船安检数据（缺陷数量）
-                row.append('<td>' + prevSeaShipDefectCount + '</td>');
-                row.append('<td>' + (agency.seaShipDefectCount || 0) + '</td>');
-                row.append(createRateCell(agency.seaShipDefectRate || 0));
-                
-                // 海船安检数据（滞留数量）
-                row.append('<td>' + prevSeaShipDetainedCount + '</td>');
-                row.append('<td>' + (agency.seaShipDetainedCount || 0) + '</td>');
-                row.append(createRateCell(agency.seaShipDetainedRate || 0));
-                
-                // 获取内河船上周数据
-                var prevRiverShipCount = 0;
-                var prevRiverShipDefectCount = 0;
-                var prevRiverShipDetainedCount = 0;
-                
-                if (data.prevShipData) {
-                    prevRiverShipCount = data.prevShipData.agencyRiverShipCounts ? (data.prevShipData.agencyRiverShipCounts[agency.agency] || 0) : 0;
-                    prevRiverShipDefectCount = data.prevShipData.agencyRiverShipDefectCounts ? (data.prevShipData.agencyRiverShipDefectCounts[agency.agency] || 0) : 0;
-                    prevRiverShipDetainedCount = data.prevShipData.agencyRiverShipDetainedCounts ? (data.prevShipData.agencyRiverShipDetainedCounts[agency.agency] || 0) : 0;
-                }
-                
-                // 内河船安检数据（检查数量）
-                row.append('<td>' + prevRiverShipCount + '</td>');
-                row.append('<td>' + (agency.riverShipCount || 0) + '</td>');
-                row.append(createRateCell(agency.riverShipCountRate || 0));
-                
-                // 内河船安检数据（缺陷数量）
-                row.append('<td>' + prevRiverShipDefectCount + '</td>');
-                row.append('<td>' + (agency.riverShipDefectCount || 0) + '</td>');
-                row.append(createRateCell(agency.riverShipDefectRate || 0));
-                
-                // 内河船安检数据（滞留数量）
-                row.append('<td><strong>' + prevRiverShipDetainedCount + '</strong></td>');
-                row.append('<td><strong>' + (data.riverShipDetainedCount || 0) + '</strong></td>');
-                row.append(createRateCell(data.riverShipDetainedRate || 0, true));
-                
-                // PSC检查数据
-                var prevPscCount = 0;
-                var prevPscDefectCount = 0;
-                var prevPscDetentionCount = 0;
-                
-                // 如果是张家港海事局才有PSC数据
-                if (agency.agency.includes("张家港海事局") && data.prevPscData) {
-                    prevPscCount = data.prevPscData.pscCount || 0;
-                    prevPscDefectCount = data.prevPscData.pscDefectCount || 0;
-                    prevPscDetentionCount = data.prevPscData.pscDetentionCount || 0;
-                }
-                
-                // PSC检查数据（检查数量）
-                row.append('<td>' + prevPscCount + '</td>');
-                row.append('<td>' + (agency.pscCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscCountRate || 0));
-                
-                // PSC检查数据（缺陷数量）
-                row.append('<td>' + prevPscDefectCount + '</td>');
-                row.append('<td>' + (agency.pscDefectCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscDefectRate || 0));
-                
-                // PSC检查数据（滞留数量）
-                row.append('<td>' + prevPscDetentionCount + '</td>');
-                row.append('<td>' + (agency.pscDetentionCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscDetentionRate || 0));
-                
-                // 获取现场监督上周数据
-                var prevOnSiteCount = 0;
-                var prevAbnormalCount = 0;
-                
-                if (data.prevOnSiteData) {
-                    prevOnSiteCount = data.prevOnSiteData.agencyOnSiteCounts ? (data.prevOnSiteData.agencyOnSiteCounts[agency.agency] || 0) : 0;
-                    prevAbnormalCount = data.prevOnSiteData.agencyAbnormalCounts ? (data.prevOnSiteData.agencyAbnormalCounts[agency.agency] || 0) : 0;
-                }
-                
-                // 现场监督数据（检查数量）
-                row.append('<td>' + prevOnSiteCount + '</td>');
-                row.append('<td>' + (agency.onSiteCount || 0) + '</td>');
-                row.append(createRateCell(agency.onSiteCountRate || 0));
-                
-                // 现场监督数据（异常数量）
-                row.append('<td>' + prevAbnormalCount + '</td>');
-                row.append('<td>' + (agency.abnormalCount || 0) + '</td>');
-                row.append(createRateCell(agency.abnormalCountRate || 0));
-                
-                tableBody.append(row);
+                departmentRiverShipChart.setOption(option);
             });
-            
-            // 添加合计行
-            addTotalRow(tableBody, data);
         }
 
-        // 创建环比变化率单元格
-        function createRateCell(rate, isBold) {
-            var prefix = isBold ? '<strong>' : '';
-            var suffix = isBold ? '</strong>' : '';
+        // 渲染各部门现场监督图表
+        function renderDepartmentOnSiteChart(agencies, onSiteCounts, abnormalCounts, data) {
+            var chartOption = {
+                title: {
+                    text: '各部门船舶现场监督情况',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            if (item.seriesName.includes('本期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        params.forEach(item => {
+                            if (item.seriesName.includes('上期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['监督总数(本期)', '监督总数(上期)', '异常数量(本期)', '异常数量(上期)'],
+                    textStyle: {
+                        color: '#0466c8'
+                    },
+                    top: 40,
+                    left: 'center',
+                    selected: {
+                        '监督总数(本期)': true,
+                        '监督总数(上期)': true,
+                        '异常数量(本期)': false,
+                        '异常数量(上期)': false
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: agencies,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30,
+                        color: '#0466c8'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#0466c8'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: '监督总数(本期)',
+                        type: 'bar',
+                        stack: '本期',
+                        data: onSiteCounts.current,
+                        itemStyle: {
+                            color: '#E6A23C'
+                        },
+                        barGap: '20%',
+                        barCategoryGap: '40%',
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '监督总数(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: onSiteCounts.last,
+                        itemStyle: {
+                            color: '#E6A23C',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '异常数量(本期)',
+                        type: 'bar',
+                        stack: '本期',
+                        data: abnormalCounts.current,
+                        itemStyle: {
+                            color: '#F56C6C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '异常数量(上期)',
+                        type: 'bar',
+                        stack: '上期',
+                        data: abnormalCounts.last,
+                        itemStyle: {
+                            color: '#F56C6C',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    }
+                ]
+            };
             
-            var rateClass = '';
-            var rateHtml = '';
+            departmentOnSiteChart.setOption(chartOption);
             
-            if (rate > 0) {
-                rateClass = 'positive-change';
-                rateHtml = '<i class="fas fa-arrow-up"></i> ' + rate.toFixed(2) + '%';
-            } else if (rate < 0) {
-                rateClass = 'negative-change';
-                rateHtml = '<i class="fas fa-arrow-down"></i> ' + Math.abs(rate).toFixed(2) + '%';
-            } else {
-                rateClass = 'neutral-change';
-                rateHtml = '<i class="fas fa-equals"></i> ' + rate.toFixed(2) + '%';
-            }
-            
-            return '<td class="' + rateClass + '">' + prefix + rateHtml + suffix + '</td>';
-        }
-
-        // 添加合计行
-        function addTotalRow(tableBody, data) {
-            var row = $('<tr class="table-active"></tr>');
-            row.append('<td><strong>合计</strong></td>');
-            
-            // 获取上周数据
-            var prevSeaShipCount = 0;
-            var prevSeaShipDefectCount = 0;
-            var prevSeaShipDetainedCount = 0;
-            
-            if (data.prevShipData) {
-                prevSeaShipCount = data.prevShipData.seaShipCount || 0;
-                prevSeaShipDefectCount = data.prevShipData.seaShipDefectCount || 0;
-                prevSeaShipDetainedCount = data.prevShipData.seaShipDetainedCount || 0;
-            }
-            
-            // 合计海船安检数据
-            row.append('<td><strong>' + prevSeaShipCount + '</strong></td>');
-            row.append('<td><strong>' + (data.seaShipCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.seaShipCountRate || 0, true));
-            
-            // 合计海船缺陷数据
-            row.append('<td><strong>' + prevSeaShipDefectCount + '</strong></td>');
-            row.append('<td><strong>' + (data.seaShipDefectCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.seaShipDefectRate || 0, true));
-            
-            // 合计海船滞留数据
-            row.append('<td><strong>' + prevSeaShipDetainedCount + '</strong></td>');
-            row.append('<td><strong>' + (data.seaShipDetainedCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.seaShipDetainedRate || 0, true));
-            
-            // 获取内河船上周数据
-            var prevRiverShipCount = 0;
-            var prevRiverShipDefectCount = 0;
-            var prevRiverShipDetainedCount = 0;
-            
-            if (data.prevShipData) {
-                prevRiverShipCount = data.prevShipData.riverShipCount || 0;
-                prevRiverShipDefectCount = data.prevShipData.riverShipDefectCount || 0;
-                prevRiverShipDetainedCount = data.prevShipData.riverShipDetainedCount || 0;
-            }
-            
-            // 合计内河船安检数据
-            row.append('<td><strong>' + prevRiverShipCount + '</strong></td>');
-            row.append('<td><strong>' + (data.riverShipCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.riverShipCountRate || 0, true));
-            
-            // 合计内河船缺陷数据
-            row.append('<td><strong>' + prevRiverShipDefectCount + '</strong></td>');
-            row.append('<td><strong>' + (data.riverShipDefectCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.riverShipDefectRate || 0, true));
-            
-            // 合计内河船滞留数据
-            row.append('<td><strong>' + prevRiverShipDetainedCount + '</strong></td>');
-            row.append('<td><strong>' + (data.riverShipDetainedCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.riverShipDetainedRate || 0, true));
-            
-            // 获取PSC检查上周数据
-            var prevPscCount = 0;
-            var prevPscDefectCount = 0;
-            var prevPscDetentionCount = 0;
-            
-            if (data.prevPscData) {
-                prevPscCount = data.prevPscData.pscCount || 0;
-                prevPscDefectCount = data.prevPscData.pscDefectCount || 0;
-                prevPscDetentionCount = data.prevPscData.pscDetentionCount || 0;
-            }
-            
-            // 合计PSC检查数据
-            row.append('<td><strong>' + prevPscCount + '</strong></td>');
-            row.append('<td><strong>' + (data.pscCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.pscCountRate || 0, true));
-            
-            // 合计PSC缺陷数据
-            row.append('<td><strong>' + prevPscDefectCount + '</strong></td>');
-            row.append('<td><strong>' + (data.pscDefectCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.pscDefectRate || 0, true));
-            
-            // 合计PSC滞留数据
-            row.append('<td><strong>' + prevPscDetentionCount + '</strong></td>');
-            row.append('<td><strong>' + (data.pscDetentionCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.pscDetentionRate || 0, true));
-            
-            // 获取现场监督上周数据
-            var prevOnSiteCount = 0;
-            var prevAbnormalCount = 0;
-            
-            if (data.prevOnSiteData) {
-                prevOnSiteCount = data.prevOnSiteData.onSiteCount || 0;
-                prevAbnormalCount = data.prevOnSiteData.abnormalCount || 0;
-            }
-            
-            // 合计现场监督数据
-            row.append('<td><strong>' + prevOnSiteCount + '</strong></td>');
-            row.append('<td><strong>' + (data.onSiteCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.onSiteCountRate || 0, true));
-            
-            // 合计现场监督异常数据
-            row.append('<td><strong>' + prevAbnormalCount + '</strong></td>');
-            row.append('<td><strong>' + (data.abnormalCount || 0) + '</strong></td>');
-            row.append(createRateCell(data.abnormalCountRate || 0, true));
-            
-            tableBody.append(row);
-        }
-        
-        // 创建带环比变化的单元格（可选加粗）
-        function createRateCell(rate, isBold) {
-            var prefix = isBold ? '<strong>' : '';
-            var suffix = isBold ? '</strong>' : '';
-            
-            var rateClass = '';
-            var rateHtml = '';
-            
-            if (rate > 0) {
-                rateClass = 'positive-change';
-                rateHtml = '<i class="fas fa-arrow-up"></i> ' + rate.toFixed(2) + '%';
-            } else if (rate < 0) {
-                rateClass = 'negative-change';
-                rateHtml = '<i class="fas fa-arrow-down"></i> ' + Math.abs(rate).toFixed(2) + '%';
-            } else {
-                rateClass = 'neutral-change';
-                rateHtml = '<i class="fas fa-equals"></i> ' + rate.toFixed(2) + '%';
-            }
-            
-            return '<td class="' + rateClass + '">' + prefix + rateHtml + suffix + '</td>';
+            // 添加点击事件，切换展示的数据类型
+            departmentOnSiteChart.off('legendselectchanged');
+            departmentOnSiteChart.on('legendselectchanged', function(params) {
+                var selected = params.selected;
+                var option = departmentOnSiteChart.getOption();
+                
+                // 如果监督总数被选中，则禁用异常数量
+                if (selected['监督总数(本期)'] || selected['监督总数(上期)']) {
+                    option.legend[0].selected = {
+                        '监督总数(本期)': true,
+                        '监督总数(上期)': true,
+                        '异常数量(本期)': false,
+                        '异常数量(上期)': false
+                    };
+                }
+                // 如果异常数量被选中，则禁用监督总数
+                else if (selected['异常数量(本期)'] || selected['异常数量(上期)']) {
+                    option.legend[0].selected = {
+                        '监督总数(本期)': false,
+                        '监督总数(上期)': false,
+                        '异常数量(本期)': true,
+                        '异常数量(上期)': true
+                    };
+                }
+                
+                departmentOnSiteChart.setOption(option);
+            });
         }
 
         // 窗口大小变化时调整图表大小
