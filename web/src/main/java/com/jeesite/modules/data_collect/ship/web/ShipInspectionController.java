@@ -263,7 +263,7 @@ public class ShipInspectionController extends BaseController {
 		
 		return result;
 	}
-
+	
 	/**
 	 * 删除数据
 	 */
