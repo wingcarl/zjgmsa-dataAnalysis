@@ -554,7 +554,7 @@ public class DynamicEnforcementDataController extends BaseController {
 			item.put("count", statsMap.get(key));
 			result.add(item);
 		}
-		
+
 		return result;
 	}
 
@@ -616,7 +616,7 @@ public class DynamicEnforcementDataController extends BaseController {
 		
 		// 巡航方式筛选
 		if (patrolType != null && !patrolType.isEmpty()) {
-			if ("现场巡航".equals(patrolType)) {
+			if ("现场巡查".equals(patrolType)) {
 				// 使用有参数的andBracket方法
 				query.sqlMap().getWhere().andBracket("a.cruise_task_name", QueryType.LIKE, "%海巡艇%",1);
 				query.sqlMap().getWhere().or("a.cruise_task_name", QueryType.LIKE, "%执法车%",2);

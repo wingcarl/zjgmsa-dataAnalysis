@@ -410,6 +410,17 @@
             word-break: break-all;
             word-wrap: break-word;
         }
+        
+        /* 为高亮效果添加的样式 */
+        .form-group {
+            transition: background-color 0.5s ease;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        .has-success {
+            border: 1px solid #3c763d;
+        }
     </style>
     <!-- jQuery 和 ECharts -->
     <!-- jQuery 和 ECharts -->
@@ -1527,15 +1538,42 @@
             var startDate = $('#startDate').val();
             var endDate = $('#endDate').val();
             
+            // 将当前的筛选条件考虑在内
+            var inspectionUnit = $('#inspectionUnit').val();
+            var inspectionResult = $('#inspectionResult').val();
+            var cruiseTaskType = $('#cruiseTaskType').val();
+            
             // 构建查询参数
             var queryParams = {
                 startDate: startDate,
                 endDate: endDate,
-                majorItemName: majorItemName
+                majorItemName: majorItemName,
+                department: inspectionUnit !== '全部' ? inspectionUnit : null,
+                inspectionResult: inspectionResult !== '全部' ? inspectionResult : null,
+                patrolType: cruiseTaskType !== '全部' ? cruiseTaskType : null
             };
             
             // 发送查询请求
             fetchDetailData(queryParams);
+            
+            // 同时在高级筛选区域中选中相应的检查项目
+            if ($('#majorItemName option[value="' + majorItemName + '"]').length > 0) {
+                $('#majorItemName').val(majorItemName).trigger('change');
+                
+                // 如果筛选区域是折叠的，展开它
+                if (!$('#advanced-filter-body').is(':visible')) {
+                    $('#toggle-advanced-filter').click();
+                }
+                
+                // 高亮显示筛选条件
+                var $formGroup = $('#majorItemName').closest('.form-group');
+                $formGroup.addClass('has-success');
+                $formGroup.css('background-color', '#dff0d8');
+                setTimeout(function() {
+                    $formGroup.removeClass('has-success');
+                    $formGroup.css('background-color', '');
+                }, 3000);
+            }
         }
         
         // 部门图表点击处理函数
@@ -1544,15 +1582,42 @@
             var startDate = $('#startDate').val();
             var endDate = $('#endDate').val();
             
+            // 将当前的筛选条件考虑在内
+            var inspectionResult = $('#inspectionResult').val();
+            var cruiseTaskType = $('#cruiseTaskType').val();
+            var majorItemName = $('#majorItemName').val();
+            
             // 构建查询参数
             var queryParams = {
                 startDate: startDate,
                 endDate: endDate,
-                department: department
+                department: department,
+                inspectionResult: inspectionResult !== '全部' ? inspectionResult : null,
+                patrolType: cruiseTaskType !== '全部' ? cruiseTaskType : null,
+                majorItemName: majorItemName !== '全部' ? majorItemName : null
             };
             
             // 发送查询请求
             fetchDetailData(queryParams);
+            
+            // 同时在高级筛选区域中选中相应的部门
+            if ($('#inspectionUnit option[value="' + department + '"]').length > 0) {
+                $('#inspectionUnit').val(department);
+                
+                // 如果筛选区域是折叠的，展开它
+                if (!$('#advanced-filter-body').is(':visible')) {
+                    $('#toggle-advanced-filter').click();
+                }
+                
+                // 高亮显示筛选条件
+                var $formGroup = $('#inspectionUnit').closest('.form-group');
+                $formGroup.addClass('has-success');
+                $formGroup.css('background-color', '#dff0d8');
+                setTimeout(function() {
+                    $formGroup.removeClass('has-success');
+                    $formGroup.css('background-color', '');
+                }, 3000);
+            }
         }
         
         // 获取详细数据并显示弹框
@@ -1873,8 +1938,17 @@
                 ],
                 tooltip: {
                     formatter: function(params) {
-                        return params[0].name + '<br/>' + 
-                               params[0].seriesName + ': ' + params[0].value;
+                        // 处理params可能不是数组的情况
+                        if (Array.isArray(params) && params.length > 0) {
+                            return params[0].name + '<br/>' + 
+                                   params[0].seriesName + ': ' + params[0].value;
+                        } else if (params && params.name) {
+                            // 单个数据点的情况
+                            return params.name + '<br/>' + 
+                                   params.seriesName + ': ' + params.value;
+                        }
+                        // 防止其他未知情况
+                        return '';
                     }
                 }
             };
