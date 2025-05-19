@@ -725,7 +725,7 @@
         var endDateInput = $('#endDate');
         var fetchDataButton = $('#fetchDataButton');
 
-        // 设置默认日期（上周五到本周四）
+        // 设置默认日期（当前日期所在周的上一周）
         setDefaultDates();
 
         // 初始化图表
@@ -746,26 +746,29 @@
             // fetchDataAndRenderCharts();
         });
 
-        // 设置默认日期范围（上周五到本周四）
+        // 设置默认日期范围（当前日期所在周的上一周，周五到周四）
         function setDefaultDates() {
             var today = new Date();
             var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
             
-            // 计算到上周五的天数
-            var daysToLastFriday = (dayOfWeek + 2) % 7;
-            if (daysToLastFriday === 0) daysToLastFriday = 7; // 如果今天是周五，则取上周五
+            var endDate = new Date(today);
+            var startDate = new Date(today);
             
-            // 上周五
-            var lastFriday = new Date(today);
-            lastFriday.setDate(today.getDate() - daysToLastFriday);
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
             
-            // 本周四
-            var thisThursday = new Date(lastFriday);
-            thisThursday.setDate(lastFriday.getDate() + 6);
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
             
             // 格式化日期为YYYY-MM-DD
-            startDateInput.val(formatDate(lastFriday));
-            endDateInput.val(formatDate(thisThursday));
+            startDateInput.val(formatDate(startDate));
+            endDateInput.val(formatDate(endDate));
         }
 
         // 拉取数据按钮点击事件
