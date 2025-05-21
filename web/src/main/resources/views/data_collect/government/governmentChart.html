@@ -298,11 +298,15 @@
 
 <div class="container-fluid">
     <div class="custom-date-input">
-        <label for="reportDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
-            <i class="far fa-calendar-alt icon-box"></i>选择日期：
+        <label for="startDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            <i class="far fa-calendar-alt icon-box"></i>开始日期：
         </label>
-        <input type="date" id="reportDate" class="form-control" style="width: auto;">
-        <button type="button" id="fetchDataButton" class="btn btn-primary">
+        <input type="date" id="startDate" class="form-control" style="width: auto;">
+        <label for="endDate" style="margin: 0 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            结束日期：
+        </label>
+        <input type="date" id="endDate" class="form-control" style="width: auto;">
+        <button type="button" id="fetchDataButton" class="btn btn-primary ml-3">
             <i class="fas fa-sync-alt"></i> 拉取数据
         </button>
     </div>
@@ -349,18 +353,51 @@
         var governmentChart = echarts.init(document.getElementById('government-chart'));
 
         // 获取日期选择器和拉取数据按钮
-        var dateInput = $('#reportDate');
+        var startDateInput = $('#startDate');
+        var endDateInput = $('#endDate');
         var fetchDataButton = $('#fetchDataButton');
 
-        // 设置默认日期为今天
-        dateInput.val(new Date().toISOString().slice(0, 10));
+        // 计算默认日期范围（与weeklyReportPenatyChart.html一致）
+        function calculateDefaultDateRange() {
+            var today = new Date();
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            
+            var endDate = new Date(today);
+            var startDate = new Date(today);
+            
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
+            
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
+            
+            return {
+                start: startDate.toISOString().slice(0, 10),
+                end: endDate.toISOString().slice(0, 10)
+            };
+        }
+
+        // 设置默认日期范围
+        var defaultDates = calculateDefaultDateRange();
+        startDateInput.val(defaultDates.start);
+        endDateInput.val(defaultDates.end);
 
         // 初始化图表
         fetchData();
 
         // 日期改变事件
-        dateInput.on('change', function() {
-            fetchData()
+        startDateInput.on('change', function() {
+            fetchData();
+        });
+        
+        endDateInput.on('change', function() {
+            fetchData();
         });
 
         // 拉取数据按钮点击事件
@@ -378,42 +415,65 @@
 
         function fetchData() {
             return new Promise((resolve) => {
-                // 获取当前选择的日期
-                var selectedDate = dateInput.val();
-                var currentDate = new Date(selectedDate);
-                var currentDayOfWeek = currentDate.getDay();
-
-                // 计算本周和上周的开始日期
-                var currentWeekStartDate = new Date(currentDate);
-                currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
-
-                var lastWeekStartDate = new Date(currentWeekStartDate);
-                lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
+                // 获取当前选择的日期范围
+                var startDate = startDateInput.val();
+                var endDate = endDateInput.val();
+                
+                // 如果日期为空，使用当前日期作为默认值
+                if (!startDate) {
+                    startDate = new Date().toISOString().slice(0, 10);
+                    startDateInput.val(startDate);
+                }
+                
+                if (!endDate) {
+                    endDate = new Date().toISOString().slice(0, 10);
+                    endDateInput.val(endDate);
+                }
+                
+                // 添加日志用于调试
+                console.log("日期参数: startDate=" + startDate + ", endDate=" + endDate);
+                
+                // 更新标题
+                var titleText = "张家港海事局政务服务数据看板 ("+startDate+" 至 "+ endDate+")";
+                $('.main-title').html('<i class="fas fa-university icon-box"></i>' + titleText);
 
                 // 构建请求参数
                 var params = {
-                    currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                    lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
+                    startDate: startDate,
+                    endDate: endDate
                 }
+                
+                // 在控制台显示完整的请求URL和参数
+                console.log("请求URL: fetchGovernmentData?" + $.param(params));
 
                 // 发送 AJAX 请求获取数据
                 $.ajax({
-                    url: 'fetchGovernmentData',
+                    url: '${ctx}/government/governmentData/fetchGovernmentData',
                     type: 'GET',
                     dataType: 'json',
+                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                    traditional: true,
                     data: params,
                     success: function(data) {
+                        console.log("请求成功，返回数据:", data);
+                        
+                        // 成功提示
                         Swal.fire({
                             title: '成功!',
                             text: '数据拉取成功',
                             icon: 'success',
                             confirmButtonText: '确定'
                         });
-                        renderGovernmentChart(data);
-                        renderGovernmentTable(data);
+                        
+                        // 渲染图表和表格
+                        if (data) {
+                            renderGovernmentChart(data);
+                            renderGovernmentTable(data);
+                        }
+                        
                         resolve();
                     },
-                    error: function(error){
+                    error: function(error) {
                         console.error('Error fetching government data:', error);
                         Swal.fire({
                             title: '错误!',
@@ -425,60 +485,6 @@
                     }
                 });
             });
-        }
-
-        function fetchDataAndRenderCharts() {
-            // 获取当前选择的日期
-            var selectedDate = dateInput.val();
-
-            // 计算本周和上周的开始日期
-            var currentDate = new Date(selectedDate);
-            var currentDayOfWeek = currentDate.getDay();
-            var currentWeekStartDate = new Date(currentDate);
-            currentWeekStartDate.setDate(currentDate.getDate() - ((currentDayOfWeek + 2) % 7));
-
-            var lastWeekStartDate = new Date(currentWeekStartDate);
-            lastWeekStartDate.setDate(currentWeekStartDate.getDate() - 7);
-
-            // 构建请求参数
-            var params = {
-                currentWeekStartDate: currentWeekStartDate.toISOString().slice(0, 10),
-                lastWeekStartDate: lastWeekStartDate.toISOString().slice(0, 10),
-            }
-
-            // 计算结束日期
-            var currentWeekEndDate = new Date(currentWeekStartDate.getTime() + 6 * 24 * 60 * 60 * 1000);
-            var formattedStartDate = currentWeekStartDate.toISOString().slice(0, 10);
-            var formattedEndDate = currentWeekEndDate.toISOString().slice(0, 10);
-
-            // 更新标题
-            var titleText = "张家港海事局政务服务数据看板 ("+formattedStartDate+" 至 "+ formattedEndDate+")";
-            $('.main-title').html('<i class="fas fa-university icon-box"></i>' + titleText);
-
-            // 模拟数据 - 实际应用中应该通过AJAX请求获取
-            // 这里为了演示，使用模拟数据
-            var mockData = {
-                categories: [
-                    "船员证书签发",
-                    "初审船舶登记",
-                    "船舶制式无线电台执照",
-                    "船载危险货物申报审批",
-                    "船载危险货物进出港口审批",
-                    "国际航行船舶证书网上备案",
-                    "国际航行船舶进出口岸查验",
-                    "国际航行船舶进口岸审批",
-                    "海域或者内河通航水域、岸线施工作业许可",
-                    "内河船舶洗舱作业核查",
-                    "洗舱作业申报",
-                    "换货申报",
-                    "发现洗舱申报问题"
-                ],
-                currentWeekData: [42, 18, 15, 23, 12, 36, 29, 14, 8, 31, 27, 19, 7],
-                lastWeekData: [38, 16, 13, 25, 11, 32, 26, 16, 10, 28, 25, 17, 9]
-            };
-
-            renderGovernmentChart(mockData);
-            renderGovernmentTable(mockData);
         }
 
         // 渲染政务服务数据表格

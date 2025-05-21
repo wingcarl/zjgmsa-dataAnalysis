@@ -15,6 +15,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.jeesite.common.config.Global;
@@ -27,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.jeesite.common.web.BaseController;
 import com.jeesite.modules.data_collect.government.entity.GovernmentData;
 import com.jeesite.modules.data_collect.government.service.GovernmentDataService;
+import java.time.temporal.ChronoUnit;
 
 /**
  * 政务服务数据Controller
@@ -156,23 +159,69 @@ public class GovernmentDataController extends BaseController {
 	/**
 	 * 根据日期获取政务服务数据
 	 */
-	@RequestMapping("fetchGovernmentData")
+	@RequestMapping(value = "fetchGovernmentData", method = RequestMethod.GET)
 	@ResponseBody
-	public Map<String, Object> fetchGovernmentData(String currentWeekStartDate, String lastWeekStartDate) {
+	public Map<String, Object> fetchGovernmentData(@RequestParam(value = "startDate", required = false) String startDate, 
+	                                               @RequestParam(value = "endDate", required = false) String endDate) {
+		
+		// 添加日志用于调试
+		System.out.println("接收到的参数: startDate=" + startDate + ", endDate=" + endDate);
+		
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
 
-		// 查询本周的数据
+		// 如果日期参数为空，计算默认日期范围
+		if (startDate == null || endDate == null || startDate.isEmpty() || endDate.isEmpty()) {
+			// 计算默认日期范围
+			LocalDate today = LocalDate.now();
+			int dayOfWeek = today.getDayOfWeek().getValue(); // 1-7，对应周一至周日
+			
+			LocalDate endLocalDate;
+			// 如果今天是周五(5)或周六(6)，则结束日期是本周四
+			if (dayOfWeek >= 5) {
+				endLocalDate = today.minusDays(dayOfWeek - 4);
+			} else {
+				// 否则结束日期是上周四
+				endLocalDate = today.minusDays(dayOfWeek + 3);
+			}
+			
+			// 开始日期是结束日期往前推6天（周五）
+			LocalDate startLocalDate = endLocalDate.minusDays(6);
+			
+			// 查询本周期的数据
+			GovernmentData govDataCurrent = new GovernmentData();
+			govDataCurrent.setDataTime_gte(DateUtils.asDate(startLocalDate));
+			govDataCurrent.setDataTime_lte(DateUtils.asDate(endLocalDate));
+			List<GovernmentData> currentWeekData = governmentDataService.findList(govDataCurrent);
+			
+			// 查询上周期的数据（往前推一周）
+			GovernmentData govDataLast = new GovernmentData();
+			govDataLast.setDataTime_gte(DateUtils.asDate(startLocalDate.minusDays(7)));
+			govDataLast.setDataTime_lte(DateUtils.asDate(endLocalDate.minusDays(7)));
+			List<GovernmentData> lastWeekData = governmentDataService.findList(govDataLast);
+			
+			// 处理数据并返回结果
+			return processGovernmentData(currentWeekData, lastWeekData);
+		}
+
+		// 解析日期范围
+		LocalDate startLocalDate = LocalDate.parse(startDate, formatter);
+		LocalDate endLocalDate = LocalDate.parse(endDate, formatter);
+		
+		// 计算上一时间段
+		long daysBetween = ChronoUnit.DAYS.between(startLocalDate, endLocalDate) + 1;
+		LocalDate prevStartLocalDate = startLocalDate.minusDays(daysBetween);
+		LocalDate prevEndLocalDate = endLocalDate.minusDays(daysBetween);
+
+		// 查询本周期的数据
 		GovernmentData govDataCurrent = new GovernmentData();
-		LocalDate currentStartLocalDate = LocalDate.parse(currentWeekStartDate, formatter);
-		govDataCurrent.setDataTime_gte(DateUtils.asDate(currentStartLocalDate));
-		govDataCurrent.setDataTime_lte(DateUtils.asDate(currentStartLocalDate.plusDays(6)));
+		govDataCurrent.setDataTime_gte(DateUtils.asDate(startLocalDate));
+		govDataCurrent.setDataTime_lte(DateUtils.asDate(endLocalDate));
 		List<GovernmentData> currentWeekData = governmentDataService.findList(govDataCurrent);
 
-		// 查询上周的数据
+		// 查询上周期的数据
 		GovernmentData govDataLast = new GovernmentData();
-		LocalDate lastStartLocalDate = LocalDate.parse(lastWeekStartDate, formatter);
-		govDataLast.setDataTime_gte(DateUtils.asDate(lastStartLocalDate));
-		govDataLast.setDataTime_lte(DateUtils.asDate(lastStartLocalDate.plusDays(6)));
+		govDataLast.setDataTime_gte(DateUtils.asDate(prevStartLocalDate));
+		govDataLast.setDataTime_lte(DateUtils.asDate(prevEndLocalDate));
 		List<GovernmentData> lastWeekData = governmentDataService.findList(govDataLast);
 
 		// 处理数据并返回结果

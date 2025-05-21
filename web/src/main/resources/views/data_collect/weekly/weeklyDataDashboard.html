@@ -211,6 +211,9 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            display: inline-block;
         }
 
         .btn-tech::before {
@@ -354,6 +357,50 @@
             }
         }
 
+        /* 平板电脑适配优化 */
+        @media (min-width: 768px) and (max-width: 991px) {
+            .col-md-6 {
+                width: 50%;
+                float: left;
+            }
+            
+            .dashboard-card {
+                height: 240px;
+            }
+            
+            .btn-tech {
+                font-size: 14px;
+                padding: 8px 15px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+
+        /* 小型平板适配 */
+        @media (min-width: 576px) and (max-width: 767px) {
+            .col-sm-6 {
+                width: 50%;
+                float: left;
+            }
+            
+            .dashboard-card {
+                height: 240px;
+            }
+            
+            .btn-tech {
+                font-size: 13px;
+                padding: 8px 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .card-title {
+                font-size: 1.5rem;
+            }
+        }
+
         .last-update {
             text-align: center;
             margin-top: 20px;
@@ -399,7 +446,7 @@
     <div class="container">
         <div class="row">
             <!-- 行政处罚卡片 -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 col-sm-6">
                 <div class="dashboard-card card-penalty animated fadeInUp">
                     <div class="card-content">
                         <div class="card-icon">
@@ -414,7 +461,7 @@
             </div>
 
             <!-- 巡航巡查卡片 -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 col-sm-6">
                 <div class="dashboard-card card-patrol animated fadeInUp" style="animation-delay: 0.1s;">
                     <div class="card-content">
                         <div class="card-icon">
@@ -429,7 +476,7 @@
             </div>
 
             <!-- 船舶监督卡片 -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 col-sm-6">
                 <div class="dashboard-card card-supervision animated fadeInUp" style="animation-delay: 0.2s;">
                     <div class="card-content">
                         <div class="card-icon">
@@ -444,7 +491,7 @@
             </div>
 
             <!-- 危管防污卡片 -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 col-sm-6">
                 <div class="dashboard-card card-hazardous animated fadeInUp" style="animation-delay: 0.3s;">
                     <div class="card-content">
                         <div class="card-icon">
@@ -459,7 +506,7 @@
             </div>
 
             <!-- 政务服务卡片 -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 col-sm-6">
                 <div class="dashboard-card card-government animated fadeInUp" style="animation-delay: 0.4s;">
                     <div class="card-content">
                         <div class="card-icon">
@@ -474,7 +521,7 @@
             </div>
 
             <!-- 港航信息卡片 -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 col-sm-6">
                 <div class="dashboard-card card-port animated fadeInUp" style="animation-delay: 0.5s;">
                     <div class="card-content">
                         <div class="card-icon">

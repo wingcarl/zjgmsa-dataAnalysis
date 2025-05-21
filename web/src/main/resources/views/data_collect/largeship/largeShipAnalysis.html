@@ -555,19 +555,36 @@
         var trendChart = echarts.init(document.getElementById('trendChart'));
         var lengthChart = echarts.init(document.getElementById('lengthChart'));
 
-        // 设置默认日期
-        // 获取今天的日期
-        var today = new Date();
-        // 计算本周四
-        var thisThursday = new Date(today);
-        thisThursday.setDate(today.getDate() + ((4 + 7 - today.getDay()) % 7));
-        // 计算上周五（即本周期开始日期）
-        var prevFriday = new Date(thisThursday);
-        prevFriday.setDate(thisThursday.getDate() - 6);
+        // 计算默认日期范围（与weeklyReportPenatyChart.html一致）
+        function calculateDefaultDateRange() {
+            var today = new Date();
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            
+            var endDate = new Date(today);
+            var startDate = new Date(today);
+            
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
+            
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
+            
+            return {
+                start: startDate.toISOString().slice(0, 10),
+                end: endDate.toISOString().slice(0, 10)
+            };
+        }
 
-        // 设置默认日期
-        $('#startDate').val(prevFriday.toISOString().slice(0, 10));
-        $('#endDate').val(thisThursday.toISOString().slice(0, 10));
+        // 设置默认日期范围
+        var defaultDates = calculateDefaultDateRange();
+        $('#startDate').val(defaultDates.start);
+        $('#endDate').val(defaultDates.end);
 
         // 当前时间单位
         var currentTimeUnit = 'day';
