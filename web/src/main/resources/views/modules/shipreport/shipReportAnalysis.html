@@ -186,6 +186,26 @@
             color: var(--primary-color);
         }
 
+        /* 返回主页按钮样式 */
+        .btn-back-home {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            border: 2px solid white;
+            border-radius: 50px;
+            padding: 8px 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        
+        .btn-back-home:hover {
+            background-color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: var(--accent-color);
+        }
+
         @media (max-width: 768px) {
             .date-range-picker {
                 flex-direction: column;
@@ -204,6 +224,58 @@
 
             .chart-container {
                 height: 300px;
+            }
+
+            /* 修改卡片布局，在平板设备上保持一行三个 */
+            .col-md-4 {
+                width: 33.333333%;
+                float: left;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.8em;
+            }
+            
+            .data-card .label {
+                font-size: 0.9rem;
+            }
+
+            .main-header .container .d-flex {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .btn-back-home {
+                margin-bottom: 10px;
+            }
+            
+            .main-title {
+                font-size: 22px;
+                margin: 10px 0;
+            }
+        }
+        
+        /* 添加手机设备的媒体查询 */
+        @media (max-width: 576px) {
+            .col-md-4 {
+                width: 100%;
+                float: none;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.6em;
+            }
+            
+            .data-card .label {
+                font-size: 0.85rem;
             }
         }
         
@@ -295,27 +367,35 @@
 
 <body>
 <div class="main-header">
-    <h2 class="main-title"><i class="fas fa-ship icon-box"></i>船舶进出港数据分析看板</h2>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="btn btn-back-home">
+                <i class="fa fa-home"></i> 返回主页
+            </a>
+            <h1 class="main-title"><i class="fas fa-ship icon-box"></i>船舶进出港数据分析看板</h1>
+            <div class="date-range">
+                <!-- 日期选择器 -->
+                <div class="date-range-picker">
+                    <label for="startDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                        <i class="far fa-calendar-alt icon-box"></i>开始日期：
+                    </label>
+                    <input type="date" id="startDate" class="form-control" style="width: auto;">
+
+                    <label for="endDate" style="margin: 0 10px 0 20px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                        <i class="far fa-calendar-alt icon-box"></i>结束日期：
+                    </label>
+                    <input type="date" id="endDate" class="form-control" style="width: auto;">
+
+                    <button type="button" id="fetchDataButton" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> 查询数据
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="container-fluid">
-    <!-- 日期选择器 -->
-    <div class="date-range-picker">
-        <label for="startDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
-            <i class="far fa-calendar-alt icon-box"></i>开始日期：
-        </label>
-        <input type="date" id="startDate" class="form-control" style="width: auto;">
-
-        <label for="endDate" style="margin: 0 10px 0 20px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
-            <i class="far fa-calendar-alt icon-box"></i>结束日期：
-        </label>
-        <input type="date" id="endDate" class="form-control" style="width: auto;">
-
-        <button type="button" id="fetchDataButton" class="btn btn-primary">
-            <i class="fas fa-sync-alt"></i> 查询数据
-        </button>
-    </div>
-
     <!-- 数据卡片区域 -->
     <div class="row">
         <div class="col-md-4">
@@ -647,17 +727,40 @@
             }
         });
 
-        // 设置默认日期为当前日期和30天前
-        var today = new Date();
-        var thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
+        // 计算默认日期范围（与weeklyReportChart.html一致）
+        function calculateDefaultDateRange() {
+            var today = new Date();
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            
+            var endDate = new Date(today);
+            var startDate = new Date(today);
+            
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
+            
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
+            
+            return {
+                start: startDate.toISOString().slice(0, 10),
+                end: endDate.toISOString().slice(0, 10)
+            };
+        }
 
-        $('#startDate').val(formatDate(thirtyDaysAgo));
-        $('#endDate').val(formatDate(today));
+        // 设置默认日期为指定范围
+        var defaultDates = calculateDefaultDateRange();
+        $('#startDate').val(defaultDates.start);
+        $('#endDate').val(defaultDates.end);
 
         // 初始化图表配置
         initializeCharts();
-
+        
         // 获取并展示数据
         fetchAndDisplayData();
 
@@ -687,7 +790,7 @@
                 fullscreenChart.resize();
             }
         });
-
+        
         // 初始化图表配置
         function initializeCharts() {
             // 初始化海事机构图表
@@ -803,15 +906,7 @@
             });
         }
 
-        // 格式化日期函数
-        function formatDate(date) {
-            var year = date.getFullYear();
-            var month = ('0' + (date.getMonth() + 1)).slice(-2);
-            var day = ('0' + date.getDate()).slice(-2);
-            return year + '-' + month + '-' + day;
-        }
-
-        // 获取并显示数据
+        // 获取并展示数据
         function fetchAndDisplayData() {
             var startDate = $('#startDate').val();
             var endDate = $('#endDate').val();

@@ -352,6 +352,48 @@
                 width: 100%;
                 margin-top: 10px;
             }
+
+            .chart-container {
+                height: 300px;
+            }
+            
+            /* 修改卡片布局，在平板设备上保持一行四个 */
+            .col-md-3 {
+                width: 25%;
+                float: left;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.8em;
+            }
+            
+            .data-card .label {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 添加手机设备的媒体查询 */
+        @media (max-width: 576px) {
+            .col-md-3 {
+                width: 100%;
+                float: none;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.6em;
+            }
+            
+            .data-card .label {
+                font-size: 0.85rem;
+            }
         }
 
         @media (max-width: 768px) {

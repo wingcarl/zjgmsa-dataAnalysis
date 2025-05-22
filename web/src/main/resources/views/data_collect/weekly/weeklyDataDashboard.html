@@ -10,7 +10,7 @@
     <!-- Font Awesome - 添加图标支持 -->
     <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
     <!-- Animate CSS - 添加动画效果 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" >
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/animate.min.css" >
 
     <!-- Custom CSS - 科技风格设计 -->
     <style>
@@ -528,14 +528,50 @@
                             <i class="fas fa-anchor"></i>
                         </div>
                         <h3 class="card-title">港航信息</h3>
-                        <a href="${ctx}/largeship/analysis" class="btn btn-tech">
+                        <button type="button" class="btn btn-tech" data-toggle="modal" data-target="#shipTypesModal">
                             <i class="fas fa-dharmachakra mr-2"></i>查看详情
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
+    </div>
+
+    <!-- 船舶类型选择模态框 -->
+    <div class="modal fade" id="shipTypesModal" tabindex="-1" role="dialog" aria-labelledby="shipTypesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="background-color: rgba(15, 52, 96, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(51, 161, 253, 0.3);">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(51, 161, 253, 0.2);">
+                    <h5 class="modal-title" id="shipTypesModalLabel" style="color: white; font-weight: 600;">
+                        <i class="fas fa-ship mr-2"></i>请选择船舶类型
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <a href="${ctx}/shipreport/shipReport/analysis" class="btn btn-tech btn-block py-3">
+                                <i class="fas fa-flag mr-2"></i>国内航行船舶
+                            </a>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <a href="#" class="btn btn-tech btn-block py-3" style="background: rgba(51, 161, 253, 0.1); cursor: not-allowed;">
+                                <i class="fas fa-globe-americas mr-2"></i>国际航行船舶
+                                <span class="badge badge-warning ml-2">开发中</span>
+                            </a>
+                        </div>
+                        <div class="col-md-12">
+                            <a href="${ctx}/largeship/analysis" class="btn btn-tech btn-block py-3">
+                                <i class="fas fa-ship mr-2"></i>大型受限船舶
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 页脚 -->

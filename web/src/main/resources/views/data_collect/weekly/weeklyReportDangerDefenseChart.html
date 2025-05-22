@@ -277,6 +277,44 @@
                 width: 100%;
                 margin-top: 10px;
             }
+
+            /* 修改卡片布局，在平板设备上保持一行三个 */
+            .col-md-4 {
+                width: 33.333333%;
+                float: left;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.8em;
+            }
+            
+            .data-card .label {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 添加手机设备的媒体查询 */
+        @media (max-width: 576px) {
+            .col-md-4 {
+                width: 100%;
+                float: none;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.6em;
+            }
+            
+            .data-card .label {
+                font-size: 0.85rem;
+            }
         }
 
         /* 返回主页按钮样式 */

@@ -247,15 +247,61 @@
             .chart-container {
                 height: 600px;
             }
+
+            .main-header .container .d-flex {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .btn-back-home {
+                margin-bottom: 10px;
+            }
+            
+            .main-title {
+                font-size: 22px;
+                margin: 10px 0;
+            }
+
+            /* 修改卡片布局，在平板设备上保持一行三个 */
+            .col-md-4 {
+                width: 33.333333%;
+                float: left;
+            }
+            
+            .col-md-6 {
+                width: 50%;
+                float: left;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .card-value {
+                font-size: 1.8em;
+            }
+            
+            .card-title {
+                font-size: 0.9rem;
+            }
         }
 
         @media (max-width: 576px) {
-            .chart-container {
-                height: 500px;
+            .col-md-4, .col-md-6 {
+                width: 100%;
+                float: none;
             }
-
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
             .card-value {
-                font-size: 24px;
+                font-size: 1.6em;
+            }
+            
+            .card-title {
+                font-size: 0.85rem;
             }
         }
 
@@ -277,22 +323,6 @@
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             color: var(--accent-color);
-        }
-
-        @media (max-width: 768px) {
-            .main-header .container .d-flex {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .btn-back-home {
-                margin-bottom: 10px;
-            }
-            
-            .main-title {
-                font-size: 22px;
-                margin: 10px 0;
-            }
         }
     </style>
     <!-- jQuery 和 ECharts -->
