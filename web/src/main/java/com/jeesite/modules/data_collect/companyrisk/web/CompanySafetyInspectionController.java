@@ -141,4 +141,69 @@ public class CompanySafetyInspectionController extends BaseController {
 		return renderResult(Global.TRUE, text("删除安全隐患与风险排查记录表成功！"));
 	}
 	
+	/**
+	 * 风险隐患分析页面
+	 */
+	@RequiresPermissions("companyrisk:companySafetyInspection:view")
+	@RequestMapping(value = "analysis")
+	public String analysis(Model model) {
+		return "data_collect/companyrisk/riskHazardAnalysis";
+	}
+	
+	/**
+	 * 获取风险隐患统计数据
+	 */
+	@RequiresPermissions("companyrisk:companySafetyInspection:view")
+	@RequestMapping(value = "getStatisticsData")
+	@ResponseBody
+	public String getStatisticsData(String startDate, String endDate) {
+		try {
+			return renderResult(Global.TRUE, "", companySafetyInspectionService.getStatisticsData(startDate, endDate));
+		} catch (Exception e) {
+			return renderResult(Global.FALSE, e.getMessage());
+		}
+	}
+	
+	/**
+	 * 获取企业自查统计数据（按部门）
+	 */
+	@RequiresPermissions("companyrisk:companySafetyInspection:view")
+	@RequestMapping(value = "getCompanySelfCheckStats")
+	@ResponseBody
+	public String getCompanySelfCheckStats(String startDate, String endDate) {
+		try {
+			return renderResult(Global.TRUE, "", companySafetyInspectionService.getCompanySelfCheckStats(startDate, endDate));
+		} catch (Exception e) {
+			return renderResult(Global.FALSE, e.getMessage());
+		}
+	}
+	
+	/**
+	 * 获取海事排查统计数据（按部门）
+	 */
+	@RequiresPermissions("companyrisk:companySafetyInspection:view")
+	@RequestMapping(value = "getMaritimeInspectionStats")
+	@ResponseBody
+	public String getMaritimeInspectionStats(String startDate, String endDate) {
+		try {
+			return renderResult(Global.TRUE, "", companySafetyInspectionService.getMaritimeInspectionStats(startDate, endDate));
+		} catch (Exception e) {
+			return renderResult(Global.FALSE, e.getMessage());
+		}
+	}
+	
+	/**
+	 * 获取综合统计数据（按企业）
+	 */
+	@RequiresPermissions("companyrisk:companySafetyInspection:view")
+	@RequestMapping(value = "getComprehensiveStats")
+	@ResponseBody
+	public String getComprehensiveStats(String startDate, String endDate) {
+		try {
+			return renderResult(Global.TRUE, "", companySafetyInspectionService.getComprehensiveStats(startDate, endDate));
+		} catch (Exception e) {
+			return renderResult(Global.FALSE, e.getMessage());
+		}
+	}
+	
 }

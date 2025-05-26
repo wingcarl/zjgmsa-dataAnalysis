@@ -12,4 +12,90 @@
 		ORDER BY ${sqlMap.order.toSql()}
 	</select> -->
 	
+	<!-- 获取风险隐患统计数据 -->
+	<select id="getStatisticsData" resultType="java.util.HashMap">
+		SELECT 
+			COALESCE(SUM(company_self_check_general_hazards), 0) as companySelfCheckGeneralHazards,
+			COALESCE(SUM(company_self_check_major_hazards), 0) as companySelfCheckMajorHazards,
+			COALESCE(SUM(company_self_check_risks), 0) as companySelfCheckRisks,
+			COALESCE(SUM(maritime_inspection_general_hazards), 0) as maritimeInspectionGeneralHazards,
+			COALESCE(SUM(maritime_inspection_major_hazards), 0) as maritimeInspectionMajorHazards,
+			COALESCE(SUM(maritime_inspection_risks), 0) as maritimeInspectionRisks
+		FROM company_safety_inspection
+		<where>
+			<if test="startDate != null and startDate != ''">
+				AND inspection_date >= #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND inspection_date &lt;= #{endDate}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 获取企业自查统计数据（按部门） -->
+	<select id="getCompanySelfCheckStats" resultType="java.util.HashMap">
+		SELECT 
+			company_name as departmentName,
+			COALESCE(SUM(company_self_check_general_hazards), 0) as generalHazards,
+			COALESCE(SUM(company_self_check_major_hazards), 0) as majorHazards,
+			COALESCE(SUM(company_self_check_risks), 0) as risks
+		FROM company_safety_inspection
+		<where>
+			<if test="startDate != null and startDate != ''">
+				AND inspection_date >= #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND inspection_date &lt;= #{endDate}
+			</if>
+			AND company_name IN ('交管中心', '船舶处', '危防处', '港区海事处', '锦丰海事处', '保税区大队')
+		</where>
+		GROUP BY company_name
+		ORDER BY FIELD(company_name, '交管中心', '船舶处', '危防处', '港区海事处', '锦丰海事处', '保税区大队')
+	</select>
+	
+	<!-- 获取海事排查统计数据（按部门） -->
+	<select id="getMaritimeInspectionStats" resultType="java.util.HashMap">
+		SELECT 
+			company_name as departmentName,
+			COALESCE(SUM(maritime_inspection_general_hazards), 0) as generalHazards,
+			COALESCE(SUM(maritime_inspection_major_hazards), 0) as majorHazards,
+			COALESCE(SUM(maritime_inspection_risks), 0) as risks
+		FROM company_safety_inspection
+		<where>
+			<if test="startDate != null and startDate != ''">
+				AND inspection_date >= #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND inspection_date &lt;= #{endDate}
+			</if>
+			AND company_name IN ('交管中心', '船舶处', '危防处', '港区海事处', '锦丰海事处', '保税区大队', '海巡执法支队')
+		</where>
+		GROUP BY company_name
+		ORDER BY FIELD(company_name, '交管中心', '船舶处', '危防处', '港区海事处', '锦丰海事处', '保税区大队', '海巡执法支队')
+	</select>
+	
+	<!-- 获取综合统计数据（按企业） -->
+	<select id="getComprehensiveStats" resultType="java.util.HashMap">
+		SELECT 
+			company_name as companyName,
+			COALESCE(SUM(company_self_check_general_hazards), 0) as companySelfCheckGeneralHazards,
+			COALESCE(SUM(company_self_check_major_hazards), 0) as companySelfCheckMajorHazards,
+			COALESCE(SUM(company_self_check_risks), 0) as companySelfCheckRisks,
+			COALESCE(SUM(maritime_inspection_general_hazards), 0) as maritimeInspectionGeneralHazards,
+			COALESCE(SUM(maritime_inspection_major_hazards), 0) as maritimeInspectionMajorHazards,
+			COALESCE(SUM(maritime_inspection_risks), 0) as maritimeInspectionRisks
+		FROM company_safety_inspection
+		<where>
+			<if test="startDate != null and startDate != ''">
+				AND inspection_date >= #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND inspection_date &lt;= #{endDate}
+			</if>
+			AND company_name IN ('双山汽渡', '高尔夫', '张皋汽渡')
+		</where>
+		GROUP BY company_name
+		ORDER BY FIELD(company_name, '双山汽渡', '高尔夫', '张皋汽渡')
+	</select>
+	
 </mapper>

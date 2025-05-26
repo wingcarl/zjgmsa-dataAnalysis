@@ -1,6 +1,11 @@
 package com.jeesite.modules.data_collect.companyrisk.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -132,6 +137,46 @@ public class CompanySafetyInspectionService extends CrudService<CompanySafetyIns
 	@Transactional
 	public void delete(CompanySafetyInspection companySafetyInspection) {
 		super.delete(companySafetyInspection);
+	}
+	
+	/**
+	 * 获取风险隐患统计数据
+	 */
+	public Map<String, Object> getStatisticsData(String startDate, String endDate) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		return dao.getStatisticsData(params);
+	}
+	
+	/**
+	 * 获取企业自查统计数据（按部门）
+	 */
+	public List<Map<String, Object>> getCompanySelfCheckStats(String startDate, String endDate) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		return dao.getCompanySelfCheckStats(params);
+	}
+	
+	/**
+	 * 获取海事排查统计数据（按部门）
+	 */
+	public List<Map<String, Object>> getMaritimeInspectionStats(String startDate, String endDate) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		return dao.getMaritimeInspectionStats(params);
+	}
+	
+	/**
+	 * 获取综合统计数据（按企业）
+	 */
+	public List<Map<String, Object>> getComprehensiveStats(String startDate, String endDate) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		return dao.getComprehensiveStats(params);
 	}
 	
 }
