@@ -1,0 +1,171 @@
+<% layout('/layouts/default.html', {title: '国际航行船舶表管理', libs: ['dataGrid']}){ %>
+<div class="main-content">
+	<div class="box box-main">
+		<div class="box-header">
+			<div class="box-title">
+				<i class="fa icon-notebook"></i> ${text('国际航行船舶表管理')}
+			</div>
+			<div class="box-tools pull-right">
+				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
+				<% if(hasPermi('shiplog:shipPortLog:edit')){ %>
+					<a href="${ctx}/shiplog/shipPortLog/form" class="btn btn-default btnTool" title="${text('新增国际航行船舶表')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<% } %>
+				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
+			</div>
+		</div>
+		<div class="box-body">
+			<#form:form id="searchForm" model="${shipPortLog}" action="${ctx}/shiplog/shipPortLog/listData" method="post" class="form-inline hide"
+					data-page-no="${parameter.pageNo}" data-page-size="${parameter.pageSize}" data-order-by="${parameter.orderBy}">
+				<div class="form-group">
+					<label class="control-label">${text('中文船名')}：</label>
+					<div class="control-inline">
+						<#form:input path="chineseShipName" maxlength="255" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船舶种类')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipCategory" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('进')}：</label>
+					<div class="control-inline">
+						<#form:input path="portOperationStatus" maxlength="20" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('进')}：</label>
+					<div class="control-inline">
+						<#form:input path="portOperationTime_gte" readonly="true" maxlength="20" class="form-control laydate width-datetime"
+							dataFormat="datetime" data-type="datetime" data-format="yyyy-MM-dd HH:mm" data-done="portOperationTime_lte.click()"/>
+						&nbsp;-&nbsp;
+						<#form:input path="portOperationTime_lte" readonly="true" maxlength="20" class="form-control laydate width-datetime"
+							dataFormat="datetime" data-type="datetime" data-format="yyyy-MM-dd HH:mm"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('查验机构')}：</label>
+					<div class="control-inline">
+						<#form:input path="inspectionAgency" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('英文船名')}：</label>
+					<div class="control-inline">
+						<#form:input path="englishShipName" maxlength="255" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('IMO编号')}：</label>
+					<div class="control-inline">
+						<#form:input path="imoNumber" maxlength="20" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船籍港')}：</label>
+					<div class="control-inline">
+						<#form:input path="portOfRegistry" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船舶所有人')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipOwner" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('船舶经营人')}：</label>
+					<div class="control-inline">
+						<#form:input path="shipOperator" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('始发/目的港')}：</label>
+					<div class="control-inline">
+						<#form:input path="originDestinationPort" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('上/下一港')}：</label>
+					<div class="control-inline">
+						<#form:input path="previousNextPort" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('停泊地点')}：</label>
+					<div class="control-inline">
+						<#form:input path="berthingLocation" maxlength="255" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('申办人')}：</label>
+					<div class="control-inline">
+						<#form:input path="applicantName" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('代理单位')}：</label>
+					<div class="control-inline">
+						<#form:input path="agentCompany" maxlength="255" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('查验时间')}：</label>
+					<div class="control-inline">
+						<#form:input path="inspectionDatetime" readonly="true" maxlength="20" class="form-control laydate width-datetime"
+							dataFormat="datetime" data-type="datetime" data-format="yyyy-MM-dd HH:mm"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-search"></i> ${text('查询')}</button>
+					<button type="reset" class="btn btn-default btn-sm isQuick"><i class="glyphicon glyphicon-repeat"></i> ${text('重置')}</button>
+				</div>
+			</#form:form>
+			<table id="dataGrid"></table>
+			<div id="dataGridPage"></div>
+		</div>
+	</div>
+</div>
+<% } %>
+<script>
+//# // 初始化DataGrid对象
+$('#dataGrid').dataGrid({
+	searchForm: $('#searchForm'),
+	columnModel: [
+		{header:'${text("中文船名")}', name:'chineseShipName', index:'a.chinese_ship_name', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
+			return '<a href="${ctx}/shiplog/shipPortLog/form?id='+row.id+'" class="btnList" data-title="${text("编辑国际航行船舶表")}">'+(val||row.id)+'</a>';
+		}},
+		{header:'${text("船舶种类")}', name:'shipCategory', index:'a.ship_category', width:150, align:"left"},
+		{header:'${text("进")}', name:'portOperationStatus', index:'a.port_operation_status', width:150, align:"left"},
+		{header:'${text("进")}', name:'portOperationTime', index:'a.port_operation_time', width:150, align:"center"},
+		{header:'${text("查验机构")}', name:'inspectionAgency', index:'a.inspection_agency', width:150, align:"left"},
+		{header:'${text("英文船名")}', name:'englishShipName', index:'a.english_ship_name', width:150, align:"left"},
+		{header:'${text("IMO编号")}', name:'imoNumber', index:'a.imo_number', width:150, align:"left"},
+		{header:'${text("船籍港")}', name:'portOfRegistry', index:'a.port_of_registry', width:150, align:"left"},
+		{header:'${text("总吨")}', name:'grossTonnage', index:'a.gross_tonnage', width:150, align:"center"},
+		{header:'${text("载重吨")}', name:'deadweightTonnage', index:'a.deadweight_tonnage', width:150, align:"center"},
+		{header:'${text("船舶所有人")}', name:'shipOwner', index:'a.ship_owner', width:150, align:"left"},
+		{header:'${text("船舶经营人")}', name:'shipOperator', index:'a.ship_operator', width:150, align:"left"},
+		{header:'${text("始发/目的港")}', name:'originDestinationPort', index:'a.origin_destination_port', width:150, align:"left"},
+		{header:'${text("上/下一港")}', name:'previousNextPort', index:'a.previous_next_port', width:150, align:"left"},
+		{header:'${text("停泊地点")}', name:'berthingLocation', index:'a.berthing_location', width:150, align:"left"},
+		{header:'${text("申办人")}', name:'applicantName', index:'a.applicant_name', width:150, align:"left"},
+		{header:'${text("代理单位")}', name:'agentCompany', index:'a.agent_company', width:150, align:"left"},
+		{header:'${text("查验时间")}', name:'inspectionDatetime', index:'a.inspection_datetime', width:150, align:"center"},
+		{header:'${text("更新时间")}', name:'updateDate', index:'a.update_date', width:150, align:"center"},
+		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
+			var actions = [];
+			//# if(hasPermi('shiplog:shipPortLog:edit')){
+				actions.push('<a href="${ctx}/shiplog/shipPortLog/form?id='+row.id+'" class="btnList" title="${text("编辑国际航行船舶表")}"><i class="fa fa-pencil"></i></a>&nbsp;');
+				actions.push('<a href="${ctx}/shiplog/shipPortLog/delete?id='+row.id+'" class="btnList" title="${text("删除国际航行船舶表")}" data-confirm="${text("确认要删除该国际航行船舶表吗？")}"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			//# }
+			return actions.join('');
+		}}
+	],
+	//# // 加载成功后执行事件
+	ajaxSuccess: function(data){
+		
+	}
+});
+</script>

@@ -1725,7 +1725,7 @@
                 }
             }
             
-            var penaltyCountRateTotal = calculateChangeRate(penaltyCountCurrentTotal, penaltyCountLastTotal);
+            var penaltyCountRateTotal = calculateChangeRate(penaltyCountLastTotal, penaltyCountCurrentTotal);
 
             row.append('<td><strong>' + penaltyCountLastTotal + '</strong></td>');
             row.append('<td><strong>' + penaltyCountCurrentTotal + '</strong></td>');
@@ -1758,7 +1758,7 @@
                 penaltyAmountCurrentTotal = data.indicatorData?.penaltyAmount?.value || 0;
             }
 
-            var penaltyAmountRateTotal = calculateChangeRate(penaltyAmountCurrentTotal, penaltyAmountLastTotal);
+            var penaltyAmountRateTotal = calculateChangeRate(penaltyAmountLastTotal, penaltyAmountCurrentTotal);
 
             // 金额显示为万元，保留2位小数
             row.append('<td><strong>' + (penaltyAmountLastTotal / 10000).toFixed(2) + '</strong></td>');

@@ -95,45 +95,93 @@ public class DynamicEnforcementDataService extends CrudService<DynamicEnforcemen
 		}
 	}
 
+
 	/**
 	 * 导入数据
 	 * @param file 导入的数据文件
-	 * @param importType 导入的类型
-	 * @return
 	 */
 	@Transactional
 	public String importData(MultipartFile file, String importType) {
+		if (file == null){
+			throw new ServiceException(text("请选择导入的数据文件！"));
+		}
 		int successNum = 0; int failureNum = 0;
 		StringBuilder successMsg = new StringBuilder();
 		StringBuilder failureMsg = new StringBuilder();
-		
 		try(ExcelImport ei = new ExcelImport(file, 2, 0)){
 			List<DynamicEnforcementData> list = ei.getDataList(DynamicEnforcementData.class);
-			for (DynamicEnforcementData ded : list) {
+			for (DynamicEnforcementData dynamicEnforcementData : list) {
 				try{
-					save(ded);
-					successNum++;
-				}catch(Exception ex){
+					ValidatorUtils.validateWithException(dynamicEnforcementData);
+
+					// 检查是否存在相同的记录
+					DynamicEnforcementData existingData = findExistingData(dynamicEnforcementData);
+
+					if (existingData != null) {
+						// 更新记录
+						if ("abnormal".equals(importType)) {
+							existingData.setInspectionResult("异常");
+						} else if ("case".equals(importType)) {
+							existingData.setInspectionResult("立案调查");
+						}
+						super.save(existingData); // 使用 save 方法更新
+						successNum++;
+						successMsg.append("<br/>" + successNum + "、编号 " + existingData.getId() + " 更新成功");
+					} else {
+						this.save(dynamicEnforcementData);
+						successNum++;
+						successMsg.append("<br/>" + successNum + "、编号 " + dynamicEnforcementData.getId() + " 导入成功");
+					}
+				} catch (Exception e) {
 					failureNum++;
-					String msg = "<br/>导入第 " + (successNum + failureNum) + " 条数据:"
-					+ (ex.getMessage() != null ? ex.getMessage() : "未知错误");
+					String msg = "<br/>" + failureNum + "、编号 " + dynamicEnforcementData.getId() + " 导入失败：";
+					if (e instanceof ConstraintViolationException){
+						ConstraintViolationException cve = (ConstraintViolationException)e;
+						for (ConstraintViolation<?> violation : cve.getConstraintViolations()) {
+							msg += Global.getText(violation.getMessage()) + " ("+violation.getPropertyPath()+")";
+						}
+					}else{
+						msg += e.getMessage();
+					}
 					failureMsg.append(msg);
-					logger.error(msg, ex);
+					logger.error(msg, e);
 				}
 			}
 		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 			failureMsg.append(e.getMessage());
-		}
-		
-		if (failureNum > 0) {
-			failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据导入失败，导入信息如下：");
 			return failureMsg.toString();
-		} else {
-			successMsg.append("恭喜您，数据已全部导入成功！共 " + successNum + " 条");
-			return successMsg.toString();
 		}
+		if (failureNum > 0) {
+			failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确或未找到匹配记录，错误如下：");
+			throw new ServiceException(failureMsg.toString());
+		}else{
+			successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
+		}
+		return successMsg.toString();
 	}
 
+	/**
+	 * 查找是否存在相同的记录
+	 * @param dynamicEnforcementData
+	 * @return
+	 */
+	private DynamicEnforcementData findExistingData(DynamicEnforcementData dynamicEnforcementData) {
+		DynamicEnforcementData params = new DynamicEnforcementData();
+		params.setInspectionUnit(dynamicEnforcementData.getInspectionUnit());
+		params.setInspectionTime(dynamicEnforcementData.getInspectionTime());
+		params.setInspectionLocation(dynamicEnforcementData.getInspectionLocation());
+		params.setInspectionTarget(dynamicEnforcementData.getInspectionTarget());
+		params.setCruiseTaskName(dynamicEnforcementData.getCruiseTaskName());
+		params.setMajorItemName(dynamicEnforcementData.getMajorItemName());
+		params.setShipGrossTonnage(dynamicEnforcementData.getShipGrossTonnage());
+
+		List<DynamicEnforcementData> list = super.findList(params);
+		if (list != null && list.size() > 0) {
+			return list.get(0);
+		}
+		return null;
+	}
 	/**
 	 * 更新数据状态
 	 * @param dynamicEnforcementData
