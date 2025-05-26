@@ -202,4 +202,231 @@ public class ShipPortLogController extends BaseController {
 		return result;
 	}
 	
+	/**
+	 * 获取时间趋势数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "trendData")
+	@ResponseBody
+	public Map<String, Object> trendData(String startDate, String endDate, String timeInterval, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			if (timeInterval == null || timeInterval.isEmpty()) {
+				timeInterval = "day";
+			}
+			
+			List<Map<String, Object>> trendData = shipPortLogService.getTrendData(startDate, endDate, timeInterval, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", trendData);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取各码头船舶数量统计
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "berthingLocationStats")
+	@ResponseBody
+	public Map<String, Object> berthingLocationStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> statsData = shipPortLogService.getBerthingLocationStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", statsData);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取各码头装卸货量统计
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "berthingLocationCargoStats")
+	@ResponseBody
+	public Map<String, Object> berthingLocationCargoStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> statsData = shipPortLogService.getBerthingLocationCargoStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", statsData);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取船舶类型统计
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "shipCategoryStats")
+	@ResponseBody
+	public Map<String, Object> shipCategoryStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> statsData = shipPortLogService.getShipCategoryStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", statsData);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取筛选选项数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "filterOptions")
+	@ResponseBody
+	public Map<String, Object> filterOptions() {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<String> berthingLocations = shipPortLogService.getBerthingLocationList();
+			List<String> shipCategories = shipPortLogService.getShipCategoryList();
+			
+			result.put("success", true);
+			result.put("berthingLocations", berthingLocations);
+			result.put("shipCategories", shipCategories);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取来往港口统计数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "previousNextPortStats")
+	@ResponseBody
+	public Map<String, Object> previousNextPortStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> data = shipPortLogService.getPreviousNextPortStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", data);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取来往港口装卸货量统计数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "previousNextPortCargoStats")
+	@ResponseBody
+	public Map<String, Object> previousNextPortCargoStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> data = shipPortLogService.getPreviousNextPortCargoStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", data);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取船籍港统计数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "portOfRegistryStats")
+	@ResponseBody
+	public Map<String, Object> portOfRegistryStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> data = shipPortLogService.getPortOfRegistryStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", data);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取船舶所有人统计数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "shipOwnerStats")
+	@ResponseBody
+	public Map<String, Object> shipOwnerStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> data = shipPortLogService.getShipOwnerStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", data);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取船舶经营人统计数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "shipOperatorStats")
+	@ResponseBody
+	public Map<String, Object> shipOperatorStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			List<Map<String, Object>> data = shipPortLogService.getShipOperatorStats(startDate, endDate, berthingLocation, shipCategory);
+			result.put("success", true);
+			result.put("data", data);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
 }

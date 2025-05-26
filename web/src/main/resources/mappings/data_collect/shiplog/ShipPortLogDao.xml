@@ -30,4 +30,241 @@
 		AND inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
 	</select>
 	
+	<!-- 获取时间趋势数据 -->
+	<select id="getTrendData" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			<choose>
+				<when test="timeInterval == 'day'">
+					DATE(lo.inspection_datetime) as timeLabel,
+					DATE_FORMAT(lo.inspection_datetime, '%Y-%m-%d') as timeDisplay
+				</when>
+				<when test="timeInterval == 'week'">
+					CONCAT(YEAR(lo.inspection_datetime), '-W', LPAD(WEEK(lo.inspection_datetime, 1), 2, '0')) as timeLabel,
+					CONCAT(YEAR(lo.inspection_datetime), '年第', WEEK(lo.inspection_datetime, 1), '周') as timeDisplay
+				</when>
+				<when test="timeInterval == 'month'">
+					DATE_FORMAT(lo.inspection_datetime, '%Y-%m') as timeLabel,
+					DATE_FORMAT(lo.inspection_datetime, '%Y年%m月') as timeDisplay
+				</when>
+				<when test="timeInterval == 'year'">
+					YEAR(lo.inspection_datetime) as timeLabel,
+					CONCAT(YEAR(lo.inspection_datetime), '年') as timeDisplay
+				</when>
+				<otherwise>
+					DATE(lo.inspection_datetime) as timeLabel,
+					DATE_FORMAT(lo.inspection_datetime, '%Y-%m-%d') as timeDisplay
+				</otherwise>
+			</choose>,
+			COUNT(CASE WHEN lo.port_operation_status = '进港' THEN 1 END) as inPortCount,
+			COUNT(CASE WHEN lo.port_operation_status = '出港' THEN 1 END) as outPortCount
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY timeLabel, timeDisplay
+		ORDER BY timeLabel
+	</select>
+	
+	<!-- 获取各码头船舶数量统计 -->
+	<select id="getBerthingLocationStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			COALESCE(ib.码头, lo.berthing_location) as berthingLocation,
+			COUNT(*) as shipCount
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.berthing_location IS NOT NULL 
+		AND lo.berthing_location != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY COALESCE(ib.码头, lo.berthing_location)
+		ORDER BY shipCount DESC
+	</select>
+	
+	<!-- 获取各码头装卸货量统计 -->
+	<select id="getBerthingLocationCargoStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			COALESCE(ib.码头, lo.berthing_location) as berthingLocation,
+			COALESCE(SUM(lo.loaded_unloaded_cargo_tonnage), 0) as cargoTonnage
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.berthing_location IS NOT NULL 
+		AND lo.berthing_location != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY COALESCE(ib.码头, lo.berthing_location)
+		ORDER BY cargoTonnage DESC
+	</select>
+	
+	<!-- 获取船舶类型统计 -->
+	<select id="getShipCategoryStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			lo.ship_category as shipCategory,
+			COUNT(*) as shipCount
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.ship_category IS NOT NULL 
+		AND lo.ship_category != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY lo.ship_category
+		ORDER BY shipCount DESC
+	</select>
+	
+	<!-- 获取所有码头列表 -->
+	<select id="getBerthingLocationList" resultType="java.lang.String">
+		SELECT DISTINCT 
+			CASE 
+				WHEN ib.码头 IS NOT NULL AND ib.码头 != '' THEN ib.码头
+				ELSE lo.berthing_location
+			END as berthingLocation
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.berthing_location IS NOT NULL 
+		AND lo.berthing_location != ''
+		ORDER BY berthingLocation
+	</select>
+	
+	<!-- 获取所有船舶类型列表 -->
+	<select id="getShipCategoryList" resultType="java.lang.String">
+		SELECT DISTINCT ship_category
+		FROM ship_port_log 
+		WHERE ship_category IS NOT NULL 
+		AND ship_category != ''
+		ORDER BY ship_category
+	</select>
+	
+	<!-- 获取来往港口统计（数量大于2的） -->
+	<select id="getPreviousNextPortStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			lo.previous_next_port as portName,
+			COUNT(*) as shipCount
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.previous_next_port IS NOT NULL 
+		AND lo.previous_next_port != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY lo.previous_next_port
+		HAVING COUNT(*) > 2
+		ORDER BY shipCount DESC
+	</select>
+	
+	<!-- 获取来往港口装卸货量统计 -->
+	<select id="getPreviousNextPortCargoStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			lo.previous_next_port as portName,
+			COALESCE(SUM(lo.loaded_unloaded_cargo_tonnage), 0) as cargoTonnage
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.previous_next_port IS NOT NULL 
+		AND lo.previous_next_port != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY lo.previous_next_port
+		HAVING COUNT(*) > 2
+		ORDER BY cargoTonnage DESC
+	</select>
+	
+	<!-- 获取船籍港统计（数量大于等于2的） -->
+	<select id="getPortOfRegistryStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			lo.port_of_registry as registryPort,
+			COUNT(*) as shipCount
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.port_of_registry IS NOT NULL 
+		AND lo.port_of_registry != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY lo.port_of_registry
+		HAVING COUNT(*) >= 2
+		ORDER BY shipCount DESC
+	</select>
+	
+	<!-- 获取船舶所有人统计（数量大于等于2的） -->
+	<select id="getShipOwnerStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			lo.ship_owner as ownerName,
+			COUNT(*) as shipCount
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.ship_owner IS NOT NULL 
+		AND lo.ship_owner != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY lo.ship_owner
+		HAVING COUNT(*) >= 2
+		ORDER BY shipCount DESC
+	</select>
+	
+	<!-- 获取船舶经营人统计（数量大于等于2的） -->
+	<select id="getShipOperatorStats" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			lo.ship_operator as operatorName,
+			COUNT(*) as shipCount
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND lo.ship_operator IS NOT NULL 
+		AND lo.ship_operator != ''
+		<if test="berthingLocation != null and berthingLocation != ''">
+			AND ib.码头 = #{berthingLocation}
+		</if>
+		<if test="shipCategory != null and shipCategory != ''">
+			AND lo.ship_category = #{shipCategory}
+		</if>
+		GROUP BY lo.ship_operator
+		HAVING COUNT(*) >= 2
+		ORDER BY shipCount DESC
+	</select>
+	
 </mapper>

@@ -149,4 +149,211 @@ public class ShipPortLogService extends CrudService<ShipPortLogDao, ShipPortLog>
 		return dao.getAnalysisData(params);
 	}
 	
+	/**
+	 * 获取时间趋势数据
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param timeInterval 时间间隔
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 时间趋势数据
+	 */
+	public List<Map<String, Object>> getTrendData(String startDate, String endDate, String timeInterval, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		params.put("timeInterval", timeInterval);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getTrendData(params);
+	}
+	
+	/**
+	 * 获取各码头船舶数量统计
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 码头统计数据
+	 */
+	public List<Map<String, Object>> getBerthingLocationStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getBerthingLocationStats(params);
+	}
+	
+	/**
+	 * 获取各码头装卸货量统计
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 码头货量统计数据
+	 */
+	public List<Map<String, Object>> getBerthingLocationCargoStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getBerthingLocationCargoStats(params);
+	}
+	
+	/**
+	 * 获取船舶类型统计
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 船舶类型统计数据
+	 */
+	public List<Map<String, Object>> getShipCategoryStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getShipCategoryStats(params);
+	}
+	
+	/**
+	 * 获取所有码头列表
+	 * @return 码头列表
+	 */
+	public List<String> getBerthingLocationList() {
+		return dao.getBerthingLocationList();
+	}
+	
+	/**
+	 * 获取所有船舶类型列表
+	 * @return 船舶类型列表
+	 */
+	public List<String> getShipCategoryList() {
+		return dao.getShipCategoryList();
+	}
+	
+	/**
+	 * 获取来往港口统计（数量大于2的）
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 来往港口统计数据
+	 */
+	public List<Map<String, Object>> getPreviousNextPortStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getPreviousNextPortStats(params);
+	}
+	
+	/**
+	 * 获取来往港口装卸货量统计
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 来往港口货量统计数据
+	 */
+	public List<Map<String, Object>> getPreviousNextPortCargoStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getPreviousNextPortCargoStats(params);
+	}
+	
+	/**
+	 * 获取船籍港统计（数量大于等于2的）
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 船籍港统计数据
+	 */
+	public List<Map<String, Object>> getPortOfRegistryStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getPortOfRegistryStats(params);
+	}
+	
+	/**
+	 * 获取船舶所有人统计（数量大于等于2的）
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 船舶所有人统计数据
+	 */
+	public List<Map<String, Object>> getShipOwnerStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getShipOwnerStats(params);
+	}
+	
+	/**
+	 * 获取船舶经营人统计（数量大于等于2的）
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @param berthingLocation 码头
+	 * @param shipCategory 船舶类型
+	 * @return 船舶经营人统计数据
+	 */
+	public List<Map<String, Object>> getShipOperatorStats(String startDate, String endDate, String berthingLocation, String shipCategory) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		if (berthingLocation != null && !berthingLocation.isEmpty() && !"all".equals(berthingLocation)) {
+			params.put("berthingLocation", berthingLocation);
+		}
+		if (shipCategory != null && !shipCategory.isEmpty() && !"all".equals(shipCategory)) {
+			params.put("shipCategory", shipCategory);
+		}
+		return dao.getShipOperatorStats(params);
+	}
+	
 }
