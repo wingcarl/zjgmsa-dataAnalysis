@@ -1,6 +1,8 @@
 package com.jeesite.modules.data_collect.shiplog.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -132,6 +134,19 @@ public class ShipPortLogService extends CrudService<ShipPortLogDao, ShipPortLog>
 	@Transactional
 	public void delete(ShipPortLog shipPortLog) {
 		super.delete(shipPortLog);
+	}
+	
+	/**
+	 * 获取数据分析统计数据
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return 统计数据
+	 */
+	public Map<String, Object> getAnalysisData(String startDate, String endDate) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("startDate", startDate);
+		params.put("endDate", endDate);
+		return dao.getAnalysisData(params);
 	}
 	
 }

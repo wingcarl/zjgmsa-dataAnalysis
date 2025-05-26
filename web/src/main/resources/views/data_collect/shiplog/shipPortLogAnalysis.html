@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国际航行船舶数据分析看板</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #0466c8;
+            --secondary-color: #0353a4;
+            --accent-color: #023e7d;
+            --text-color: #001845;
+            --highlight-color: #33a1fd;
+            --background-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --positive-color: #38b000;
+            --negative-color: #d90429;
+            --grid-line: rgba(4, 102, 200, 0.2);
+            --chart-colors: #64B5F6, #81C784, #FFB74D, #E57373, #BA68C8, #4DD0E1;
+        }
+
+        body {
+            background-color: var(--background-color);
+            background-image: linear-gradient(to bottom, rgba(4, 102, 200, 0.05), rgba(1, 22, 56, 0.1));
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+
+        .main-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .data-card {
+            border: 1px solid rgba(4, 102, 200, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-card .label {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .data-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .date-range-picker {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .date-range-picker input {
+            margin: 0 15px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-line);
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--secondary-color);
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-box {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        /* 返回主页按钮样式 */
+        .btn-back-home {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            border: 2px solid white;
+            border-radius: 50px;
+            padding: 8px 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        
+        .btn-back-home:hover {
+            background-color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .date-range-picker {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .date-range-picker input {
+                margin: 10px 0;
+                width: 100%;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            /* 修改卡片布局，在平板设备上保持一行三个 */
+            .col-md-4 {
+                width: 33.333333%;
+                float: left;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.8em;
+            }
+            
+            .data-card .label {
+                font-size: 0.9rem;
+            }
+
+            .main-header .container .d-flex {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .btn-back-home {
+                margin-bottom: 10px;
+            }
+            
+            .main-title {
+                font-size: 22px;
+                margin: 10px 0;
+            }
+        }
+        
+        /* 添加手机设备的媒体查询 */
+        @media (max-width: 576px) {
+            .col-md-4 {
+                width: 100%;
+                float: none;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.6em;
+            }
+            
+            .data-card .label {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="main-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="${ctx}/shiplog/shipPortLog/list" class="btn btn-back-home">
+                <i class="fa fa-list"></i> 返回列表
+            </a>
+            <h1 class="main-title"><i class="fas fa-ship icon-box"></i>国际航行船舶数据分析看板</h1>
+            <div class="date-range">
+                <!-- 日期选择器 -->
+                <div class="date-range-picker">
+                    <label for="startDate" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                        <i class="far fa-calendar-alt icon-box"></i>开始日期：
+                    </label>
+                    <input type="date" id="startDate" class="form-control" style="width: auto;">
+
+                    <label for="endDate" style="margin: 0 10px 0 20px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                        <i class="far fa-calendar-alt icon-box"></i>结束日期：
+                    </label>
+                    <input type="date" id="endDate" class="form-control" style="width: auto;">
+
+                    <button type="button" id="fetchDataButton" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> 查询数据
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- 数据卡片区域 -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-sign-in-alt icon-box"></i>进港查验数量</div>
+                <div class="value" id="in-port-count-value">0</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-sign-out-alt icon-box"></i>出港查验数量</div>
+                <div class="value" id="out-port-count-value">0</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-boxes icon-box"></i>装卸货量(吨)</div>
+                <div class="value" id="cargo-tonnage-value">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-anchor icon-box"></i>往来港口数量</div>
+                <div class="value" id="port-count-value">0</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-flag icon-box"></i>船籍港数量</div>
+                <div class="value" id="registry-port-count-value">0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
+<!-- Scripts -->
+<script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
+<script src="${ctxStatic}/nickjs/sweetalert2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // 计算默认日期范围（上周五至本周四）
+        function calculateDefaultDateRange() {
+            var today = new Date();
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            
+            var endDate = new Date(today);
+            var startDate = new Date(today);
+            
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
+            
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
+            
+            return {
+                start: startDate.toISOString().slice(0, 10),
+                end: endDate.toISOString().slice(0, 10)
+            };
+        }
+
+        // 设置默认日期为指定范围
+        var defaultDates = calculateDefaultDateRange();
+        $('#startDate').val(defaultDates.start);
+        $('#endDate').val(defaultDates.end);
+
+        // 获取并展示数据
+        fetchAndDisplayData();
+
+        // 绑定查询按钮点击事件
+        $('#fetchDataButton').on('click', function() {
+            fetchAndDisplayData();
+        });
+
+        // 获取并展示数据的函数
+        function fetchAndDisplayData() {
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            
+            if (!startDate || !endDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '提示',
+                    text: '请选择开始日期和结束日期！'
+                });
+                return;
+            }
+            
+            if (startDate > endDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '提示',
+                    text: '开始日期不能大于结束日期！'
+                });
+                return;
+            }
+
+            // 显示加载状态
+            $('#in-port-count-value').text('加载中...');
+            $('#out-port-count-value').text('加载中...');
+            $('#cargo-tonnage-value').text('加载中...');
+            $('#port-count-value').text('加载中...');
+            $('#registry-port-count-value').text('加载中...');
+
+            // 发送AJAX请求获取数据
+            $.ajax({
+                url: '${ctx}/shiplog/shipPortLog/analysisData',
+                type: 'GET',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var data = response.data;
+                        
+                        // 更新卡片数据
+                        $('#in-port-count-value').text(data.inPortCount || 0);
+                        $('#out-port-count-value').text(data.outPortCount || 0);
+                        $('#cargo-tonnage-value').text(formatNumber(data.totalCargoTonnage || 0));
+                        $('#port-count-value').text(data.portCount || 0);
+                        $('#registry-port-count-value').text(data.registryPortCount || 0);
+                        
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '错误',
+                            text: response.message || '获取数据失败！'
+                        });
+                        
+                        // 重置为0
+                        $('#in-port-count-value').text('0');
+                        $('#out-port-count-value').text('0');
+                        $('#cargo-tonnage-value').text('0');
+                        $('#port-count-value').text('0');
+                        $('#registry-port-count-value').text('0');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '错误',
+                        text: '网络请求失败：' + error
+                    });
+                    
+                    // 重置为0
+                    $('#in-port-count-value').text('0');
+                    $('#out-port-count-value').text('0');
+                    $('#cargo-tonnage-value').text('0');
+                    $('#port-count-value').text('0');
+                    $('#registry-port-count-value').text('0');
+                }
+            });
+        }
+
+        // 格式化数字，添加千分位分隔符
+        function formatNumber(num) {
+            if (num === null || num === undefined) return '0';
+            return parseFloat(num).toLocaleString('zh-CN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+    });
+</script>
+
+</body>
+</html> 

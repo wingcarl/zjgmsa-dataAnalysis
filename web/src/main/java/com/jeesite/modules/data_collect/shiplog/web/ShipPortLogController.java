@@ -1,6 +1,12 @@
 package com.jeesite.modules.data_collect.shiplog.web;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+import java.util.Calendar;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -139,6 +145,61 @@ public class ShipPortLogController extends BaseController {
 	public String delete(ShipPortLog shipPortLog) {
 		shipPortLogService.delete(shipPortLog);
 		return renderResult(Global.TRUE, text("删除国际航行船舶表成功！"));
+	}
+	
+	/**
+	 * 数据分析页面
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "analysis")
+	public String analysis(Model model) {
+		return "data_collect/shiplog/shipPortLogAnalysis";
+	}
+	
+	/**
+	 * 获取数据分析统计数据
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "analysisData")
+	@ResponseBody
+	public Map<String, Object> analysisData(String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 如果没有传入日期，默认为上周五至本周四
+			if (startDate == null || endDate == null) {
+				Calendar cal = Calendar.getInstance();
+				// 获取本周四
+				int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+				int daysToThursday = (Calendar.THURSDAY - dayOfWeek + 7) % 7;
+				if (daysToThursday == 0 && dayOfWeek != Calendar.THURSDAY) {
+					daysToThursday = 7;
+				}
+				cal.add(Calendar.DAY_OF_MONTH, daysToThursday);
+				Date endDateTime = cal.getTime();
+				
+				// 获取上周五
+				cal.add(Calendar.DAY_OF_MONTH, -6);
+				Date startDateTime = cal.getTime();
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				startDate = sdf.format(startDateTime);
+				endDate = sdf.format(endDateTime);
+			}
+			
+			// 获取统计数据
+			Map<String, Object> analysisResult = shipPortLogService.getAnalysisData(startDate, endDate);
+			result.put("success", true);
+			result.put("data", analysisResult);
+			result.put("startDate", startDate);
+			result.put("endDate", endDate);
+			
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
 	}
 	
 }

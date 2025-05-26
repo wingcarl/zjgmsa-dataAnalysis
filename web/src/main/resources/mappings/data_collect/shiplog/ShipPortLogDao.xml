@@ -12,4 +12,22 @@
 		ORDER BY ${sqlMap.order.toSql()}
 	</select> -->
 	
+	<!-- 获取数据分析统计数据 -->
+	<select id="getAnalysisData" resultType="java.util.HashMap" parameterType="java.util.Map">
+		SELECT 
+			-- 进港查验数量
+			COUNT(CASE WHEN port_operation_status = '进港' THEN 1 END) as inPortCount,
+			-- 出港查验数量  
+			COUNT(CASE WHEN port_operation_status = '出港' THEN 1 END) as outPortCount,
+			-- 装卸货量总计
+			COALESCE(SUM(loaded_unloaded_cargo_tonnage), 0) as totalCargoTonnage,
+			-- 往来港口数量（不同的上/下一港）
+			COUNT(DISTINCT CASE WHEN previous_next_port IS NOT NULL AND previous_next_port != '' THEN previous_next_port END) as portCount,
+			-- 船籍港数量（不同的船籍港）
+			COUNT(DISTINCT CASE WHEN port_of_registry IS NOT NULL AND port_of_registry != '' THEN port_of_registry END) as registryPortCount
+		FROM ship_port_log 
+		WHERE inspection_datetime >= #{startDate} 
+		AND inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+	</select>
+	
 </mapper>

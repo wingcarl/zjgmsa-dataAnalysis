@@ -1,5 +1,6 @@
 package com.jeesite.modules.data_collect.shiplog.dao;
 
+import java.util.Map;
 import com.jeesite.common.dao.CrudDao;
 import com.jeesite.common.mybatis.annotation.MyBatisDao;
 import com.jeesite.modules.data_collect.shiplog.entity.ShipPortLog;
@@ -11,5 +12,12 @@ import com.jeesite.modules.data_collect.shiplog.entity.ShipPortLog;
  */
 @MyBatisDao
 public interface ShipPortLogDao extends CrudDao<ShipPortLog> {
+	
+	/**
+	 * 获取数据分析统计数据
+	 * @param params 参数Map，包含startDate和endDate
+	 * @return 统计数据
+	 */
+	Map<String, Object> getAnalysisData(Map<String, Object> params);
 	
 }
