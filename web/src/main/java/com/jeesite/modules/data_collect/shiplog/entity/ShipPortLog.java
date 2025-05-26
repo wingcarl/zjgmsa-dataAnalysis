@@ -10,6 +10,9 @@ import com.jeesite.common.entity.DataEntity;
 import com.jeesite.common.mybatis.annotation.Column;
 import com.jeesite.common.mybatis.annotation.Table;
 import com.jeesite.common.mybatis.mapper.query.QueryType;
+import com.jeesite.common.utils.excel.annotation.ExcelField;
+import com.jeesite.common.utils.excel.annotation.ExcelField.Align;
+import com.jeesite.common.utils.excel.annotation.ExcelFields;
 
 /**
  * 国际航行船舶表Entity
@@ -95,6 +98,41 @@ public class ShipPortLog extends DataEntity<ShipPortLog> {
 	private Date inspectionDatetime;		// 查验时间
 	private String handlingOfficerName;		// 受理人员
 
+	@ExcelFields({
+		@ExcelField(title="中文船名", attrName="chineseShipName", align=Align.CENTER, sort=20),
+		@ExcelField(title="海船内河船标志", attrName="shipSeaRiverFlag", align=Align.CENTER, sort=30),
+		@ExcelField(title="船舶种类", attrName="shipCategory", align=Align.CENTER, sort=40),
+		@ExcelField(title="进", attrName="portOperationStatus", align=Align.CENTER, sort=50),
+		@ExcelField(title="进", attrName="portOperationTime", align=Align.CENTER, sort=60, dataFormat="yyyy-MM-dd hh:mm"),
+		@ExcelField(title="查验机构", attrName="inspectionAgency", align=Align.CENTER, sort=70),
+		@ExcelField(title="英文船名", attrName="englishShipName", align=Align.CENTER, sort=80),
+		@ExcelField(title="初次登记号", attrName="initialRegistrationNo", align=Align.CENTER, sort=90),
+		@ExcelField(title="IMO编号", attrName="imoNumber", align=Align.CENTER, sort=100),
+		@ExcelField(title="船舶登记号", attrName="shipRegistrationNo", align=Align.CENTER, sort=110),
+		@ExcelField(title="船籍港", attrName="portOfRegistry", align=Align.CENTER, sort=120),
+		@ExcelField(title="总吨", attrName="grossTonnage", align=Align.CENTER, sort=130),
+		@ExcelField(title="净吨", attrName="netTonnage", align=Align.CENTER, sort=140),
+		@ExcelField(title="载重吨", attrName="deadweightTonnage", align=Align.CENTER, sort=150),
+		@ExcelField(title="船舶所有人", attrName="shipOwner", align=Align.CENTER, sort=160),
+		@ExcelField(title="船舶经营人", attrName="shipOperator", align=Align.CENTER, sort=170),
+		@ExcelField(title="始发/目的港", attrName="originDestinationPort", align=Align.CENTER, sort=180),
+		@ExcelField(title="上/下一港", attrName="previousNextPort", align=Align.CENTER, sort=190),
+		@ExcelField(title="停泊地点", attrName="berthingLocation", align=Align.CENTER, sort=200),
+		@ExcelField(title="航次", attrName="voyageNumber", align=Align.CENTER, sort=210),
+		@ExcelField(title="实载货量", attrName="actualCargoTonnage", align=Align.CENTER, sort=220),
+		@ExcelField(title="载/卸货量", attrName="loadedUnloadedCargoTonnage", align=Align.CENTER, sort=230),
+		@ExcelField(title="实载客量", attrName="actualPassengerCount", align=Align.CENTER, sort=240),
+		@ExcelField(title="上/下客量", attrName="embarkedDisembarkedPassengerCount", align=Align.CENTER, sort=250),
+		@ExcelField(title="驳船数量", attrName="bargeCount", align=Align.CENTER, sort=260),
+		@ExcelField(title="危险货物", attrName="dangerousGoodsDetails", align=Align.CENTER, sort=270),
+		@ExcelField(title="船员人数", attrName="crewCount", align=Align.CENTER, sort=280),
+		@ExcelField(title="前吃水", attrName="forwardDraft", align=Align.CENTER, sort=290),
+		@ExcelField(title="后吃水", attrName="aftDraft", align=Align.CENTER, sort=300),
+		@ExcelField(title="申办人", attrName="applicantName", align=Align.CENTER, sort=310),
+		@ExcelField(title="代理单位", attrName="agentCompany", align=Align.CENTER, sort=320),
+		@ExcelField(title="查验时间", attrName="inspectionDatetime", align=Align.CENTER, sort=330, dataFormat="yyyy-MM-dd hh:mm"),
+		@ExcelField(title="受理人员", attrName="handlingOfficerName", align=Align.CENTER, sort=340),
+	})
 	public ShipPortLog() {
 		this(null);
 	}
