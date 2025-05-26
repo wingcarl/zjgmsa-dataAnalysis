@@ -1,0 +1,132 @@
+<% layout('/layouts/default.html', {title: '安全隐患与风险排查记录表管理', libs: ['dataGrid']}){ %>
+<div class="main-content">
+	<div class="box box-main">
+		<div class="box-header">
+			<div class="box-title">
+				<i class="fa icon-notebook"></i> ${text('安全隐患与风险排查记录表管理')}
+			</div>
+			<div class="box-tools pull-right">
+				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
+				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
+				<% if(hasPermi('companyrisk:companySafetyInspection:edit')){ %>
+						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
+					<a href="${ctx}/companyrisk/companySafetyInspection/form" class="btn btn-default btnTool" title="${text('新增安全隐患与风险排查记录表')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<% } %>
+				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
+			</div>
+		</div>
+		<div class="box-body">
+			<#form:form id="searchForm" model="${companySafetyInspection}" action="${ctx}/companyrisk/companySafetyInspection/listData" method="post" class="form-inline hide"
+					data-page-no="${parameter.pageNo}" data-page-size="${parameter.pageSize}" data-order-by="${parameter.orderBy}">
+				<div class="form-group">
+					<label class="control-label">${text('单位名称')}：</label>
+					<div class="control-inline">
+						<#form:input path="companyName" maxlength="255" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('数据记录日期')}：</label>
+					<div class="control-inline">
+						<#form:input path="inspectionDate_gte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd" data-done="inspectionDate_lte.click()"/>
+						&nbsp;-&nbsp;
+						<#form:input path="inspectionDate_lte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-search"></i> ${text('查询')}</button>
+					<button type="reset" class="btn btn-default btn-sm isQuick"><i class="glyphicon glyphicon-repeat"></i> ${text('重置')}</button>
+				</div>
+			</#form:form>
+			<table id="dataGrid"></table>
+			<div id="dataGridPage"></div>
+		</div>
+	</div>
+</div>
+<% } %>
+<script>
+//# // 初始化DataGrid对象
+$('#dataGrid').dataGrid({
+	searchForm: $('#searchForm'),
+	columnModel: [
+		{header:'${text("单位名称")}', name:'companyName', index:'a.company_name', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
+			return '<a href="${ctx}/companyrisk/companySafetyInspection/form?id='+row.id+'" class="btnList" data-title="${text("编辑安全隐患与风险排查记录表")}">'+(val||row.id)+'</a>';
+		}},
+		{header:'${text("数据记录日期")}', name:'inspectionDate', index:'a.inspection_date', width:150, align:"center"},
+		{header:'${text("企业自查一般隐患数量")}', name:'companySelfCheckGeneralHazards', index:'a.company_self_check_general_hazards', width:150, align:"center"},
+		{header:'${text("企业自查重大隐患数量")}', name:'companySelfCheckMajorHazards', index:'a.company_self_check_major_hazards', width:150, align:"center"},
+		{header:'${text("企业自查风险数量")}', name:'companySelfCheckRisks', index:'a.company_self_check_risks', width:150, align:"center"},
+		{header:'${text("海事排查一般隐患数量")}', name:'maritimeInspectionGeneralHazards', index:'a.maritime_inspection_general_hazards', width:150, align:"center"},
+		{header:'${text("海事排查重大隐患数量")}', name:'maritimeInspectionMajorHazards', index:'a.maritime_inspection_major_hazards', width:150, align:"center"},
+		{header:'${text("海事排查风险数量")}', name:'maritimeInspectionRisks', index:'a.maritime_inspection_risks', width:150, align:"center"},
+		{header:'${text("更新时间")}', name:'updateDate', index:'a.update_date', width:150, align:"center"},
+		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
+			var actions = [];
+			//# if(hasPermi('companyrisk:companySafetyInspection:edit')){
+				actions.push('<a href="${ctx}/companyrisk/companySafetyInspection/form?id='+row.id+'" class="btnList" title="${text("编辑安全隐患与风险排查记录表")}"><i class="fa fa-pencil"></i></a>&nbsp;');
+				actions.push('<a href="${ctx}/companyrisk/companySafetyInspection/delete?id='+row.id+'" class="btnList" title="${text("删除安全隐患与风险排查记录表")}" data-confirm="${text("确认要删除该安全隐患与风险排查记录表吗？")}"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			//# }
+			return actions.join('');
+		}}
+	],
+	//# // 加载成功后执行事件
+	ajaxSuccess: function(data){
+		
+	}
+});
+</script><script>
+$('#btnExport').click(function(){
+	js.ajaxSubmitForm($('#searchForm'), {
+		url: '${ctx}/companyrisk/companySafetyInspection/exportData',
+		clearParams: 'pageNo,pageSize',
+		downloadFile: true
+	});
+});
+$('#btnImport').click(function(){
+	js.layer.open({
+		type: 1,
+		area: ['400px'],
+		title: '${text("导入安全隐患与风险排查记录表")}',
+		resize: false,
+		scrollbar: true,
+		content: js.template('importTpl'),
+		btn: ['<i class="fa fa-check"></i> ${text("导入")}',
+			'<i class="fa fa-remove"></i> ${text("关闭")}'],
+		btn1: function(index, layero){
+			var form = {
+				inputForm: layero.find('#inputForm'),
+				file: layero.find('#file').val()
+			};
+		    if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
+		    	js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
+		        return false;
+		    }
+			js.ajaxSubmitForm(form.inputForm, function(data){
+				js.showMessage(data.message);
+				if(data.result == Global.TRUE){
+					js.layer.closeAll();
+				}
+				page();
+			}, "json");
+			return true;
+		}
+	});
+});
+</script>
+<script id="importTpl" type="text/template">//<!--
+<form id="inputForm" action="${ctx}/companyrisk/companySafetyInspection/importData" method="post" enctype="multipart/form-data"
+	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
+	<div class="row">
+		<div class="col-xs-12 col-xs-offset-1">
+			<input type="file" id="file" name="file" class="form-file"/>
+			<div class="mt10 pt5" style="color:red">
+				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
+			</div>
+			<div class="mt10 pt5">
+				<a href="${ctx}/companyrisk/companySafetyInspection/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>
+			</div>
+		</div>
+	</div>
+</form>
+//--></script>
