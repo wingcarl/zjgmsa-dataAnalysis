@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张家港海事局风险隐患分析看板</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
+    <!-- Font Awesome - 添加图标支持 -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Custom CSS - 科技风格设计 -->
+    <style>
+        :root {
+            --primary-color: #0466c8;
+            --secondary-color: #0353a4;
+            --accent-color: #023e7d;
+            --text-color: #001845;
+            --highlight-color: #33a1fd;
+            --background-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --positive-color: #38b000;
+            --negative-color: #d90429;
+            --grid-line: rgba(4, 102, 200, 0.2);
+        }
+
+        body {
+            background-color: var(--background-color);
+            background-image: linear-gradient(to bottom, rgba(4, 102, 200, 0.05), rgba(1, 22, 56, 0.1));
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+
+        .main-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .data-card {
+            border: 1px solid rgba(4, 102, 200, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-card .label {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .data-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .custom-date-input {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .custom-date-input input {
+            margin: 0 15px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-line);
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--secondary-color);
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 表格样式优化 */
+        .table-container {
+            position: relative;
+            overflow-x: auto;
+            width: 100%;
+            margin: 20px auto 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+        }
+
+        .summary-table {
+            margin: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+        }
+
+        .summary-table th:first-child,
+        .summary-table td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: var(--card-bg);
+            z-index: 1;
+            width: 120px;
+            min-width: 120px;
+        }
+
+        .summary-table th:first-child {
+            background-color: var(--primary-color);
+        }
+
+        .summary-table th {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            vertical-align: middle;
+            padding: 12px 8px;
+            border: none;
+            white-space: nowrap;
+            font-size: 1.05rem;
+        }
+
+        .summary-table td {
+            text-align: center;
+            vertical-align: middle;
+            border-color: var(--grid-line);
+            padding: 10px 8px;
+            font-size: 1.05rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .summary-table tr:hover td {
+            background-color: rgba(4, 102, 200, 0.05);
+        }
+
+        .table-section-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .table-section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--highlight-color);
+        }
+
+        /* 科技风格图标 */
+        .icon-box {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        /* 调整日期选择器的响应式布局 */
+        @media (max-width: 768px) {
+            .custom-date-input {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .custom-date-input input {
+                margin: 10px 0;
+                width: 100%;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            /* 修改卡片布局，在平板设备上保持一行两个 */
+            .col-md-6 {
+                width: 50%;
+                float: left;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 2em;
+            }
+            
+            .data-card .label {
+                font-size: 1rem;
+            }
+        }
+
+        /* 返回按钮样式 */
+        .back-button {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 8px 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .back-button {
+                position: relative;
+                left: 0;
+                top: 0;
+                transform: none;
+                display: block;
+                text-align: center;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-header">
+        <div class="container">
+            <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="back-button">
+                <i class="fas fa-arrow-left mr-2"></i>返回
+            </a>
+            <h1 class="main-title">
+                <i class="fas fa-exclamation-triangle mr-3"></i>张家港海事局风险隐患分析看板
+            </h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 时间筛选区域 -->
+        <div class="custom-date-input">
+            <label for="startDate" class="mr-2"><i class="icon-box fas fa-calendar-alt"></i>开始日期:</label>
+            <input type="date" id="startDate" class="form-control" style="width: 200px;">
+            <label for="endDate" class="mr-2 ml-3"><i class="icon-box fas fa-calendar-alt"></i>结束日期:</label>
+            <input type="date" id="endDate" class="form-control" style="width: 200px;">
+            <button type="button" class="btn btn-primary ml-3" onclick="loadData()">
+                <i class="fas fa-search mr-2"></i>查询
+            </button>
+        </div>
+
+        <!-- 统计卡片区域 -->
+        <div class="row">
+            <div class="col-md-4 col-sm-6">
+                <div class="data-card">
+                    <div class="label">企业自查一般隐患数量</div>
+                    <div class="value" id="companySelfCheckGeneralHazards">0</div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="data-card">
+                    <div class="label">企业自查重大隐患数量</div>
+                    <div class="value" id="companySelfCheckMajorHazards">0</div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="data-card">
+                    <div class="label">企业自查风险数量</div>
+                    <div class="value" id="companySelfCheckRisks">0</div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="data-card">
+                    <div class="label">海事排查一般隐患数量</div>
+                    <div class="value" id="maritimeInspectionGeneralHazards">0</div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="data-card">
+                    <div class="label">海事排查重大隐患数量</div>
+                    <div class="value" id="maritimeInspectionMajorHazards">0</div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6">
+                <div class="data-card">
+                    <div class="label">海事排查风险数量</div>
+                    <div class="value" id="maritimeInspectionRisks">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表格1：企业风险隐患常态化自查情况 -->
+        <h2 class="table-section-title">表1. 企业风险隐患常态化自查情况（周）</h2>
+        <div class="table-container">
+            <table class="table table-bordered summary-table">
+                <thead>
+                    <tr>
+                        <th>各单位（部门）</th>
+                        <th>企业自查一般隐患</th>
+                        <th>企业自查重大隐患</th>
+                        <th>企业自查风险</th>
+                    </tr>
+                </thead>
+                <tbody id="companySelfCheckTable">
+                    <tr>
+                        <td>交管中心</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>船舶处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>危防处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>港区海事处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>锦丰海事处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>保税区大队</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 表格2：海事风险隐患常态化排查情况 -->
+        <h2 class="table-section-title">表2. 海事风险隐患常态化排查情况（周）</h2>
+        <div class="table-container">
+            <table class="table table-bordered summary-table">
+                <thead>
+                    <tr>
+                        <th>各单位（部门）</th>
+                        <th>海事排查一般隐患</th>
+                        <th>海事排查重大隐患</th>
+                        <th>海事排查风险</th>
+                    </tr>
+                </thead>
+                <tbody id="maritimeInspectionTable">
+                    <tr>
+                        <td>交管中心</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>船舶处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>危防处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>港区海事处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>锦丰海事处</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>保税区大队</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>海巡执法支队</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 表格3：综合统计情况 -->
+        <h2 class="table-section-title">表3. 综合风险隐患排查情况（周）</h2>
+        <div class="table-container">
+            <table class="table table-bordered summary-table">
+                <thead>
+                    <tr>
+                        <th>各单位（部门）</th>
+                        <th>企业自查一般隐患</th>
+                        <th>企业自查重大隐患</th>
+                        <th>企业自查风险</th>
+                        <th>海事排查一般隐患</th>
+                        <th>海事排查重大隐患</th>
+                        <th>海事排查风险</th>
+                    </tr>
+                </thead>
+                <tbody id="comprehensiveTable">
+                    <tr>
+                        <td>双山汽渡</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>高尔夫</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td>张皋汽渡</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+        <!-- 图表区域 -->
+        <div class="row mt-5">
+            <!-- 图表1：企业自查情况 -->
+            <div class="col-md-12">
+                <h2 class="table-section-title">企业风险隐患常态化自查情况图表</h2>
+                <div class="table-container">
+                    <div id="companySelfCheckChart" style="height: 400px;"></div>
+                </div>
+            </div>
+            
+            <!-- 图表2：海事排查情况 -->
+            <div class="col-md-12">
+                <h2 class="table-section-title">海事风险隐患常态化排查情况图表</h2>
+                <div class="table-container">
+                    <div id="maritimeInspectionChart" style="height: 400px;"></div>
+                </div>
+            </div>
+            
+            <!-- 图表3：综合统计情况 -->
+            <div class="col-md-12">
+                <h2 class="table-section-title">综合风险隐患排查情况图表</h2>
+                <div class="table-container">
+                    <div id="comprehensiveChart" style="height: 450px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
+    <script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
+    <script src="${ctxStatic}/nickjs/echarts.js"></script>
+    <script>
+        // 图表实例
+        var companySelfCheckChart, maritimeInspectionChart, comprehensiveChart;
+
+        $(document).ready(function() {
+            // 初始化图表
+            initCharts();
+            
+            // 设置默认时间范围（本周）
+            setDefaultDateRange();
+            
+            // 初始加载数据
+            loadData();
+        });
+
+        // 初始化图表
+        function initCharts() {
+            // 企业自查图表
+            companySelfCheckChart = echarts.init(document.getElementById('companySelfCheckChart'));
+            
+            // 海事排查图表
+            maritimeInspectionChart = echarts.init(document.getElementById('maritimeInspectionChart'));
+            
+            // 综合统计图表
+            comprehensiveChart = echarts.init(document.getElementById('comprehensiveChart'));
+            
+            // 窗口大小改变时重新调整图表
+            window.addEventListener('resize', function() {
+                companySelfCheckChart.resize();
+                maritimeInspectionChart.resize();
+                comprehensiveChart.resize();
+            });
+        }
+
+        // 设置默认时间范围
+        function setDefaultDateRange() {
+            var today = new Date();
+            var currentDay = today.getDay(); // 0是周日，1是周一
+            
+            // 计算本周一
+            var monday = new Date(today);
+            monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+            
+            // 计算本周日
+            var sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            
+            // 格式化日期
+            var startDate = monday.toISOString().split('T')[0];
+            var endDate = sunday.toISOString().split('T')[0];
+            
+            $('#startDate').val(startDate);
+            $('#endDate').val(endDate);
+        }
+
+        // 加载数据
+        function loadData() {
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            
+            if (!startDate || !endDate) {
+                alert('请选择开始日期和结束日期');
+                return;
+            }
+            
+            // 加载统计数据
+            loadStatisticsData(startDate, endDate);
+            
+            // 加载表格数据
+            loadCompanySelfCheckData(startDate, endDate);
+            loadMaritimeInspectionData(startDate, endDate);
+            loadComprehensiveData(startDate, endDate);
+        }
+
+        // 加载统计数据
+        function loadStatisticsData(startDate, endDate) {
+            $.ajax({
+                url: '${ctx}/companyrisk/companySafetyInspection/getStatisticsData',
+                type: 'GET',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.result === 'true') {
+                        var data = response;
+                        $('#companySelfCheckGeneralHazards').text(data.companySelfCheckGeneralHazards || 0);
+                        $('#companySelfCheckMajorHazards').text(data.companySelfCheckMajorHazards || 0);
+                        $('#companySelfCheckRisks').text(data.companySelfCheckRisks || 0);
+                        $('#maritimeInspectionGeneralHazards').text(data.maritimeInspectionGeneralHazards || 0);
+                        $('#maritimeInspectionMajorHazards').text(data.maritimeInspectionMajorHazards || 0);
+                        $('#maritimeInspectionRisks').text(data.maritimeInspectionRisks || 0);
+                    }
+                },
+                error: function(error) {
+                    console.error('加载统计数据失败:', error);
+                }
+            });
+        }
+
+        // 加载企业自查数据
+        function loadCompanySelfCheckData(startDate, endDate) {
+            $.ajax({
+                url: '${ctx}/companyrisk/companySafetyInspection/getCompanySelfCheckStats',
+                type: 'GET',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.result === 'true') {
+                        var data = response.data;
+                        var departments = ['交管中心', '船舶处', '危防处', '港区海事处', '锦丰海事处', '保税区大队'];
+                        var dataMap = {};
+                        
+                        // 创建数据映射
+                        data.forEach(function(item) {
+                            dataMap[item.departmentName] = item;
+                        });
+                        
+                        // 更新表格
+                        var tbody = $('#companySelfCheckTable');
+                        tbody.empty();
+                        
+                        var chartData = {
+                            departments: [],
+                            generalHazards: [],
+                            majorHazards: [],
+                            risks: []
+                        };
+                        
+                        departments.forEach(function(dept) {
+                            var item = dataMap[dept] || {generalHazards: 0, majorHazards: 0, risks: 0};
+                            var row = '<tr>' +
+                                '<td>' + dept + '</td>' +
+                                '<td>' + (item.generalHazards || 0) + '</td>' +
+                                '<td>' + (item.majorHazards || 0) + '</td>' +
+                                '<td>' + (item.risks || 0) + '</td>' +
+                                '</tr>';
+                            tbody.append(row);
+                            
+                            // 收集图表数据
+                            chartData.departments.push(dept);
+                            chartData.generalHazards.push(item.generalHazards || 0);
+                            chartData.majorHazards.push(item.majorHazards || 0);
+                            chartData.risks.push(item.risks || 0);
+                        });
+                        
+                        // 更新图表
+                        updateCompanySelfCheckChart(chartData);
+                    }
+                },
+                error: function(error) {
+                    console.error('加载企业自查数据失败:', error);
+                }
+            });
+        }
+
+        // 加载海事排查数据
+        function loadMaritimeInspectionData(startDate, endDate) {
+            $.ajax({
+                url: '${ctx}/companyrisk/companySafetyInspection/getMaritimeInspectionStats',
+                type: 'GET',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.result === 'true') {
+                        var data = response.data;
+                        var departments = ['交管中心', '船舶处', '危防处', '港区海事处', '锦丰海事处', '保税区大队', '海巡执法支队'];
+                        var dataMap = {};
+                        
+                        // 创建数据映射
+                        data.forEach(function(item) {
+                            dataMap[item.departmentName] = item;
+                        });
+                        
+                        // 更新表格
+                        var tbody = $('#maritimeInspectionTable');
+                        tbody.empty();
+                        
+                        var chartData = {
+                            departments: [],
+                            generalHazards: [],
+                            majorHazards: [],
+                            risks: []
+                        };
+                        
+                        departments.forEach(function(dept) {
+                            var item = dataMap[dept] || {generalHazards: 0, majorHazards: 0, risks: 0};
+                            var row = '<tr>' +
+                                '<td>' + dept + '</td>' +
+                                '<td>' + (item.generalHazards || 0) + '</td>' +
+                                '<td>' + (item.majorHazards || 0) + '</td>' +
+                                '<td>' + (item.risks || 0) + '</td>' +
+                                '</tr>';
+                            tbody.append(row);
+                            
+                            // 收集图表数据
+                            chartData.departments.push(dept);
+                            chartData.generalHazards.push(item.generalHazards || 0);
+                            chartData.majorHazards.push(item.majorHazards || 0);
+                            chartData.risks.push(item.risks || 0);
+                        });
+                        
+                        // 更新图表
+                        updateMaritimeInspectionChart(chartData);
+                    }
+                },
+                error: function(error) {
+                    console.error('加载海事排查数据失败:', error);
+                }
+            });
+        }
+
+        // 加载综合数据
+        function loadComprehensiveData(startDate, endDate) {
+            $.ajax({
+                url: '${ctx}/companyrisk/companySafetyInspection/getComprehensiveStats',
+                type: 'GET',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.result === 'true') {
+                        var data = response.data;
+                        var companies = ['双山汽渡', '高尔夫', '张皋汽渡'];
+                        var dataMap = {};
+                        
+                        // 创建数据映射
+                        data.forEach(function(item) {
+                            dataMap[item.companyName] = item;
+                        });
+                        
+                        // 更新表格
+                        var tbody = $('#comprehensiveTable');
+                        tbody.empty();
+                        
+                        var chartData = {
+                            companies: [],
+                            companySelfCheckGeneralHazards: [],
+                            companySelfCheckMajorHazards: [],
+                            companySelfCheckRisks: [],
+                            maritimeInspectionGeneralHazards: [],
+                            maritimeInspectionMajorHazards: [],
+                            maritimeInspectionRisks: []
+                        };
+                        
+                        companies.forEach(function(company) {
+                            var item = dataMap[company] || {
+                                companySelfCheckGeneralHazards: 0,
+                                companySelfCheckMajorHazards: 0,
+                                companySelfCheckRisks: 0,
+                                maritimeInspectionGeneralHazards: 0,
+                                maritimeInspectionMajorHazards: 0,
+                                maritimeInspectionRisks: 0
+                            };
+                            var row = '<tr>' +
+                                '<td>' + company + '</td>' +
+                                '<td>' + (item.companySelfCheckGeneralHazards || 0) + '</td>' +
+                                '<td>' + (item.companySelfCheckMajorHazards || 0) + '</td>' +
+                                '<td>' + (item.companySelfCheckRisks || 0) + '</td>' +
+                                '<td>' + (item.maritimeInspectionGeneralHazards || 0) + '</td>' +
+                                '<td>' + (item.maritimeInspectionMajorHazards || 0) + '</td>' +
+                                '<td>' + (item.maritimeInspectionRisks || 0) + '</td>' +
+                                '</tr>';
+                            tbody.append(row);
+                            
+                            // 收集图表数据
+                            chartData.companies.push(company);
+                            chartData.companySelfCheckGeneralHazards.push(item.companySelfCheckGeneralHazards || 0);
+                            chartData.companySelfCheckMajorHazards.push(item.companySelfCheckMajorHazards || 0);
+                            chartData.companySelfCheckRisks.push(item.companySelfCheckRisks || 0);
+                            chartData.maritimeInspectionGeneralHazards.push(item.maritimeInspectionGeneralHazards || 0);
+                            chartData.maritimeInspectionMajorHazards.push(item.maritimeInspectionMajorHazards || 0);
+                            chartData.maritimeInspectionRisks.push(item.maritimeInspectionRisks || 0);
+                        });
+                        
+                        // 更新图表
+                        updateComprehensiveChart(chartData);
+                    }
+                },
+                error: function(error) {
+                    console.error('加载综合数据失败:', error);
+                }
+            });
+        }
+
+        // 更新企业自查图表
+        function updateCompanySelfCheckChart(chartData) {
+            var option = {
+                title: {
+                    text: '企业风险隐患常态化自查情况',
+                    left: 'center',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 18,
+                        fontWeight: 'bold'
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['一般隐患', '重大隐患', '风险'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: chartData.departments,
+                    axisLabel: {
+                        rotate: 45,
+                        fontSize: 12
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数量'
+                },
+                series: [
+                    {
+                        name: '一般隐患',
+                        type: 'bar',
+                        data: chartData.generalHazards,
+                        itemStyle: {
+                            color: '#5470c6'
+                        }
+                    },
+                    {
+                        name: '重大隐患',
+                        type: 'bar',
+                        data: chartData.majorHazards,
+                        itemStyle: {
+                            color: '#ee6666'
+                        }
+                    },
+                    {
+                        name: '风险',
+                        type: 'bar',
+                        data: chartData.risks,
+                        itemStyle: {
+                            color: '#fac858'
+                        }
+                    }
+                ]
+            };
+            companySelfCheckChart.setOption(option);
+        }
+
+        // 更新海事排查图表
+        function updateMaritimeInspectionChart(chartData) {
+            var option = {
+                title: {
+                    text: '海事风险隐患常态化排查情况',
+                    left: 'center',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 18,
+                        fontWeight: 'bold'
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['一般隐患', '重大隐患', '风险'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: chartData.departments,
+                    axisLabel: {
+                        rotate: 45,
+                        fontSize: 12
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数量'
+                },
+                series: [
+                    {
+                        name: '一般隐患',
+                        type: 'bar',
+                        data: chartData.generalHazards,
+                        itemStyle: {
+                            color: '#91cc75'
+                        }
+                    },
+                    {
+                        name: '重大隐患',
+                        type: 'bar',
+                        data: chartData.majorHazards,
+                        itemStyle: {
+                            color: '#fc8452'
+                        }
+                    },
+                    {
+                        name: '风险',
+                        type: 'bar',
+                        data: chartData.risks,
+                        itemStyle: {
+                            color: '#9a60b4'
+                        }
+                    }
+                ]
+            };
+            maritimeInspectionChart.setOption(option);
+        }
+
+        // 更新综合统计图表
+        function updateComprehensiveChart(chartData) {
+            var option = {
+                title: {
+                    text: '综合风险隐患排查情况',
+                    left: 'center',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 18,
+                        fontWeight: 'bold'
+                    }
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['企业自查一般隐患', '企业自查重大隐患', '企业自查风险', '海事排查一般隐患', '海事排查重大隐患', '海事排查风险'],
+                    top: 30,
+                    type: 'scroll'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: chartData.companies,
+                    axisLabel: {
+                        fontSize: 12
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数量'
+                },
+                series: [
+                    {
+                        name: '企业自查一般隐患',
+                        type: 'bar',
+                        data: chartData.companySelfCheckGeneralHazards,
+                        itemStyle: {
+                            color: '#5470c6'
+                        }
+                    },
+                    {
+                        name: '企业自查重大隐患',
+                        type: 'bar',
+                        data: chartData.companySelfCheckMajorHazards,
+                        itemStyle: {
+                            color: '#ee6666'
+                        }
+                    },
+                    {
+                        name: '企业自查风险',
+                        type: 'bar',
+                        data: chartData.companySelfCheckRisks,
+                        itemStyle: {
+                            color: '#fac858'
+                        }
+                    },
+                    {
+                        name: '海事排查一般隐患',
+                        type: 'bar',
+                        data: chartData.maritimeInspectionGeneralHazards,
+                        itemStyle: {
+                            color: '#91cc75'
+                        }
+                    },
+                    {
+                        name: '海事排查重大隐患',
+                        type: 'bar',
+                        data: chartData.maritimeInspectionMajorHazards,
+                        itemStyle: {
+                            color: '#fc8452'
+                        }
+                    },
+                    {
+                        name: '海事排查风险',
+                        type: 'bar',
+                        data: chartData.maritimeInspectionRisks,
+                        itemStyle: {
+                            color: '#9a60b4'
+                        }
+                    }
+                ]
+            };
+            comprehensiveChart.setOption(option);
+        }
+    </script>
+</body>
+
+</html> 
