@@ -460,17 +460,17 @@
                 </div>
             </div>
 
-            <!-- 巡航巡查卡片 -->
+            <!-- 动态执法卡片 -->
             <div class="col-md-6 col-lg-4 col-sm-6">
                 <div class="dashboard-card card-patrol animated fadeInUp" style="animation-delay: 0.1s;">
                     <div class="card-content">
                         <div class="card-icon">
                             <i class="fas fa-search"></i>
                         </div>
-                        <h3 class="card-title">巡航巡查</h3>
-                        <a href="${ctx}/dynamic/dynamicEnforcementData/chart" class="btn btn-tech">
+                        <h3 class="card-title">动态执法</h3>
+                        <button type="button" class="btn btn-tech" data-toggle="modal" data-target="#dynamicEnforcementModal">
                             <i class="fas fa-binoculars mr-2"></i>查看详情
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -557,16 +557,46 @@
                                 <i class="fas fa-flag mr-2"></i>国内航行船舶
                             </a>
                         </div>
-                        <div class="col-md-12 mb-3">
-                            <a href="#" class="btn btn-tech btn-block py-3" style="background: rgba(51, 161, 253, 0.1); cursor: not-allowed;">
+                        <div class="col-md-12">
+                            <a href="${ctx}/shiplog/shipPortLog/analysis" class="btn btn-tech btn-block py-3" >
                                 <i class="fas fa-globe-americas mr-2"></i>国际航行船舶
-                                <span class="badge badge-warning ml-2">开发中</span>
                             </a>
                         </div>
                         <div class="col-md-12">
                             <a href="${ctx}/largeship/analysis" class="btn btn-tech btn-block py-3">
                                 <i class="fas fa-ship mr-2"></i>大型受限船舶
                             </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 动态执法选择模态框 -->
+    <div class="modal fade" id="dynamicEnforcementModal" tabindex="-1" role="dialog" aria-labelledby="dynamicEnforcementModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="background-color: rgba(15, 52, 96, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(51, 161, 253, 0.3);">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(51, 161, 253, 0.2);">
+                    <h5 class="modal-title" id="dynamicEnforcementModalLabel" style="color: white; font-weight: 600;">
+                        <i class="fas fa-search mr-2"></i>请选择执法类型
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <a href="${ctx}/dynamic/dynamicEnforcementData/chart" class="btn btn-tech btn-block py-3">
+                                <i class="fas fa-binoculars mr-2"></i>巡航巡查
+                            </a>
+                        </div>
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-tech btn-block py-3" disabled style="opacity: 0.6; cursor: not-allowed;">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>风险隐患排查
+                                <small class="d-block mt-1" style="font-size: 0.8em; color: rgba(255, 255, 255, 0.7);">开发中...</small>
+                            </button>
                         </div>
                     </div>
                 </div>

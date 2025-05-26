@@ -234,6 +234,11 @@
 		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
 		AND lo.ship_owner IS NOT NULL 
 		AND lo.ship_owner != ''
+		AND lo.ship_owner != 'null'
+		AND lo.ship_owner != 'NULL'
+		AND LOWER(lo.ship_owner) != 'null'
+		AND TRIM(lo.ship_owner) != ''
+		AND lo.ship_owner NOT LIKE '%null%'
 		<if test="berthingLocation != null and berthingLocation != ''">
 			AND ib.码头 = #{berthingLocation}
 		</if>
@@ -256,6 +261,11 @@
 		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
 		AND lo.ship_operator IS NOT NULL 
 		AND lo.ship_operator != ''
+		AND lo.ship_operator != 'null'
+		AND lo.ship_operator != 'NULL'
+		AND LOWER(lo.ship_operator) != 'null'
+		AND TRIM(lo.ship_operator) != ''
+		AND lo.ship_operator NOT LIKE '%null%'
 		<if test="berthingLocation != null and berthingLocation != ''">
 			AND ib.码头 = #{berthingLocation}
 		</if>
