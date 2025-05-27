@@ -196,4 +196,11 @@ public class PunishJudgeService extends CrudService<PunishJudgeDao, PunishJudge>
 	public List<java.util.Map<String, Object>> findAveragePenaltyAmountsByDepartment(PunishJudge punishJudge) {
 		return dao.findAveragePenaltyAmountsByDepartment(punishJudge);
 	}
+	
+	/**
+	 * 按部门统计重点违法行为占比（通过agency_dept和case_key表关联）
+	 */
+	public List<java.util.Map<String, Object>> findKeyViolationRatioByDepartment(PunishJudge punishJudge) {
+		return dao.findKeyViolationRatioByDepartment(punishJudge);
+	}
 }

@@ -299,6 +299,10 @@ public class PunishJudgeController extends BaseController {
 		Map<String, Object> averagePenaltyAmountByAgency = getAveragePenaltyAmountByDepartmentFromPunish(punishJudge, lastPunishJudge);
 		chartData.put("averagePenaltyAmountByAgency", averagePenaltyAmountByAgency);
 		
+		// 获取各部门重点违法行为占比数据（使用部门统计）
+		Map<String, Object> keyViolationRatioByAgency = getKeyViolationRatioByDepartmentFromPunish(punishJudge, lastPunishJudge);
+		chartData.put("keyViolationRatioByAgency", keyViolationRatioByAgency);
+		
 		// 获取案由对比数据
 		Map<String, Object> caseReasonData = getCaseReasonDataFromPunish(currentPunishList);
 		chartData.put("caseReasonData", caseReasonData);
@@ -684,6 +688,72 @@ public class PunishJudgeController extends BaseController {
 	}
 
 	/**
+	 * 获取各部门重点违法行为占比数据（使用部门统计）
+	 */
+	private Map<String, Object> getKeyViolationRatioByDepartmentFromPunish(PunishJudge currentQuery, PunishJudge lastQuery) {
+		Map<String, Object> result = new HashMap<>();
+		
+		logger.info("开始查询重点违法行为占比数据...");
+		
+		// 查询当前期间各部门重点违法行为占比
+		List<Map<String, Object>> currentDeptRatios = punishJudgeService.findKeyViolationRatioByDepartment(currentQuery);
+		logger.info("当前期间查询结果数量: {}", currentDeptRatios.size());
+		
+		Map<String, Double> currentRatioMap = new HashMap<>();
+		for (Map<String, Object> item : currentDeptRatios) {
+			String dept = (String) item.get("department");
+			Double ratio = ((Number) item.get("keyViolationRatio")).doubleValue();
+			currentRatioMap.put(dept, ratio);
+			logger.info("部门: {}, 重点违法行为占比: {}%", dept, ratio);
+		}
+		
+		// 查询上期各部门重点违法行为占比
+		List<Map<String, Object>> lastDeptRatios = punishJudgeService.findKeyViolationRatioByDepartment(lastQuery);
+		Map<String, Double> lastRatioMap = new HashMap<>();
+		for (Map<String, Object> item : lastDeptRatios) {
+			String dept = (String) item.get("department");
+			Double ratio = ((Number) item.get("keyViolationRatio")).doubleValue();
+			lastRatioMap.put(dept, ratio);
+		}
+		
+		// 获取所有部门并按当前期间重点违法行为占比降序排序
+		List<String> sortedDepartments = currentDeptRatios.stream()
+				.sorted((a, b) -> {
+					Double ratioA = ((Number) a.get("keyViolationRatio")).doubleValue();
+					Double ratioB = ((Number) b.get("keyViolationRatio")).doubleValue();
+					return Double.compare(ratioB, ratioA); // 降序排序
+				})
+				.map(item -> (String) item.get("department"))
+				.collect(Collectors.toList());
+		
+		// 基于排序后的部门列表构建数据
+		List<Map<String, Object>> currentRatios = new ArrayList<>();
+		List<Double> lastRatios = new ArrayList<>();
+		
+		for (String dept : sortedDepartments) {
+			double currentRatio = currentRatioMap.getOrDefault(dept, 0.0);
+			double lastRatio = lastRatioMap.getOrDefault(dept, 0.0);
+			
+			// 计算环比变化率（百分点变化）
+			double changeRate = currentRatio - lastRatio;
+			
+			// 构建当前数据对象（包含值和环比）
+			Map<String, Object> currentData = new HashMap<>();
+			currentData.put("value", currentRatio);
+			currentData.put("changeRate", changeRate);
+			
+			currentRatios.add(currentData);
+			lastRatios.add(lastRatio);
+		}
+		
+		result.put("categories", sortedDepartments);
+		result.put("current", currentRatios);
+		result.put("last", lastRatios);
+		
+		return result;
+	}
+
+	/**
 	 * 获取下拉列表选项
 	 */
 	@GetMapping("getFilterOptions")
@@ -954,6 +1024,10 @@ public class PunishJudgeController extends BaseController {
 		// 获取各部门平均处罚金额数据（使用部门统计）
 		Map<String, Object> averagePenaltyAmountByAgency = getAveragePenaltyAmountByDepartmentFromPunish(punishJudge, lastPunishJudge);
 		chartData.put("averagePenaltyAmountByAgency", averagePenaltyAmountByAgency);
+		
+		// 获取各部门重点违法行为占比数据（使用部门统计）
+		Map<String, Object> keyViolationRatioByAgency = getKeyViolationRatioByDepartmentFromPunish(punishJudge, lastPunishJudge);
+		chartData.put("keyViolationRatioByAgency", keyViolationRatioByAgency);
 		
 		// 获取案由对比数据
 		Map<String, Object> caseReasonData = getCaseReasonDataFromPunish(currentPunishList);

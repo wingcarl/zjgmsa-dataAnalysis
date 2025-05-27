@@ -194,4 +194,54 @@
 		ORDER BY averageAmount DESC, ad.dept ASC
 	</select>
 	
+	<!-- 按部门统计重点违法行为占比（通过agency_dept和case_key表关联） -->
+	<select id="findKeyViolationRatioByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			COUNT(*) as totalCount,
+			SUM(CASE WHEN ck.is_key = '是' THEN 1 ELSE 0 END) as keyViolationCount,
+			CASE 
+				WHEN COUNT(*) > 0 THEN 
+					ROUND((SUM(CASE WHEN ck.is_key = '是' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)), 2)
+				ELSE 0 
+			END as keyViolationRatio
+		FROM punish_judge pj
+		INNER JOIN agency_dept ad ON pj.penalty_agency = ad.agency
+		LEFT JOIN case_key ck ON pj.case_reason = ck.case_reason
+		<where>
+			<if test="penaltyDecisionTime_gte != null">
+				AND pj.penalty_decision_time >= #{penaltyDecisionTime_gte}
+			</if>
+			<if test="penaltyDecisionTime_lte != null">
+				AND pj.penalty_decision_time &lt;= #{penaltyDecisionTime_lte}
+			</if>
+			<if test="penaltyAgency != null and penaltyAgency != ''">
+				AND pj.penalty_agency = #{penaltyAgency}
+			</if>
+			<if test="seaRiverShip != null and seaRiverShip != ''">
+				AND pj.sea_river_ship = #{seaRiverShip}
+			</if>
+			<if test="caseReason != null and caseReason != ''">
+				AND pj.case_reason = #{caseReason}
+			</if>
+			<if test="managementCategory != null and managementCategory != ''">
+				AND pj.management_category = #{managementCategory}
+			</if>
+			<if test="violationCircumstances != null and violationCircumstances != ''">
+				AND pj.violation_circumstances = #{violationCircumstances}
+			</if>
+			<if test="shipType != null and shipType != ''">
+				AND pj.ship_type = #{shipType}
+			</if>
+			<if test="penaltyAmount_gte != null">
+				AND pj.penalty_amount >= #{penaltyAmount_gte}
+			</if>
+			<if test="penaltyAmount_lte != null">
+				AND pj.penalty_amount &lt;= #{penaltyAmount_lte}
+			</if>
+		</where>
+		GROUP BY ad.dept
+		ORDER BY keyViolationRatio DESC, ad.dept ASC
+	</select>
+	
 </mapper>

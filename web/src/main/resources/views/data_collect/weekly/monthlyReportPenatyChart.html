@@ -687,6 +687,16 @@
         </div>
     </div>
 
+    <!-- 各部门重点违法行为占比图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-column icon-box"></i>各部门重点违法行为占比</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="key-violation-ratio-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- 处罚案由对比图表 -->
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>处罚案由对比</h5>
@@ -759,6 +769,7 @@
         var punishAgencyChart = echarts.init(document.getElementById('punish-agency-chart'));
         var penaltyAmountChart = echarts.init(document.getElementById('penalty-amount-chart'));
         var averagePenaltyAmountChart = echarts.init(document.getElementById('average-penalty-amount-chart'));
+        var keyViolationRatioChart = echarts.init(document.getElementById('key-violation-ratio-chart'));
         var caseReasonChart = echarts.init(document.getElementById('case-reason-chart'));
         var managementCategoryChart = echarts.init(document.getElementById('management-category-chart'));
 
@@ -772,6 +783,7 @@
                 punishAgencyChart.resize();
                 penaltyAmountChart.resize();
                 averagePenaltyAmountChart.resize();
+                keyViolationRatioChart.resize();
                 caseReasonChart.resize();
                 managementCategoryChart.resize();
             }, 350);
@@ -968,6 +980,7 @@
                     data: params,
                     success: function(data) {
                         console.log('拉取的月度数据:', data);
+                        console.log('重点违法行为占比数据:', data.keyViolationRatioByAgency);
                         
                         Swal.fire({
                             title: '成功!',
@@ -980,6 +993,7 @@
                         renderPunishAgencyChart(data);
                         renderPenaltyAmountChart(data);
                         renderAveragePenaltyAmountChart(data);
+                        renderKeyViolationRatioChart(data);
                         renderCaseReasonChart(data);
                         renderManagementCategoryChart(data);
                         resolve();
@@ -1037,12 +1051,14 @@
                 data: params,
                 success: function(data) {
                     console.log('月度数据:', data);
+                    console.log('重点违法行为占比数据:', data.keyViolationRatioByAgency);
                     
                     renderDataCards(data);
                     renderDepartmentTable(data);
                     renderPunishAgencyChart(data);
                     renderPenaltyAmountChart(data);
                     renderAveragePenaltyAmountChart(data);
+                    renderKeyViolationRatioChart(data);
                     renderCaseReasonChart(data);
                     renderManagementCategoryChart(data);
                     
@@ -1729,6 +1745,226 @@
             });
         }
 
+        function renderKeyViolationRatioChart(data) {
+            // 检查是否有重点违法行为占比数据
+            if (!data.keyViolationRatioByAgency) {
+                console.warn('No key violation ratio data available');
+                return;
+            }
+            
+            // 处理数据格式
+            var ratioData = data.keyViolationRatioByAgency;
+            var categories = ratioData.categories || [];
+            var lastData = ratioData.last || [];
+            var currentData = [];
+            
+            // 处理current可能是对象数组的情况
+            if (ratioData.current) {
+                currentData = ratioData.current.map(function(item) {
+                    if (typeof item === 'object' && item !== null) {
+                        return item;
+                    } else {
+                        return {
+                            value: item,
+                            changeRate: 0
+                        };
+                    }
+                });
+            }
+            
+            var chartOption = {
+                title: {
+                    text: '各部门重点违法行为占比',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            var value = item.value;
+                            if (typeof item.value === 'object' && 'value' in item.value) {
+                                value = item.value.value;
+                            }
+                            var valueText = value.toFixed(2) + '%';
+                            result += colorSpan(item.color) + item.seriesName + ': ' + valueText + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['上期', '本期'],
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14
+                    },
+                    top: 30,
+                    left: 'center'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categories,
+                    axisLabel: {
+                        rotate: 30,
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12,
+                        formatter: function(value) {
+                            return value.toFixed(1) + '%';
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    },
+                    max: 100 // 设置最大值为100%
+                },
+                series: [{
+                    name: '上期',
+                    type: 'bar',
+                    data: lastData,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#67C23A',
+                        fontSize: 12,
+                        formatter: function(params) {
+                            return params.value.toFixed(1) + '%';
+                        }
+                    },
+                    itemStyle: {
+                        color: function(params) {
+                            var category = categories[params.dataIndex];
+                            if (category === '张家港海事局') {
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#ff9800'
+                                    }, {
+                                        offset: 1, color: '#ffb74d'
+                                    }]
+                                };
+                            }
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            };
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                },
+                {
+                    name: '本期',
+                    type: 'bar',
+                    data: currentData,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#409EFF',
+                        fontSize: 12,
+                        formatter: function(params) {
+                            if (typeof params.data === 'object' && params.data !== null && 'value' in params.data) {
+                                var valueText = params.data.value.toFixed(1) + '%';
+                                if ('changeRate' in params.data) {
+                                    var changeText = (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate.toFixed(1) + "pp";
+                                    return valueText + " (" + changeText + ")";
+                                }
+                                return valueText;
+                            }
+                            return params.value.toFixed(1) + '%';
+                        }
+                    },
+                    itemStyle: {
+                        color: function(params) {
+                            var category = categories[params.dataIndex];
+                            if (category === '张家港海事局') {
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#ffc107'
+                                    }, {
+                                        offset: 1, color: '#ffeb3b'
+                                    }]
+                                };
+                            }
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            };
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                }]
+            };
+            
+            keyViolationRatioChart.setOption(chartOption);
+            
+            // 添加点击事件
+            keyViolationRatioChart.off('click');
+            keyViolationRatioChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var departmentName = categories[params.dataIndex];
+                    var queryParams = getQueryParams();
+                    
+                    // 获取详细数据（部门图表点击显示所有数据，不按特定机构过滤）
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
+        }
+
         function renderCaseReasonChart(data) {
             var chartOption = {
                 title: {
@@ -2167,6 +2403,7 @@
             punishAgencyChart.resize();
             penaltyAmountChart.resize();
             averagePenaltyAmountChart.resize();
+            keyViolationRatioChart.resize();
             caseReasonChart.resize();
             managementCategoryChart.resize();
         });

@@ -58,4 +58,9 @@ public interface PunishJudgeDao extends CrudDao<PunishJudge> {
 	 * 按部门统计平均处罚金额（通过agency_dept表关联）
 	 */
 	List<Map<String, Object>> findAveragePenaltyAmountsByDepartment(PunishJudge punishJudge);
+	
+	/**
+	 * 按部门统计重点违法行为占比（通过agency_dept和case_key表关联）
+	 */
+	List<Map<String, Object>> findKeyViolationRatioByDepartment(PunishJudge punishJudge);
 }
