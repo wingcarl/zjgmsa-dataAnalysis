@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>张家港海事局法制管理数据看板</title>
+    <title>江苏海事局法制管理数据看板</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
     <!-- Font Awesome - 添加图标支持 -->
@@ -152,6 +152,19 @@
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             background-color: var(--card-bg);
+        }
+        
+        /* 张家港海事局高亮样式 */
+        .highlight-zjg {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+            font-weight: 600;
+            color: #856404;
+        }
+        
+        .highlight-zjg td {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+            font-weight: 600;
+            color: #856404;
         }
 
         .summary-table {
@@ -628,11 +641,11 @@
                         <th colspan="3">处罚金额(万元)</th>
                     </tr>
                     <tr>
-                        <th>上周</th>
-                        <th>本周</th>
-                        <th>环比</th>
-                        <th>上周</th>
-                        <th>本周</th>
+                                                    <th>上期</th>
+                            <th>本期</th>
+                            <th>环比</th>
+                            <th>上期</th>
+                            <th>本期</th>
                         <th>环比</th>
                     </tr>
                     </thead>
@@ -644,9 +657,9 @@
         </div>
     </div>
 
-    <!-- 各机构处罚决定数量图表 -->
+    <!-- 各部门处罚决定数量图表 -->
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构处罚决定数量</h5>
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各部门处罚决定数量</h5>
         <div class="row">
             <div class="col-md-12">
                 <div id="punish-agency-chart" class="chart-container"></div>
@@ -654,12 +667,22 @@
         </div>
     </div>
 
-    <!-- 各机构处罚金额图表 -->
+    <!-- 各部门处罚金额图表 -->
     <div class="charts-section">
-        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构处罚金额</h5>
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各部门处罚金额</h5>
         <div class="row">
             <div class="col-md-12">
                 <div id="penalty-amount-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 各部门平均处罚金额图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-line icon-box"></i>各部门平均处罚金额</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="average-penalty-amount-chart" class="chart-container"></div>
             </div>
         </div>
     </div>
@@ -735,6 +758,7 @@
         // 初始化 ECharts 实例
         var punishAgencyChart = echarts.init(document.getElementById('punish-agency-chart'));
         var penaltyAmountChart = echarts.init(document.getElementById('penalty-amount-chart'));
+        var averagePenaltyAmountChart = echarts.init(document.getElementById('average-penalty-amount-chart'));
         var caseReasonChart = echarts.init(document.getElementById('case-reason-chart'));
         var managementCategoryChart = echarts.init(document.getElementById('management-category-chart'));
 
@@ -747,6 +771,7 @@
             setTimeout(function() {
                 punishAgencyChart.resize();
                 penaltyAmountChart.resize();
+                averagePenaltyAmountChart.resize();
                 caseReasonChart.resize();
                 managementCategoryChart.resize();
             }, 350);
@@ -770,22 +795,22 @@
         // 计算默认日期范围
         function calculateDefaultDateRange() {
             var today = new Date();
-            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            var currentDay = today.getDate();
+            var currentMonth = today.getMonth();
+            var currentYear = today.getFullYear();
             
-            var endDate = new Date(today);
-            var startDate = new Date(today);
+            var endDate = new Date();
+            var startDate = new Date();
             
-            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
-            if (dayOfWeek >= 5) {
-                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            if (currentDay <= 25) {
+                // 如果当前日期为本月25日之前，则为上上月的26至本月的25日
+                endDate = new Date(currentYear, currentMonth, 25);
+                startDate = new Date(currentYear, currentMonth - 2, 26);
             } else {
-                // 否则结束日期是上周四
-                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+                // 如果当前日期为本月25日之后，则为上月的26至本月的25日
+                endDate = new Date(currentYear, currentMonth, 25);
+                startDate = new Date(currentYear, currentMonth - 1, 26);
             }
-            
-            // 开始日期是结束日期往前推6天（周五）
-            startDate = new Date(endDate);
-            startDate.setDate(endDate.getDate() - 6);
             
             return {
                 start: startDate.toISOString().slice(0, 10),
@@ -798,13 +823,8 @@
         startDateInput.val(defaultDates.start);
         endDateInput.val(defaultDates.end);
 
-        // 定义允许的机构列表
-        var allowedAgencies = [
-            '张家港锦丰海事处',
-            '张家港港区海事处',
-            '海巡执法支队',
-            '张家港港区海事处保税区海巡执法大队'
-        ];
+        // 移除机构限制，显示所有机构
+        var allowedAgencies = null;
 
         // 加载筛选条件选项
         loadFilterOptions();
@@ -872,18 +892,18 @@
                         });
                     }
                     
-                    // 加载处罚机构选项 - 只显示允许的机构
-                    var agencyOptions = '<option value="">全部</option>';
-                    if (typeof allowedAgencies !== 'undefined' && Array.isArray(allowedAgencies)) {
-                        allowedAgencies.forEach(function(item) {
+                    // 加载处罚机构选项 - 显示所有机构
+                    if (data && data.penaltyAgencies && Array.isArray(data.penaltyAgencies) && data.penaltyAgencies.length > 0) {
+                        var agencyOptions = '<option value="">全部</option>';
+                        data.penaltyAgencies.forEach(function(item) {
                             agencyOptions += '<option value="' + item + '">' + item + '</option>';
                         });
+                        penaltyAgencySelect.html(agencyOptions);
+                        penaltyAgencySelect.select2({
+                            placeholder: "请选择处罚机构",
+                            allowClear: true
+                        });
                     }
-                    penaltyAgencySelect.html(agencyOptions);
-                    penaltyAgencySelect.select2({
-                        placeholder: "请选择处罚机构",
-                        allowClear: true
-                    });
                     
                     // 加载案由选项
                     if (data && data.caseReasons && Array.isArray(data.caseReasons) && data.caseReasons.length > 0) {
@@ -942,16 +962,12 @@
 
                 // 发送 AJAX 请求获取数据
                 $.ajax({
-                    url: 'fetchData',
+                    url: 'fetchMonthlyData',
                     type: 'GET',
                     dataType: 'json',
                     data: params,
                     success: function(data) {
-                        console.log('拉取的原始数据:', data);
-                        
-                        // 过滤数据，只保留允许的机构
-                        var filteredData = filterDataByAllowedAgencies(data);
-                        console.log('拉取的过滤后数据:', filteredData);
+                        console.log('拉取的月度数据:', data);
                         
                         Swal.fire({
                             title: '成功!',
@@ -959,12 +975,13 @@
                             icon: 'success',
                             confirmButtonText: '确定'
                         });
-                        renderDataCards(filteredData);
-                        renderDepartmentTable(filteredData);
-                        renderPunishAgencyChart(filteredData);
-                        renderPenaltyAmountChart(filteredData);
-                        renderCaseReasonChart(filteredData); // 案由数据也需要按机构过滤
-                        renderManagementCategoryChart(filteredData); // 业务类型数据也需要按机构过滤
+                        renderDataCards(data);
+                        renderDepartmentTable(data);
+                        renderPunishAgencyChart(data);
+                        renderPenaltyAmountChart(data);
+                        renderAveragePenaltyAmountChart(data);
+                        renderCaseReasonChart(data);
+                        renderManagementCategoryChart(data);
                         resolve();
                     },
                     error: function(error){
@@ -981,114 +998,7 @@
             });
         }
 
-        // 过滤数据，只保留允许的机构
-        function filterDataByAllowedAgencies(data) {
-            if (!data || !data.categories) return data;
-            
-            var filteredData = JSON.parse(JSON.stringify(data)); // 深拷贝
-            var filteredCategories = [];
-            var filteredPenaltyCountsLast = [];
-            var filteredPenaltyCountsCurrent = [];
-            var filteredPenaltyAmountLast = [];
-            var filteredPenaltyAmountCurrent = [];
-            
-            // 过滤机构数据
-            data.categories.forEach(function(category, index) {
-                if (allowedAgencies.includes(category)) {
-                    filteredCategories.push(category);
-                    
-                    // 处罚数量数据
-                    if (data.penaltyAgencyCounts && data.penaltyAgencyCounts.last) {
-                        filteredPenaltyCountsLast.push(data.penaltyAgencyCounts.last[index] || 0);
-                    }
-                    if (data.penaltyAgencyCounts && data.penaltyAgencyCounts.current) {
-                        filteredPenaltyCountsCurrent.push(data.penaltyAgencyCounts.current[index] || 0);
-                    }
-                    
-                    // 处罚金额数据
-                    if (data.penaltyAmountByAgency && data.penaltyAmountByAgency.last) {
-                        filteredPenaltyAmountLast.push(data.penaltyAmountByAgency.last[index] || 0);
-                    }
-                    if (data.penaltyAmountByAgency && data.penaltyAmountByAgency.current) {
-                        filteredPenaltyAmountCurrent.push(data.penaltyAmountByAgency.current[index] || 0);
-                    }
-                }
-            });
-            
-            // 更新过滤后的数据
-            filteredData.categories = filteredCategories;
-            if (filteredData.penaltyAgencyCounts) {
-                filteredData.penaltyAgencyCounts.last = filteredPenaltyCountsLast;
-                filteredData.penaltyAgencyCounts.current = filteredPenaltyCountsCurrent;
-            }
-            if (filteredData.penaltyAmountByAgency) {
-                filteredData.penaltyAmountByAgency.last = filteredPenaltyAmountLast;
-                filteredData.penaltyAmountByAgency.current = filteredPenaltyAmountCurrent;
-            }
-            
-            // 重新计算指标数据
-            if (filteredData.indicatorData) {
-                // 计算处罚决定数量
-                var currentCountTotal = 0;
-                var lastCountTotal = 0;
-                
-                if (filteredPenaltyCountsCurrent.length > 0) {
-                    currentCountTotal = filteredPenaltyCountsCurrent.reduce(function(sum, item) {
-                        if (typeof item === 'object' && item.value !== undefined) {
-                            return sum + item.value;
-                        }
-                        return sum + (item || 0);
-                    }, 0);
-                }
-                
-                if (filteredPenaltyCountsLast.length > 0) {
-                    lastCountTotal = filteredPenaltyCountsLast.reduce(function(sum, item) {
-                        return sum + (item || 0);
-                    }, 0);
-                }
-                
-                var countChangeRate = lastCountTotal === 0 ? 
-                    (currentCountTotal > 0 ? 100 : 0) : 
-                    ((currentCountTotal - lastCountTotal) / lastCountTotal) * 100;
-                
-                filteredData.indicatorData.penaltyDecisionCount = {
-                    value: currentCountTotal,
-                    lastValue: lastCountTotal,
-                    rate: countChangeRate
-                };
-                
-                // 计算处罚金额
-                var currentAmountTotal = 0;
-                var lastAmountTotal = 0;
-                
-                if (filteredPenaltyAmountCurrent.length > 0) {
-                    currentAmountTotal = filteredPenaltyAmountCurrent.reduce(function(sum, item) {
-                        if (typeof item === 'object' && item.value !== undefined) {
-                            return sum + item.value;
-                        }
-                        return sum + (item || 0);
-                    }, 0);
-                }
-                
-                if (filteredPenaltyAmountLast.length > 0) {
-                    lastAmountTotal = filteredPenaltyAmountLast.reduce(function(sum, item) {
-                        return sum + (item || 0);
-                    }, 0);
-                }
-                
-                var amountChangeRate = lastAmountTotal === 0 ? 
-                    (currentAmountTotal > 0 ? 100 : 0) : 
-                    ((currentAmountTotal - lastAmountTotal) / lastAmountTotal) * 100;
-                
-                filteredData.indicatorData.penaltyAmount = {
-                    value: currentAmountTotal,
-                    lastValue: lastAmountTotal,
-                    rate: amountChangeRate
-                };
-            }
-            
-            return filteredData;
-        }
+
 
         // 获取查询参数
         function getQueryParams() {
@@ -1106,7 +1016,7 @@
                 shipType: shipTypeSelect.val(),
                 minAmount: minAmount ? minAmount : "",
                 maxAmount: maxAmount ? maxAmount : "",
-                allowedAgencies: (typeof allowedAgencies !== 'undefined' && allowedAgencies) ? allowedAgencies.join(',') : "" // 添加允许的机构列表
+
             };
         }
 
@@ -1121,28 +1031,23 @@
 
             // 发送 AJAX 请求获取数据
             $.ajax({
-                url: 'weeklyChartDataWithDate',
+                url: 'monthlyChartDataWithDate',
                 type: 'GET',
                 dataType: 'json',
                 data: params,
                 success: function(data) {
-                    console.log('原始数据:', data);
+                    console.log('月度数据:', data);
                     
-                    // 过滤数据，只保留允许的机构
-                    var filteredData = filterDataByAllowedAgencies(data);
-                    console.log('过滤后数据:', filteredData);
+                    renderDataCards(data);
+                    renderDepartmentTable(data);
+                    renderPunishAgencyChart(data);
+                    renderPenaltyAmountChart(data);
+                    renderAveragePenaltyAmountChart(data);
+                    renderCaseReasonChart(data);
+                    renderManagementCategoryChart(data);
                     
-                    renderDataCards(filteredData);
-                    renderDepartmentTable(filteredData);
-                    renderPunishAgencyChart(filteredData);
-                    renderPenaltyAmountChart(filteredData);
-                    renderCaseReasonChart(filteredData); // 案由数据也需要按机构过滤
-                    renderManagementCategoryChart(filteredData); // 业务类型数据也需要按机构过滤
-                    
-                    // 动态填充处罚机构下拉框
-                    fillAgencyDropdown(filteredData.categories);
                     // 动态填充业务类型下拉框
-                    fillManagementCategoryDropdown(filteredData.managementCategoryData || data.managementCategoryData);
+                    fillManagementCategoryDropdown(data.managementCategoryData);
                 },
                 error: function(error) {
                     console.error('Error fetching chart data:', error);
@@ -1156,19 +1061,7 @@
             });
         }
         
-        // 填充处罚机构下拉框 - 只显示允许的机构
-        function fillAgencyDropdown(categories) {
-            var currentValue = penaltyAgencySelect.val();
-            var options = '<option value="">全部</option>';
-            
-            // 只显示允许的机构
-            allowedAgencies.forEach(function(agency) {
-                var selected = currentValue === agency ? 'selected' : '';
-                options += '<option value="' + agency + '" ' + selected + '>' + agency + '</option>';
-            });
-            
-            penaltyAgencySelect.html(options);
-        }
+
         
         // 填充业务类型下拉框
         function fillManagementCategoryDropdown(categoryData) {
@@ -1232,9 +1125,11 @@
                 });
             }
             
+
+            
             var chartOption = {
                 title: {
-                    text: '各机构处罚决定数量',
+                    text: '各部门处罚决定数量',
                     textStyle: {
                         color: '#0466c8',
                         fontWeight: 'bold',
@@ -1269,7 +1164,7 @@
                     }
                 },
                 legend: {
-                    data: ['上周', '本周'],
+                    data: ['上期', '本期'],
                     textStyle: {
                         color: '#0466c8',
                         fontSize: 14
@@ -1316,7 +1211,7 @@
                     }
                 },
                 series: [{
-                    name: '上周',
+                    name: '上期',
                     type: 'bar',
                     data: lastData,
                     label: {
@@ -1326,20 +1221,34 @@
                         fontSize: 12
                     },
                     itemStyle: {
-                        color: {
-                            type: 'linear',
-                            x: 0, y: 0, x2: 0, y2: 1,
-                            colorStops: [{
-                                offset: 0, color: '#67C23A'
-                            }, {
-                                offset: 1, color: '#95d475'
-                            }]
+                        color: function(params) {
+                            var category = data.categories[params.dataIndex];
+                            if (category === '张家港海事局') {
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#ff9800'
+                                    }, {
+                                        offset: 1, color: '#ffb74d'
+                                    }]
+                                };
+                            }
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            };
                         },
                         borderRadius: [3, 3, 0, 0]
                     }
                 },
                 {
-                    name: '本周',
+                    name: '本期',
                     type: 'bar',
                     data: currentData,
                     label: {
@@ -1358,14 +1267,28 @@
                         }
                     },
                     itemStyle: {
-                        color: {
-                            type: 'linear',
-                            x: 0, y: 0, x2: 0, y2: 1,
-                            colorStops: [{
-                                offset: 0, color: '#409EFF'
-                            }, {
-                                offset: 1, color: '#7ab9ff'
-                            }]
+                        color: function(params) {
+                            var category = data.categories[params.dataIndex];
+                            if (category === '张家港海事局') {
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#ffc107'
+                                    }, {
+                                        offset: 1, color: '#ffeb3b'
+                                    }]
+                                };
+                            }
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            };
                         },
                         borderRadius: [3, 3, 0, 0]
                     }
@@ -1378,11 +1301,11 @@
             punishAgencyChart.off('click');
             punishAgencyChart.on('click', function(params) {
                 if (params.componentType === 'series') {
-                    var agencyName = data.categories[params.dataIndex];
+                    var departmentName = data.categories[params.dataIndex];
                     var queryParams = getQueryParams();
                     
-                    // 获取详细数据（机构图表点击仍使用原函数，因为已经限制了机构）
-                    getPenaltyDetails(agencyName, queryParams);
+                    // 获取详细数据（部门图表点击显示所有数据，不按特定机构过滤）
+                    getPenaltyDetails(null, queryParams);
                 }
             });
         }
@@ -1408,7 +1331,7 @@
             
             var chartOption = {
                 title: {
-                    text: '各机构处罚金额',
+                    text: '各部门处罚金额',
                     textStyle: {
                         color: '#0466c8',
                         fontWeight: 'bold',
@@ -1445,7 +1368,7 @@
                     }
                 },
                 legend: {
-                    data: ['上周', '本周'],
+                    data: ['上期', '本期'],
                     textStyle: {
                         color: '#0466c8',
                         fontSize: 14
@@ -1495,7 +1418,7 @@
                     }
                 },
                 series: [{
-                    name: '上周',
+                    name: '上期',
                     type: 'bar',
                     data: lastData,
                     label: {
@@ -1508,20 +1431,34 @@
                         }
                     },
                     itemStyle: {
-                        color: {
-                            type: 'linear',
-                            x: 0, y: 0, x2: 0, y2: 1,
-                            colorStops: [{
-                                offset: 0, color: '#67C23A'
-                            }, {
-                                offset: 1, color: '#95d475'
-                            }]
+                        color: function(params) {
+                            var category = data.categories[params.dataIndex];
+                            if (category === '张家港海事局') {
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#ff9800'
+                                    }, {
+                                        offset: 1, color: '#ffb74d'
+                                    }]
+                                };
+                            }
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            };
                         },
                         borderRadius: [3, 3, 0, 0]
                     }
                 },
                     {
-                        name: '本周',
+                        name: '本期',
                         type: 'bar',
                         data: currentData,
                         label: {
@@ -1541,14 +1478,28 @@
                             }
                         },
                         itemStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#409EFF'
-                                }, {
-                                    offset: 1, color: '#7ab9ff'
-                                }]
+                            color: function(params) {
+                                var category = data.categories[params.dataIndex];
+                                if (category === '张家港海事局') {
+                                    return {
+                                        type: 'linear',
+                                        x: 0, y: 0, x2: 0, y2: 1,
+                                        colorStops: [{
+                                            offset: 0, color: '#ffc107'
+                                        }, {
+                                            offset: 1, color: '#ffeb3b'
+                                        }]
+                                    };
+                                }
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#409EFF'
+                                    }, {
+                                        offset: 1, color: '#7ab9ff'
+                                    }]
+                                };
                             },
                             borderRadius: [3, 3, 0, 0]
                         }
@@ -1557,6 +1508,225 @@
             };
             
             penaltyAmountChart.setOption(chartOption);
+        }
+
+        function renderAveragePenaltyAmountChart(data) {
+            // 检查是否有平均处罚金额数据
+            if (!data.averagePenaltyAmountByAgency) {
+                console.warn('No average penalty amount data available');
+                return;
+            }
+            
+            // 处理数据格式
+            var avgData = data.averagePenaltyAmountByAgency;
+            var categories = avgData.categories || [];
+            var lastData = avgData.last || [];
+            var currentData = [];
+            
+            // 处理current可能是对象数组的情况
+            if (avgData.current) {
+                currentData = avgData.current.map(function(item) {
+                    if (typeof item === 'object' && item !== null) {
+                        return item;
+                    } else {
+                        return {
+                            value: item,
+                            changeRate: 0
+                        };
+                    }
+                });
+            }
+            
+            var chartOption = {
+                title: {
+                    text: '各部门平均处罚金额',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            // 金额转为万元显示
+                            var value = item.value;
+                            if (typeof item.value === 'object' && 'value' in item.value) {
+                                value = item.value.value;
+                            }
+                            var valueText = (value / 10000).toFixed(2) + '万元';
+                            result += colorSpan(item.color) + item.seriesName + ': ' + valueText + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['上期', '本期'],
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14
+                    },
+                    top: 30,
+                    left: 'center'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 80,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categories,
+                    axisLabel: {
+                        rotate: 30,
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12,
+                        formatter: function(value) {
+                            return (value / 10000).toFixed(2) + '万';
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '上期',
+                    type: 'bar',
+                    data: lastData,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#67C23A',
+                        fontSize: 12,
+                        formatter: function(params) {
+                            return (params.value / 10000).toFixed(2) + '万';
+                        }
+                    },
+                    itemStyle: {
+                        color: function(params) {
+                            var category = categories[params.dataIndex];
+                            if (category === '张家港海事局') {
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#ff9800'
+                                    }, {
+                                        offset: 1, color: '#ffb74d'
+                                    }]
+                                };
+                            }
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            };
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                },
+                {
+                    name: '本期',
+                    type: 'bar',
+                    data: currentData,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#409EFF',
+                        fontSize: 12,
+                        formatter: function(params) {
+                            if (typeof params.data === 'object' && params.data !== null && 'value' in params.data) {
+                                var valueText = (params.data.value / 10000).toFixed(2) + '万';
+                                if ('changeRate' in params.data) {
+                                    return valueText + " (" + (params.data.changeRate > 0 ? "+" : "") + params.data.changeRate.toFixed(2) + "%)";
+                                }
+                                return valueText;
+                            }
+                            return (params.value / 10000).toFixed(2) + '万';
+                        }
+                    },
+                    itemStyle: {
+                        color: function(params) {
+                            var category = categories[params.dataIndex];
+                            if (category === '张家港海事局') {
+                                return {
+                                    type: 'linear',
+                                    x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [{
+                                        offset: 0, color: '#ffc107'
+                                    }, {
+                                        offset: 1, color: '#ffeb3b'
+                                    }]
+                                };
+                            }
+                            return {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
+                            };
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                }]
+            };
+            
+            averagePenaltyAmountChart.setOption(chartOption);
+            
+            // 添加点击事件
+            averagePenaltyAmountChart.off('click');
+            averagePenaltyAmountChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var departmentName = categories[params.dataIndex];
+                    var queryParams = getQueryParams();
+                    
+                    // 获取详细数据（部门图表点击显示所有数据，不按特定机构过滤）
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
         }
 
         function renderCaseReasonChart(data) {
@@ -1601,7 +1771,14 @@
                         right: 0,
                         width: 20,
                         start: 0,
-                        end: 100,
+                        end: function() {
+                            // 计算默认显示15个案由的百分比
+                            var totalCount = data.caseReasonData.data.length;
+                            if (totalCount <= 15) {
+                                return 100;
+                            }
+                            return Math.round((15 / totalCount) * 100);
+                        }(),
                         filterMode: 'filter',
                         showDetail: false,
                         showDataShadow: false,
@@ -1692,8 +1869,8 @@
                     var queryParams = getQueryParams();
                     queryParams.caseReason = caseReason;
                     
-                    // 获取详细数据，限制在允许的机构范围内
-                    getPenaltyDetailsWithAgencyFilter(null, queryParams);
+                    // 获取详细数据
+                    getPenaltyDetails(null, queryParams);
                 }
             });
         }
@@ -1758,8 +1935,8 @@
                     var queryParams = getQueryParams();
                     queryParams.managementCategory = category;
                     
-                    // 获取详细数据，限制在允许的机构范围内
-                    getPenaltyDetailsWithAgencyFilter(null, queryParams);
+                    // 获取详细数据
+                    getPenaltyDetails(null, queryParams);
                 }
             });
         }
@@ -1774,6 +1951,11 @@
 
             departments.forEach(function(dept, index) {
                 var row = $('<tr></tr>');
+                
+                // 如果是张家港海事局，添加高亮样式
+                if (dept === '张家港海事局') {
+                    row.addClass('highlight-zjg');
+                }
 
                 // 添加部门名称
                 row.append('<td>' + dept + '</td>');
@@ -1978,74 +2160,13 @@
             });
         }
 
-        // 获取处罚详情数据并显示在弹窗中（限制在允许的机构范围内）
-        function getPenaltyDetailsWithAgencyFilter(agencyName, queryParams) {
-            // 构建查询参数
-            var params = queryParams || getQueryParams();
-            
-            // 如果传入了机构名称，添加到查询参数
-            if (agencyName) {
-                params.penaltyAgency = agencyName;
-            }
-            
-            // 发送AJAX请求获取详情数据
-            $.ajax({
-                url: 'getPenaltyDetails',
-                type: 'GET',
-                dataType: 'json',
-                data: params,
-                success: function(data) {
-                    // 清空表格内容
-                    var tableBody = $('#penaltyDetailsTable tbody');
-                    tableBody.empty();
-                    
-                    // 过滤数据，只显示允许的机构
-                    var filteredData = [];
-                    if (data && data.length > 0) {
-                        filteredData = data.filter(function(item) {
-                            return item.penaltyAgency && allowedAgencies.includes(item.penaltyAgency);
-                        });
-                    }
-                    
-                    // 填充表格数据
-                    if (filteredData.length > 0) {
-                        filteredData.forEach(function(item) {
-                            var row = $('<tr></tr>');
-                            row.append('<td>' + (item.caseReason || '-') + '</td>');
-                            row.append('<td>' + (item.shipName || '-') + '</td>');
-                            row.append('<td>' + (item.shipType || '-') + '</td>');
-                            row.append('<td>' + (item.seaRiverShip || '-') + '</td>');
-                            row.append('<td>' + (item.penaltyAgency || '-') + '</td>');
-                            row.append('<td>' + (item.penaltyAmount || '0') + '</td>');
-                            row.append('<td>' + (item.penaltyDecisionTime || '-') + '</td>');
-                            row.append('<td>' + (item.managementCategory || '-') + '</td>');
-                            row.append('<td>' + (item.violationCircumstances || '-') + '</td>');
-                            tableBody.append(row);
-                        });
-                    } else {
-                        // 如果没有数据，显示提示信息
-                        tableBody.append('<tr><td colspan="9" class="text-center">没有符合条件的处罚记录</td></tr>');
-                    }
-                    
-                    // 显示弹窗
-                    $('#penaltyDetailsModal').modal('show');
-                },
-                error: function(error) {
-                    console.error('Error fetching penalty details:', error);
-                    Swal.fire({
-                        title: '错误!',
-                        text: '获取处罚详情失败，请查看控制台错误信息。',
-                        icon: 'error',
-                        confirmButtonText: '确定'
-                    });
-                }
-            });
-        }
+
 
         // 窗口大小变化时调整图表大小
         $(window).resize(function() {
             punishAgencyChart.resize();
             penaltyAmountChart.resize();
+            averagePenaltyAmountChart.resize();
             caseReasonChart.resize();
             managementCategoryChart.resize();
         });

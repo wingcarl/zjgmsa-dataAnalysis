@@ -168,4 +168,32 @@ public class PunishJudgeService extends CrudService<PunishJudgeDao, PunishJudge>
 	public List<String> findManagementCategories() {
 		return dao.findManagementCategories();
 	}
+	
+	/**
+	 * 获取所有部门列表（通过agency_dept表）
+	 */
+	public List<String> findAllDepartments() {
+		return dao.findAllDepartments();
+	}
+	
+	/**
+	 * 按部门统计处罚数量（通过agency_dept表关联）
+	 */
+	public List<java.util.Map<String, Object>> findPenaltyCountsByDepartment(PunishJudge punishJudge) {
+		return dao.findPenaltyCountsByDepartment(punishJudge);
+	}
+	
+	/**
+	 * 按部门统计处罚金额（通过agency_dept表关联）
+	 */
+	public List<java.util.Map<String, Object>> findPenaltyAmountsByDepartment(PunishJudge punishJudge) {
+		return dao.findPenaltyAmountsByDepartment(punishJudge);
+	}
+	
+	/**
+	 * 按部门统计平均处罚金额（通过agency_dept表关联）
+	 */
+	public List<java.util.Map<String, Object>> findAveragePenaltyAmountsByDepartment(PunishJudge punishJudge) {
+		return dao.findAveragePenaltyAmountsByDepartment(punishJudge);
+	}
 }

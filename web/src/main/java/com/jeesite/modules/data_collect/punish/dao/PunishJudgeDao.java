@@ -4,6 +4,7 @@ import com.jeesite.common.dao.CrudDao;
 import com.jeesite.common.mybatis.annotation.MyBatisDao;
 import com.jeesite.modules.data_collect.punish.entity.PunishJudge;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 处罚决定DAO接口
@@ -37,4 +38,24 @@ public interface PunishJudgeDao extends CrudDao<PunishJudge> {
 	 * 获取所有业务类型选项
 	 */
 	List<String> findManagementCategories();
+	
+	/**
+	 * 获取所有部门列表（通过agency_dept表）
+	 */
+	List<String> findAllDepartments();
+	
+	/**
+	 * 按部门统计处罚数量（通过agency_dept表关联）
+	 */
+	List<Map<String, Object>> findPenaltyCountsByDepartment(PunishJudge punishJudge);
+	
+	/**
+	 * 按部门统计处罚金额（通过agency_dept表关联）
+	 */
+	List<Map<String, Object>> findPenaltyAmountsByDepartment(PunishJudge punishJudge);
+	
+	/**
+	 * 按部门统计平均处罚金额（通过agency_dept表关联）
+	 */
+	List<Map<String, Object>> findAveragePenaltyAmountsByDepartment(PunishJudge punishJudge);
 }

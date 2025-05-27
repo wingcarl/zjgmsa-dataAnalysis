@@ -52,4 +52,146 @@
 		ORDER BY management_category
 	</select>
 	
+	<!-- 获取所有部门列表（通过agency_dept表） -->
+	<select id="findAllDepartments" resultType="String">
+		SELECT DISTINCT dept
+		FROM agency_dept
+		WHERE dept IS NOT NULL AND dept != ''
+		ORDER BY dept
+	</select>
+	
+	<!-- 按部门统计处罚数量（通过agency_dept表关联） -->
+	<select id="findPenaltyCountsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			COUNT(*) as count
+		FROM punish_judge pj
+		INNER JOIN agency_dept ad ON pj.penalty_agency = ad.agency
+		<where>
+			<if test="penaltyDecisionTime_gte != null">
+				AND pj.penalty_decision_time >= #{penaltyDecisionTime_gte}
+			</if>
+			<if test="penaltyDecisionTime_lte != null">
+				AND pj.penalty_decision_time &lt;= #{penaltyDecisionTime_lte}
+			</if>
+			<if test="penaltyAgency != null and penaltyAgency != ''">
+				AND pj.penalty_agency = #{penaltyAgency}
+			</if>
+			<if test="seaRiverShip != null and seaRiverShip != ''">
+				AND pj.sea_river_ship = #{seaRiverShip}
+			</if>
+			<if test="caseReason != null and caseReason != ''">
+				AND pj.case_reason = #{caseReason}
+			</if>
+			<if test="managementCategory != null and managementCategory != ''">
+				AND pj.management_category = #{managementCategory}
+			</if>
+			<if test="violationCircumstances != null and violationCircumstances != ''">
+				AND pj.violation_circumstances = #{violationCircumstances}
+			</if>
+			<if test="shipType != null and shipType != ''">
+				AND pj.ship_type = #{shipType}
+			</if>
+			<if test="penaltyAmount_gte != null">
+				AND pj.penalty_amount >= #{penaltyAmount_gte}
+			</if>
+			<if test="penaltyAmount_lte != null">
+				AND pj.penalty_amount &lt;= #{penaltyAmount_lte}
+			</if>
+		</where>
+		GROUP BY ad.dept
+		ORDER BY count DESC, ad.dept ASC
+	</select>
+	
+	<!-- 按部门统计处罚金额（通过agency_dept表关联） -->
+	<select id="findPenaltyAmountsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			COALESCE(SUM(pj.penalty_amount), 0) as amount
+		FROM punish_judge pj
+		INNER JOIN agency_dept ad ON pj.penalty_agency = ad.agency
+		<where>
+			<if test="penaltyDecisionTime_gte != null">
+				AND pj.penalty_decision_time >= #{penaltyDecisionTime_gte}
+			</if>
+			<if test="penaltyDecisionTime_lte != null">
+				AND pj.penalty_decision_time &lt;= #{penaltyDecisionTime_lte}
+			</if>
+			<if test="penaltyAgency != null and penaltyAgency != ''">
+				AND pj.penalty_agency = #{penaltyAgency}
+			</if>
+			<if test="seaRiverShip != null and seaRiverShip != ''">
+				AND pj.sea_river_ship = #{seaRiverShip}
+			</if>
+			<if test="caseReason != null and caseReason != ''">
+				AND pj.case_reason = #{caseReason}
+			</if>
+			<if test="managementCategory != null and managementCategory != ''">
+				AND pj.management_category = #{managementCategory}
+			</if>
+			<if test="violationCircumstances != null and violationCircumstances != ''">
+				AND pj.violation_circumstances = #{violationCircumstances}
+			</if>
+			<if test="shipType != null and shipType != ''">
+				AND pj.ship_type = #{shipType}
+			</if>
+			<if test="penaltyAmount_gte != null">
+				AND pj.penalty_amount >= #{penaltyAmount_gte}
+			</if>
+			<if test="penaltyAmount_lte != null">
+				AND pj.penalty_amount &lt;= #{penaltyAmount_lte}
+			</if>
+		</where>
+		GROUP BY ad.dept
+		ORDER BY amount DESC, ad.dept ASC
+	</select>
+	
+	<!-- 按部门统计平均处罚金额（通过agency_dept表关联） -->
+	<select id="findAveragePenaltyAmountsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			COUNT(*) as count,
+			COALESCE(SUM(pj.penalty_amount), 0) as totalAmount,
+			CASE 
+				WHEN COUNT(*) > 0 THEN COALESCE(SUM(pj.penalty_amount), 0) / COUNT(*)
+				ELSE 0 
+			END as averageAmount
+		FROM punish_judge pj
+		INNER JOIN agency_dept ad ON pj.penalty_agency = ad.agency
+		<where>
+			<if test="penaltyDecisionTime_gte != null">
+				AND pj.penalty_decision_time >= #{penaltyDecisionTime_gte}
+			</if>
+			<if test="penaltyDecisionTime_lte != null">
+				AND pj.penalty_decision_time &lt;= #{penaltyDecisionTime_lte}
+			</if>
+			<if test="penaltyAgency != null and penaltyAgency != ''">
+				AND pj.penalty_agency = #{penaltyAgency}
+			</if>
+			<if test="seaRiverShip != null and seaRiverShip != ''">
+				AND pj.sea_river_ship = #{seaRiverShip}
+			</if>
+			<if test="caseReason != null and caseReason != ''">
+				AND pj.case_reason = #{caseReason}
+			</if>
+			<if test="managementCategory != null and managementCategory != ''">
+				AND pj.management_category = #{managementCategory}
+			</if>
+			<if test="violationCircumstances != null and violationCircumstances != ''">
+				AND pj.violation_circumstances = #{violationCircumstances}
+			</if>
+			<if test="shipType != null and shipType != ''">
+				AND pj.ship_type = #{shipType}
+			</if>
+			<if test="penaltyAmount_gte != null">
+				AND pj.penalty_amount >= #{penaltyAmount_gte}
+			</if>
+			<if test="penaltyAmount_lte != null">
+				AND pj.penalty_amount &lt;= #{penaltyAmount_lte}
+			</if>
+		</where>
+		GROUP BY ad.dept
+		ORDER BY averageAmount DESC, ad.dept ASC
+	</select>
+	
 </mapper>
