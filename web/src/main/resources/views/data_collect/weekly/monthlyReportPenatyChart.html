@@ -57,6 +57,7 @@
             background-color: var(--card-bg);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 15px;
+            position: relative;
         }
 
         .data-card {
@@ -480,6 +481,133 @@
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 100% !important; /* 箭头跟随容器高度 */
         }
+
+        /* 图表放大按钮样式 */
+        .chart-expand-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background-color: rgba(4, 102, 200, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .chart-expand-btn:hover {
+            background-color: var(--primary-color);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .chart-expand-btn:active {
+            transform: scale(0.95);
+        }
+
+
+
+        /* 弹窗样式 */
+        .chart-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .chart-modal-content {
+            position: relative;
+            background-color: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 95%;
+            height: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .chart-modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .chart-modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-modal-close:hover {
+            color: #333;
+            background-color: #f0f0f0;
+        }
+        
+        .chart-modal-body {
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .chart-modal-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .chart-modal-content {
+                width: 98%;
+                height: 95%;
+                margin: 1% auto;
+                padding: 15px;
+            }
+            
+            .chart-modal-title {
+                font-size: 20px;
+            }
+            
+            .chart-expand-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+        }
     </style>
     <!-- jQuery 和 ECharts -->
     <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
@@ -536,6 +664,15 @@
                 <div class="row">
                     <div class="col-md-3 mb-2">
                         <div class="form-group">
+                            <label for="department">海事机构：</label>
+                            <select id="department" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
                             <label for="penaltyAgency">处罚机构：</label>
                             <select id="penaltyAgency" class="form-control filter-select">
                                 <option value="">全部</option>
@@ -553,19 +690,10 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-2"><!-- 调整案由的列宽为4 -->
+                    <div class="col-md-3 mb-2">
                         <div class="form-group">
                             <label for="caseReason">案由：</label>
                             <select id="caseReason" class="form-control filter-select">
-                                <option value="">全部</option>
-                                <!-- 动态填充 -->
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-2 mb-2"><!-- 相应调整业务类型的列宽为2 -->
-                        <div class="form-group">
-                            <label for="managementCategory">业务类型：</label>
-                            <select id="managementCategory" class="form-control filter-select">
                                 <option value="">全部</option>
                                 <!-- 动态填充 -->
                             </select>
@@ -576,6 +704,15 @@
             
             <div class="filter-row">
                 <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="managementCategory">业务类型：</label>
+                            <select id="managementCategory" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
                     <div class="col-md-3 mb-2">
                         <div class="form-group">
                             <label for="violationCircumstances">违法情节：</label>
@@ -598,6 +735,8 @@
                         <div class="form-group">
                             <label for="minAmount">最小金额：</label>
                             <input type="number" id="minAmount" class="form-control filter-input" placeholder="最小金额">
+                        </div>
+                    </div>
                         </div>
                     </div>
                     <div class="col-md-3 mb-2">
@@ -643,7 +782,7 @@
                     <tr>
                                                     <th>上期</th>
                             <th>本期</th>
-                            <th>环比</th>
+                        <th>环比</th>
                             <th>上期</th>
                             <th>本期</th>
                         <th>环比</th>
@@ -662,7 +801,11 @@
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各部门处罚决定数量</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="punish-agency-chart" class="chart-container"></div>
+                <div id="punish-agency-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('punish-agency-chart', '各部门处罚决定数量')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -672,7 +815,11 @@
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各部门处罚金额</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="penalty-amount-chart" class="chart-container"></div>
+                <div id="penalty-amount-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('penalty-amount-chart', '各部门处罚金额')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -682,7 +829,11 @@
         <h5 class="charts-title"><i class="fas fa-chart-line icon-box"></i>各部门平均处罚金额</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="average-penalty-amount-chart" class="chart-container"></div>
+                <div id="average-penalty-amount-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('average-penalty-amount-chart', '各部门平均处罚金额')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -692,7 +843,11 @@
         <h5 class="charts-title"><i class="fas fa-chart-column icon-box"></i>各部门重点违法行为占比</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="key-violation-ratio-chart" class="chart-container"></div>
+                <div id="key-violation-ratio-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('key-violation-ratio-chart', '各部门重点违法行为占比')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -702,7 +857,11 @@
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>处罚案由对比</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="case-reason-chart" class="chart-container"></div>
+                <div id="case-reason-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('case-reason-chart', '处罚案由对比')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -712,7 +871,53 @@
         <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>处罚类别对比</h5>
         <div class="row">
             <div class="col-md-12">
-                <div id="management-category-chart" class="chart-container"></div>
+                <div id="management-category-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('management-category-chart', '处罚类别对比')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 违法情节统计图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>违法情节统计</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="violation-circumstances-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('violation-circumstances-chart', '违法情节统计')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 当事人类型统计图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>当事人类型统计</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="party-type-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('party-type-chart', '当事人类型统计')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 船籍港处罚数量统计图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>船籍港处罚数量统计</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="port-registry-chart" class="chart-container">
+                    <button class="chart-expand-btn" onclick="expandChart('port-registry-chart', '船籍港处罚数量统计')" title="放大图表">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -755,6 +960,19 @@
             </div>
         </div>
     </div>
+
+    <!-- 图表放大弹窗 -->
+    <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <h2 class="chart-modal-title" id="chartModalTitle">图表</h2>
+                <button class="chart-modal-close" onclick="closeChartModal()">&times;</button>
+            </div>
+            <div class="chart-modal-body">
+                <div id="chartModalChart" class="chart-modal-chart"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
@@ -772,6 +990,9 @@
         var keyViolationRatioChart = echarts.init(document.getElementById('key-violation-ratio-chart'));
         var caseReasonChart = echarts.init(document.getElementById('case-reason-chart'));
         var managementCategoryChart = echarts.init(document.getElementById('management-category-chart'));
+        var violationCircumstancesChart = echarts.init(document.getElementById('violation-circumstances-chart'));
+        var partyTypeChart = echarts.init(document.getElementById('party-type-chart'));
+        var portRegistryChart = echarts.init(document.getElementById('port-registry-chart'));
 
         // 筛选条件折叠功能
         $('#filterToggle').on('click', function() {
@@ -786,6 +1007,9 @@
                 keyViolationRatioChart.resize();
                 caseReasonChart.resize();
                 managementCategoryChart.resize();
+                violationCircumstancesChart.resize();
+                partyTypeChart.resize();
+                portRegistryChart.resize();
             }, 350);
         });
 
@@ -795,6 +1019,7 @@
         var fetchDataButton = $('#fetchDataButton');
         
         // 获取筛选条件元素
+        var departmentSelect = $('#department');
         var penaltyAgencySelect = $('#penaltyAgency');
         var seaRiverShipSelect = $('#seaRiverShip');
         var caseReasonInput = $('#caseReason');
@@ -878,6 +1103,19 @@
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {
+                    // 加载部门选项
+                    if (data && data.departments && Array.isArray(data.departments) && data.departments.length > 0) {
+                        var departmentOptions = '<option value="">全部</option>';
+                        data.departments.forEach(function(item) {
+                            departmentOptions += '<option value="' + item + '">' + item + '</option>';
+                        });
+                        departmentSelect.html(departmentOptions);
+                        departmentSelect.select2({
+                            placeholder: "请选择海事机构",
+                            allowClear: true
+                        });
+                    }
+                    
                     // 加载违法情节选项
                     if (data && data.violationCircumstances && Array.isArray(data.violationCircumstances) && data.violationCircumstances.length > 0) {
                         var violationOptions = '<option value="">全部</option>';
@@ -996,6 +1234,9 @@
                         renderKeyViolationRatioChart(data);
                         renderCaseReasonChart(data);
                         renderManagementCategoryChart(data);
+                        renderViolationCircumstancesChart(data);
+                        renderPartyTypeChart(data);
+                        renderPortRegistryChart(data);
                         resolve();
                     },
                     error: function(error){
@@ -1030,7 +1271,7 @@
                 shipType: shipTypeSelect.val(),
                 minAmount: minAmount ? minAmount : "",
                 maxAmount: maxAmount ? maxAmount : "",
-
+                department: departmentSelect.val()
             };
         }
 
@@ -1061,6 +1302,9 @@
                     renderKeyViolationRatioChart(data);
                     renderCaseReasonChart(data);
                     renderManagementCategoryChart(data);
+                    renderViolationCircumstancesChart(data);
+                    renderPartyTypeChart(data);
+                    renderPortRegistryChart(data);
                     
                     // 动态填充业务类型下拉框
                     fillManagementCategoryDropdown(data.managementCategoryData);
@@ -1251,13 +1495,13 @@
                                 };
                             }
                             return {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#67C23A'
-                                }, {
-                                    offset: 1, color: '#95d475'
-                                }]
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#67C23A'
+                            }, {
+                                offset: 1, color: '#95d475'
+                            }]
                             };
                         },
                         borderRadius: [3, 3, 0, 0]
@@ -1297,13 +1541,13 @@
                                 };
                             }
                             return {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#409EFF'
-                                }, {
-                                    offset: 1, color: '#7ab9ff'
-                                }]
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#409EFF'
+                            }, {
+                                offset: 1, color: '#7ab9ff'
+                            }]
                             };
                         },
                         borderRadius: [3, 3, 0, 0]
@@ -1461,13 +1705,13 @@
                                 };
                             }
                             return {
-                                type: 'linear',
-                                x: 0, y: 0, x2: 0, y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: '#67C23A'
-                                }, {
-                                    offset: 1, color: '#95d475'
-                                }]
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#67C23A'
+                            }, {
+                                offset: 1, color: '#95d475'
+                            }]
                             };
                         },
                         borderRadius: [3, 3, 0, 0]
@@ -1508,13 +1752,13 @@
                                     };
                                 }
                                 return {
-                                    type: 'linear',
-                                    x: 0, y: 0, x2: 0, y2: 1,
-                                    colorStops: [{
-                                        offset: 0, color: '#409EFF'
-                                    }, {
-                                        offset: 1, color: '#7ab9ff'
-                                    }]
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#409EFF'
+                                }, {
+                                    offset: 1, color: '#7ab9ff'
+                                }]
                                 };
                             },
                             borderRadius: [3, 3, 0, 0]
@@ -1524,6 +1768,18 @@
             };
             
             penaltyAmountChart.setOption(chartOption);
+            
+            // 添加点击事件
+            penaltyAmountChart.off('click');
+            penaltyAmountChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var departmentName = data.categories[params.dataIndex];
+                    var queryParams = getQueryParams();
+                    
+                    // 获取详细数据（部门图表点击显示所有数据，不按特定机构过滤）
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
         }
 
         function renderAveragePenaltyAmountChart(data) {
@@ -2340,15 +2596,315 @@
             return "neutral-change";
         }
 
+        // 渲染违法情节统计图表
+        function renderViolationCircumstancesChart(data) {
+            if (!data.violationCircumstancesData || !data.violationCircumstancesData.data) {
+                console.warn('No violation circumstances data available');
+                return;
+            }
+            
+            var chartOption = {
+                title: {
+                    text: '违法情节统计',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var colorSpan = '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + params.color + '"></span>';
+                        return colorSpan + params.name + ': ' + params.value + ' (' + params.percent + '%)';
+                    }
+                },
+                legend: {
+                    orient: 'horizontal',
+                    left: 'center',
+                    top: 50,
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14
+                    }
+                },
+                series: [{
+                    name: '违法情节',
+                    type: 'pie',
+                    radius: '60%',
+                    center: ['50%', '60%'],
+                    data: data.violationCircumstancesData.data,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+            violationCircumstancesChart.setOption(chartOption);
+            
+            // 添加点击事件
+            violationCircumstancesChart.off('click');
+            violationCircumstancesChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var violationCircumstance = params.name;
+                    var queryParams = getQueryParams();
+                    queryParams.violationCircumstances = violationCircumstance;
+                    
+                    // 获取详细数据
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
+        }
+
+        // 渲染当事人类型统计图表
+        function renderPartyTypeChart(data) {
+            if (!data.partyTypeData || !data.partyTypeData.data) {
+                console.warn('No party type data available');
+                return;
+            }
+            
+            var chartOption = {
+                title: {
+                    text: '当事人类型统计',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var colorSpan = '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + params.color + '"></span>';
+                        return colorSpan + params.name + ': ' + params.value + ' (' + params.percent + '%)';
+                    }
+                },
+                legend: {
+                    orient: 'horizontal',
+                    left: 'center',
+                    top: 50,
+                    textStyle: {
+                        color: '#0466c8',
+                        fontSize: 14
+                    }
+                },
+                series: [{
+                    name: '当事人类型',
+                    type: 'pie',
+                    radius: '60%',
+                    center: ['50%', '60%'],
+                    data: data.partyTypeData.data,
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+            partyTypeChart.setOption(chartOption);
+            
+            // 添加点击事件
+            partyTypeChart.off('click');
+            partyTypeChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var partyType = params.name;
+                    var queryParams = getQueryParams();
+                    queryParams.partyType = partyType;
+                    
+                    // 获取详细数据
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
+        }
+
+        // 渲染船籍港处罚数量统计图表
+        function renderPortRegistryChart(data) {
+            if (!data.portRegistryData || !data.portRegistryData.data) {
+                console.warn('No port registry data available');
+                return;
+            }
+            
+            var chartOption = {
+                title: {
+                    text: '船籍港处罚数量统计',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    }
+                },
+                legend: {
+                    show: false
+                },
+                grid: {
+                    left: '15%',
+                    right: '10%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        right: 0,
+                        width: 20,
+                        start: 0,
+                        end: function() {
+                            // 计算默认显示15个船籍港的百分比
+                            var totalCount = data.portRegistryData.data.length;
+                            if (totalCount <= 15) {
+                                return 100;
+                            }
+                            return Math.round((15 / totalCount) * 100);
+                        }(),
+                        filterMode: 'filter',
+                        showDetail: false,
+                        showDataShadow: false,
+                        handleIcon: 'path://M10.7,11.9v-1.3H9.3v1.3c-4.9,0.3-8.8,4.4-8.8,9.4c0,5,3.9,9.1,8.8,9.4v1.3h1.3v-1.3c4.9-0.3,8.8-4.4,8.8-9.4C19.5,16.3,15.6,12.2,10.7,11.9z M13.3,24.4H6.7V23h6.6V24.4z M13.3,19.6H6.7v-1.4h6.6V19.6z',
+                        handleSize: '80%',
+                        handleStyle: {
+                            color: '#0466c8',
+                            shadowBlur: 3,
+                            shadowColor: 'rgba(0, 0, 0, 0.2)',
+                            shadowOffsetX: 1,
+                            shadowOffsetY: 1
+                        }
+                    }
+                ],
+                xAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: data.portRegistryData.data.map(function(item) { return item.name; }),
+                    axisLabel: {
+                        color: '#001845',
+                        fontSize: 12,
+                        formatter: function (value) {
+                            // 如果文本长度超过15个字符，截取前15个字符并加上省略号
+                            if (value.length > 15) {
+                                return value.substring(0, 15) + '...';
+                            }
+                            return value;
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
+                series: [{
+                    name: '船籍港',
+                    type: 'bar',
+                    data: data.portRegistryData.data.map(function(item) { return item.value; }),
+                    label: {
+                        show: true,
+                        position: 'right',
+                        color: '#409EFF',
+                        fontSize: 12
+                    },
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 1, y2: 0,
+                            colorStops: [{
+                                offset: 0, color: '#409EFF'
+                            }, {
+                                offset: 1, color: '#7ab9ff'
+                            }]
+                        },
+                        borderRadius: [0, 3, 3, 0]
+                    }
+                }]
+            };
+            portRegistryChart.setOption(chartOption);
+            
+            // 添加点击事件
+            portRegistryChart.off('click');
+            portRegistryChart.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var portRegistry = data.portRegistryData.data[params.dataIndex].name;
+                    var queryParams = getQueryParams();
+                    queryParams.portRegistry = portRegistry;
+                    
+                    // 获取详细数据
+                    getPenaltyDetails(null, queryParams);
+                }
+            });
+        }
+
         // 获取处罚详情数据并显示在弹窗中
         function getPenaltyDetails(agencyName, queryParams) {
             // 构建查询参数
             var params = queryParams || getQueryParams();
             
-            // 如果传入了机构名称，添加到查询参数
+            // 如果传入了机构名称，添加到查询参数（但不覆盖海事机构筛选）
             if (agencyName) {
                 params.penaltyAgency = agencyName;
             }
+            
+            // 确保海事机构筛选条件始终包含在内（强制更新为当前选择的值）
+            var currentDepartment = departmentSelect.val();
+            if (currentDepartment) {
+                params.department = currentDepartment;
+            }
+            
+            // 调试信息：打印查询参数
+            console.log('getPenaltyDetails 查询参数:', params);
+            console.log('当前选择的海事机构:', currentDepartment);
             
             // 发送AJAX请求获取详情数据
             $.ajax({
@@ -2406,7 +2962,128 @@
             keyViolationRatioChart.resize();
             caseReasonChart.resize();
             managementCategoryChart.resize();
+            violationCircumstancesChart.resize();
+            partyTypeChart.resize();
+            portRegistryChart.resize();
         });
+    });
+
+    // 全局变量存储弹窗图表实例
+    var modalChart = null;
+
+    // 图表放大功能
+    function expandChart(chartId, title) {
+        // 获取原始图表实例
+        var originalChart = null;
+        switch(chartId) {
+            case 'punish-agency-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('punish-agency-chart'));
+                break;
+            case 'penalty-amount-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('penalty-amount-chart'));
+                break;
+            case 'average-penalty-amount-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('average-penalty-amount-chart'));
+                break;
+            case 'key-violation-ratio-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('key-violation-ratio-chart'));
+                break;
+            case 'case-reason-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('case-reason-chart'));
+                break;
+            case 'management-category-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('management-category-chart'));
+                break;
+            case 'violation-circumstances-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('violation-circumstances-chart'));
+                break;
+            case 'party-type-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('party-type-chart'));
+                break;
+            case 'port-registry-chart':
+                originalChart = echarts.getInstanceByDom(document.getElementById('port-registry-chart'));
+                break;
+        }
+
+        if (!originalChart) {
+            console.error('找不到图表实例:', chartId);
+            return;
+        }
+
+        // 设置弹窗标题
+        document.getElementById('chartModalTitle').textContent = title;
+
+        // 显示弹窗
+        document.getElementById('chartModal').style.display = 'block';
+
+        // 创建弹窗图表实例
+        setTimeout(function() {
+            var modalChartContainer = document.getElementById('chartModalChart');
+            
+            // 销毁之前的图表实例
+            if (modalChart) {
+                modalChart.dispose();
+            }
+            
+            // 创建新的图表实例
+            modalChart = echarts.init(modalChartContainer);
+            
+            // 获取原始图表的配置
+            var option = originalChart.getOption();
+            
+            // 调整弹窗图表的配置
+            if (option.title && option.title[0]) {
+                option.title[0].textStyle = {
+                    ...option.title[0].textStyle,
+                    fontSize: 20
+                };
+            }
+            
+            if (option.legend && option.legend[0]) {
+                option.legend[0].textStyle = {
+                    ...option.legend[0].textStyle,
+                    fontSize: 16
+                };
+            }
+
+            // 设置配置到弹窗图表
+            modalChart.setOption(option);
+            
+            // 调整图表大小
+            modalChart.resize();
+        }, 100);
+    }
+
+    // 关闭图表弹窗
+    function closeChartModal() {
+        document.getElementById('chartModal').style.display = 'none';
+        
+        // 销毁弹窗图表实例
+        if (modalChart) {
+            modalChart.dispose();
+            modalChart = null;
+        }
+    }
+
+    // 点击弹窗背景关闭弹窗
+    document.getElementById('chartModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeChartModal();
+        }
+    });
+
+    // ESC键关闭弹窗
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeChartModal();
+        }
+    });
+
+    // 窗口大小变化时调整弹窗图表大小
+    window.addEventListener('resize', function() {
+        if (modalChart) {
+            modalChart.resize();
+        }
     });
 </script>
 </body>

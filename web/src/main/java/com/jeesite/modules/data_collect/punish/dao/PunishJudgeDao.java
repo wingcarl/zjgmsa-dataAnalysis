@@ -63,4 +63,29 @@ public interface PunishJudgeDao extends CrudDao<PunishJudge> {
 	 * 按部门统计重点违法行为占比（通过agency_dept和case_key表关联）
 	 */
 	List<Map<String, Object>> findKeyViolationRatioByDepartment(PunishJudge punishJudge);
+	
+	/**
+	 * 获取案由统计数据（支持部门筛选）
+	 */
+	List<Map<String, Object>> findCaseReasonStatistics(PunishJudge punishJudge);
+	
+	/**
+	 * 获取管理分类统计数据（支持部门筛选）
+	 */
+	List<Map<String, Object>> findManagementCategoryStatistics(PunishJudge punishJudge);
+	
+	/**
+	 * 获取违法情节统计数据（支持部门筛选）
+	 */
+	List<Map<String, Object>> findViolationCircumstancesStatistics(PunishJudge punishJudge);
+	
+	/**
+	 * 获取当事人类型统计数据（支持部门筛选）
+	 */
+	List<Map<String, Object>> findPartyTypeStatistics(PunishJudge punishJudge);
+	
+	/**
+	 * 获取船籍港统计数据（支持部门筛选）
+	 */
+	List<Map<String, Object>> findPortRegistryStatistics(PunishJudge punishJudge);
 }

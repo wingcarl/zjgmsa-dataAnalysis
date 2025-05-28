@@ -203,4 +203,39 @@ public class PunishJudgeService extends CrudService<PunishJudgeDao, PunishJudge>
 	public List<java.util.Map<String, Object>> findKeyViolationRatioByDepartment(PunishJudge punishJudge) {
 		return dao.findKeyViolationRatioByDepartment(punishJudge);
 	}
+	
+	/**
+	 * 获取案由统计数据（支持部门筛选）
+	 */
+	public List<java.util.Map<String, Object>> findCaseReasonStatistics(PunishJudge punishJudge) {
+		return dao.findCaseReasonStatistics(punishJudge);
+	}
+	
+	/**
+	 * 获取管理分类统计数据（支持部门筛选）
+	 */
+	public List<java.util.Map<String, Object>> findManagementCategoryStatistics(PunishJudge punishJudge) {
+		return dao.findManagementCategoryStatistics(punishJudge);
+	}
+	
+	/**
+	 * 获取违法情节统计数据（支持部门筛选）
+	 */
+	public List<java.util.Map<String, Object>> findViolationCircumstancesStatistics(PunishJudge punishJudge) {
+		return dao.findViolationCircumstancesStatistics(punishJudge);
+	}
+	
+	/**
+	 * 获取当事人类型统计数据（支持部门筛选）
+	 */
+	public List<java.util.Map<String, Object>> findPartyTypeStatistics(PunishJudge punishJudge) {
+		return dao.findPartyTypeStatistics(punishJudge);
+	}
+	
+	/**
+	 * 获取船籍港统计数据（支持部门筛选）
+	 */
+	public List<java.util.Map<String, Object>> findPortRegistryStatistics(PunishJudge punishJudge) {
+		return dao.findPortRegistryStatistics(punishJudge);
+	}
 }

@@ -73,7 +73,7 @@ import com.jeesite.common.utils.excel.annotation.ExcelFields;
 		@Column(name="update_by", attrName="updateBy", label="更新者", isQuery=false),
 		@Column(name="update_date", attrName="updateDate", label="更新时间", isQuery=false),
 		@Column(name="remarks", attrName="remarks", label="备注信息", isQuery=false),
-	}, orderBy="a.update_date DESC"
+	}, orderBy="a.update_date DESC", extWhereKeys="departmentWhere"
 )
 public class PunishJudge extends DataEntity<PunishJudge> {
 	
@@ -131,6 +131,9 @@ public class PunishJudge extends DataEntity<PunishJudge> {
 	private Date penaltyDecisionTime_lte;		// 处罚决定时间-结束
 	private Double penaltyAmount_gte;		// 处罚金额-最小值
 	private Double penaltyAmount_lte;		// 处罚金额-最大值
+	
+	// 部门筛选条件（用于关联agency_dept表）
+	private String department;		// 部门筛选
 
 	@ExcelFields({
 		@ExcelField(title="处罚类型", attrName="penaltyType", align=Align.CENTER, sort=20),
@@ -639,6 +642,19 @@ public class PunishJudge extends DataEntity<PunishJudge> {
 	public void setPenaltyAmount_lte(Double penaltyAmount_lte) {
 		this.penaltyAmount_lte = penaltyAmount_lte;
 		sqlMap.getWhere().and("penalty_amount", QueryType.LTE, penaltyAmount_lte);
+	}
+	
+	public String getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(String department) {
+		this.department = department;
+		// 添加自定义查询条件，通过agency_dept表关联查询
+		if (com.jeesite.common.lang.StringUtils.isNotBlank(department)) {
+			String extWhere = "AND EXISTS (SELECT 1 FROM agency_dept ad WHERE ad.agency = a.penalty_agency AND ad.dept = '" + department + "')";
+			sqlMap().add("departmentWhere", extWhere);
+		}
 	}
 	
 }

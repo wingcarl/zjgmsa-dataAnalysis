@@ -166,7 +166,7 @@ public class PunishJudgeController extends BaseController {
 												  String seaRiverShip, String caseReason, 
 												  String managementCategory, String violationCircumstances, 
 												  String minAmount, String maxAmount, String shipType,
-												  String allowedAgencies) {
+												  String allowedAgencies, String department) {
 		Map<String, Object> chartData = new HashMap<>();
 		
 		// 构建查询条件
@@ -198,6 +198,11 @@ public class PunishJudgeController extends BaseController {
 		}
 		if (StringUtils.isNotBlank(shipType)) {
 			punishJudge.setShipType(shipType);
+		}
+		
+		// 设置部门筛选条件
+		if (StringUtils.isNotBlank(department)) {
+			punishJudge.setDepartment(department);
 		}
 		
 		// 设置金额范围
@@ -258,6 +263,9 @@ public class PunishJudgeController extends BaseController {
 			}
 			if (StringUtils.isNotBlank(shipType)) {
 				lastPunishJudge.setShipType(shipType);
+			}
+			if (StringUtils.isNotBlank(department)) {
+				lastPunishJudge.setDepartment(department);
 			}
 			if (StringUtils.isNotBlank(minAmount)) {
 				lastPunishJudge.setPenaltyAmount_gte(Double.parseDouble(minAmount));
@@ -781,6 +789,10 @@ public class PunishJudgeController extends BaseController {
 		List<String> managementCategories = punishJudgeService.findManagementCategories();
 		result.put("managementCategories", managementCategories);
 		
+		// 获取所有部门选项（通过agency_dept表）
+		List<String> departments = punishJudgeService.findAllDepartments();
+		result.put("departments", departments);
+		
 		return result;
 	}
 
@@ -792,7 +804,8 @@ public class PunishJudgeController extends BaseController {
 	public List<Map<String, Object>> getPenaltyDetails(String startDate, String endDate, String penaltyAgency, 
                                      String seaRiverShip, String caseReason, 
                                      String managementCategory, String violationCircumstances, 
-                                     String minAmount, String maxAmount, String shipType) {
+                                     String minAmount, String maxAmount, String shipType,
+                                     String partyType, String portRegistry, String department) {
 		// 构建查询条件
 		PunishJudge punishJudge = new PunishJudge();
 		
@@ -824,6 +837,15 @@ public class PunishJudgeController extends BaseController {
 		}
 		if (StringUtils.isNotBlank(shipType)) {
 			punishJudge.setShipType(shipType);
+		}
+		if (StringUtils.isNotBlank(partyType)) {
+			punishJudge.setPartyType(partyType);
+		}
+		if (StringUtils.isNotBlank(portRegistry)) {
+			punishJudge.setPortRegistry(portRegistry);
+		}
+		if (StringUtils.isNotBlank(department)) {
+			punishJudge.setDepartment(department);
 		}
 		
 		// 设置金额范围
@@ -871,15 +893,170 @@ public class PunishJudgeController extends BaseController {
 		return (double) Math.round(((double) (current - last) / last) * 10000) / 100;
 	}
 
+	/**
+	 * 获取违法情节统计数据
+	 */
+	private Map<String, Object> getViolationCircumstancesDataFromPunish(List<PunishJudge> punishList) {
+		Map<String, Object> result = new HashMap<>();
+		Map<String, Integer> countMap = new HashMap<>();
+		
+		// 统计各违法情节的数量
+		for (PunishJudge punish : punishList) {
+			String violationCircumstances = punish.getViolationCircumstances();
+			if (StringUtils.isNotBlank(violationCircumstances)) {
+				countMap.put(violationCircumstances, countMap.getOrDefault(violationCircumstances, 0) + 1);
+			}
+		}
+		
+		// 转换为图表数据格式，按数量降序排序
+		List<Map<String, Object>> data = new ArrayList<>();
+		countMap.entrySet().stream()
+			.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+			.forEach(entry -> {
+				Map<String, Object> item = new HashMap<>();
+				item.put("name", entry.getKey());
+				item.put("value", entry.getValue());
+				data.add(item);
+			});
+		
+		result.put("data", data);
+		return result;
+	}
+
+	/**
+	 * 获取当事人类型统计数据
+	 */
+	private Map<String, Object> getPartyTypeDataFromPunish(List<PunishJudge> punishList) {
+		Map<String, Object> result = new HashMap<>();
+		Map<String, Integer> countMap = new HashMap<>();
+		
+		// 统计各当事人类型的数量
+		for (PunishJudge punish : punishList) {
+			String partyType = punish.getPartyType();
+			if (StringUtils.isNotBlank(partyType)) {
+				countMap.put(partyType, countMap.getOrDefault(partyType, 0) + 1);
+			}
+		}
+		
+		// 转换为图表数据格式，按数量降序排序
+		List<Map<String, Object>> data = new ArrayList<>();
+		countMap.entrySet().stream()
+			.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+			.forEach(entry -> {
+				Map<String, Object> item = new HashMap<>();
+				item.put("name", entry.getKey());
+				item.put("value", entry.getValue());
+				data.add(item);
+			});
+		
+		result.put("data", data);
+		return result;
+	}
+
+	/**
+	 * 获取船籍港处罚数量统计数据
+	 */
+	private Map<String, Object> getPortRegistryDataFromPunish(List<PunishJudge> punishList) {
+		Map<String, Object> result = new HashMap<>();
+		Map<String, Integer> countMap = new HashMap<>();
+		
+		// 统计各船籍港的处罚数量
+		for (PunishJudge punish : punishList) {
+			String portRegistry = punish.getPortRegistry();
+			if (StringUtils.isNotBlank(portRegistry)) {
+				countMap.put(portRegistry, countMap.getOrDefault(portRegistry, 0) + 1);
+			}
+		}
+		
+		// 转换为图表数据格式，按数量降序排序
+		List<Map<String, Object>> data = new ArrayList<>();
+		countMap.entrySet().stream()
+			.sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+			.forEach(entry -> {
+				Map<String, Object> item = new HashMap<>();
+				item.put("name", entry.getKey());
+				item.put("value", entry.getValue());
+				data.add(item);
+			});
+		
+		result.put("data", data);
+		return result;
+	}
+
+	/**
+	 * 获取案由对比数据（支持部门筛选）
+	 */
+	private Map<String, Object> getCaseReasonDataFromPunishWithFilter(PunishJudge punishJudge) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 使用数据库查询获取案由统计数据
+		List<Map<String, Object>> caseReasonStats = punishJudgeService.findCaseReasonStatistics(punishJudge);
+		
+		result.put("data", caseReasonStats);
+		return result;
+	}
+
+	/**
+	 * 获取处罚类别对比数据（支持部门筛选）
+	 */
+	private Map<String, Object> getManagementCategoryDataFromPunishWithFilter(PunishJudge punishJudge) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 使用数据库查询获取管理分类统计数据
+		List<Map<String, Object>> categoryStats = punishJudgeService.findManagementCategoryStatistics(punishJudge);
+		
+		result.put("data", categoryStats);
+		return result;
+	}
+
+	/**
+	 * 获取违法情节统计数据（支持部门筛选）
+	 */
+	private Map<String, Object> getViolationCircumstancesDataFromPunishWithFilter(PunishJudge punishJudge) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 使用数据库查询获取违法情节统计数据
+		List<Map<String, Object>> violationStats = punishJudgeService.findViolationCircumstancesStatistics(punishJudge);
+		
+		result.put("data", violationStats);
+		return result;
+	}
+
+	/**
+	 * 获取当事人类型统计数据（支持部门筛选）
+	 */
+	private Map<String, Object> getPartyTypeDataFromPunishWithFilter(PunishJudge punishJudge) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 使用数据库查询获取当事人类型统计数据
+		List<Map<String, Object>> partyTypeStats = punishJudgeService.findPartyTypeStatistics(punishJudge);
+		
+		result.put("data", partyTypeStats);
+		return result;
+	}
+
+	/**
+	 * 获取船籍港处罚数量统计数据（支持部门筛选）
+	 */
+	private Map<String, Object> getPortRegistryDataFromPunishWithFilter(PunishJudge punishJudge) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 使用数据库查询获取船籍港统计数据
+		List<Map<String, Object>> portRegistryStats = punishJudgeService.findPortRegistryStatistics(punishJudge);
+		
+		result.put("data", portRegistryStats);
+		return result;
+	}
+
 	@GetMapping("fetchData")
 	@ResponseBody
 	public Map<String, Object> fetchData(String startDate, String endDate, String penaltyAgency, 
                                      String seaRiverShip, String caseReason, 
                                      String managementCategory, String violationCircumstances, 
                                      String minAmount, String maxAmount, String shipType,
-                                     String allowedAgencies) {
+                                     String allowedAgencies, String department) {
 		return getChartDataWithDate(startDate, endDate, penaltyAgency, seaRiverShip, caseReason,
-                               managementCategory, violationCircumstances, minAmount, maxAmount, shipType, allowedAgencies);
+                               managementCategory, violationCircumstances, minAmount, maxAmount, shipType, allowedAgencies, department);
 	}
 
 	@GetMapping("monthlyChartDataWithDate")
@@ -888,7 +1065,7 @@ public class PunishJudgeController extends BaseController {
 														  String seaRiverShip, String caseReason, 
 														  String managementCategory, String violationCircumstances, 
 														  String minAmount, String maxAmount, String shipType,
-														  String allowedAgencies) {
+														  String allowedAgencies, String department) {
 		Map<String, Object> chartData = new HashMap<>();
 		
 		// 构建查询条件
@@ -922,6 +1099,11 @@ public class PunishJudgeController extends BaseController {
 			punishJudge.setShipType(shipType);
 		}
 		
+		// 设置部门筛选条件
+		if (StringUtils.isNotBlank(department)) {
+			punishJudge.setDepartment(department);
+		}
+		
 		// 设置金额范围
 		if (StringUtils.isNotBlank(minAmount)) {
 			try {
@@ -938,7 +1120,7 @@ public class PunishJudgeController extends BaseController {
 			}
 		}
 		
-		// 查询当前时间范围的数据
+		// 查询当前时间范围的数据（用于数据看板计算）
 		List<PunishJudge> currentPunishList = punishJudgeService.findList(punishJudge);
 		
 		// 计算上期的时间范围（环比：根据本期时间段长度向前推相同时间段）
@@ -977,6 +1159,9 @@ public class PunishJudgeController extends BaseController {
 			}
 			if (StringUtils.isNotBlank(shipType)) {
 				lastPunishJudge.setShipType(shipType);
+			}
+			if (StringUtils.isNotBlank(department)) {
+				lastPunishJudge.setDepartment(department);
 			}
 			if (StringUtils.isNotBlank(minAmount)) {
 				try {
@@ -1029,13 +1214,25 @@ public class PunishJudgeController extends BaseController {
 		Map<String, Object> keyViolationRatioByAgency = getKeyViolationRatioByDepartmentFromPunish(punishJudge, lastPunishJudge);
 		chartData.put("keyViolationRatioByAgency", keyViolationRatioByAgency);
 		
-		// 获取案由对比数据
-		Map<String, Object> caseReasonData = getCaseReasonDataFromPunish(currentPunishList);
+		// 获取案由对比数据（使用数据库查询支持部门筛选）
+		Map<String, Object> caseReasonData = getCaseReasonDataFromPunishWithFilter(punishJudge);
 		chartData.put("caseReasonData", caseReasonData);
 		
-		// 获取处罚类别对比数据
-		Map<String, Object> managementCategoryData = getManagementCategoryDataFromPunish(currentPunishList);
+		// 获取处罚类别对比数据（使用数据库查询支持部门筛选）
+		Map<String, Object> managementCategoryData = getManagementCategoryDataFromPunishWithFilter(punishJudge);
 		chartData.put("managementCategoryData", managementCategoryData);
+		
+		// 获取违法情节统计数据（使用数据库查询支持部门筛选）
+		Map<String, Object> violationCircumstancesData = getViolationCircumstancesDataFromPunishWithFilter(punishJudge);
+		chartData.put("violationCircumstancesData", violationCircumstancesData);
+		
+		// 获取当事人类型统计数据（使用数据库查询支持部门筛选）
+		Map<String, Object> partyTypeData = getPartyTypeDataFromPunishWithFilter(punishJudge);
+		chartData.put("partyTypeData", partyTypeData);
+		
+		// 获取船籍港处罚数量统计数据（使用数据库查询支持部门筛选）
+		Map<String, Object> portRegistryData = getPortRegistryDataFromPunishWithFilter(punishJudge);
+		chartData.put("portRegistryData", portRegistryData);
 		
 		return chartData;
 	}
@@ -1046,8 +1243,8 @@ public class PunishJudgeController extends BaseController {
 											   String seaRiverShip, String caseReason, 
 											   String managementCategory, String violationCircumstances, 
 											   String minAmount, String maxAmount, String shipType,
-											   String allowedAgencies) {
+											   String allowedAgencies, String department) {
 		return getMonthlyChartDataWithDate(startDate, endDate, penaltyAgency, seaRiverShip, caseReason,
-										  managementCategory, violationCircumstances, minAmount, maxAmount, shipType, allowedAgencies);
+										  managementCategory, violationCircumstances, minAmount, maxAmount, shipType, allowedAgencies, department);
 	}
 }
