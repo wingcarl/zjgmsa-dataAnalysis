@@ -33,6 +33,13 @@ public class ShipOnSiteInspectionService extends CrudService<ShipOnSiteInspectio
     	return shipOnsiteInspectionDao.findDistinctList(query);
 	}
 
+	/**
+	 * 按部门统计现场监督数据（通过agency_dept表关联）
+	 */
+	public List<java.util.Map<String, Object>> findOnSiteInspectionStatisticsByDepartment(String startDate, String endDate, String department) {
+		return shipOnsiteInspectionDao.findOnSiteInspectionStatisticsByDepartment(startDate, endDate, department);
+	}
+
     /**
 	 * 获取单条数据
 	 * @param shipOnSiteInspection

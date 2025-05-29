@@ -35,4 +35,37 @@
 		MAX(update_date) DESC
 	</select>
 	
+	<!-- 按部门统计船舶检查数据（通过agency_dept表关联） -->
+	<select id="findShipInspectionStatisticsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			si.ship_type as shipType,
+			COUNT(*) as inspectionCount,
+			SUM(si.defect_count) as defectCount,
+			SUM(CASE WHEN si.detained = '是' THEN 1 ELSE 0 END) as detainedCount
+		FROM (
+			SELECT DISTINCT 
+				si.ship_name_cn,
+				DATE(si.inspection_date) as inspection_date,
+				si.inspection_agency,
+				si.ship_type,
+				si.defect_count,
+				si.detained
+			FROM ship_inspection si
+			WHERE si.inspection_type = '初查'
+			<if test="startDate != null and startDate != ''">
+				AND si.inspection_date >= #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND si.inspection_date &lt;= #{endDate}
+			</if>
+		) si
+		INNER JOIN agency_dept ad ON si.inspection_agency = ad.agency
+		<if test="department != null and department != ''">
+			WHERE ad.dept = #{department}
+		</if>
+		GROUP BY ad.dept, si.ship_type
+		ORDER BY ad.dept, si.ship_type
+	</select>
+	
 </mapper>

@@ -223,4 +223,50 @@ public class ShipOnSiteInspectionController extends BaseController {
 		return result;
 	}
 	
+	/**
+	 * 获取船舶现场监督检查数据统计 - 按部门分组（通过agency_dept表关联）
+	 */
+	@GetMapping("getOnSiteInspectionStatisticsByDepartment")
+	@ResponseBody
+	public Map<String, Object> getOnSiteInspectionStatisticsByDepartment(String startDate, String endDate, String department) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 使用DAO方法获取按部门分组的现场监督数据
+			List<Map<String, Object>> onSiteStatistics = shipOnSiteInspectionService.findOnSiteInspectionStatisticsByDepartment(startDate, endDate, department);
+			
+			// 初始化统计数据
+			long onSiteCount = 0;
+			long abnormalCount = 0;
+			Map<String, Long> agencyOnSiteCounts = new HashMap<>();
+			Map<String, Long> agencyAbnormalCounts = new HashMap<>();
+			
+			// 处理查询结果
+			for (Map<String, Object> stat : onSiteStatistics) {
+				String dept = (String) stat.get("department");
+				Long onSiteCountForDept = ((Number) stat.get("onSiteCount")).longValue();
+				Long abnormalCountForDept = ((Number) stat.get("abnormalCount")).longValue();
+				
+				onSiteCount += onSiteCountForDept;
+				abnormalCount += abnormalCountForDept;
+				
+				agencyOnSiteCounts.put(dept, onSiteCountForDept);
+				agencyAbnormalCounts.put(dept, abnormalCountForDept);
+			}
+			
+			// 组装返回数据
+			result.put("onSiteCount", onSiteCount);
+			result.put("abnormalCount", abnormalCount);
+			result.put("agencyOnSiteCounts", agencyOnSiteCounts);
+			result.put("agencyAbnormalCounts", agencyAbnormalCounts);
+			result.put("status", "success");
+		} catch (Exception e) {
+			logger.error("获取现场监督统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
 }

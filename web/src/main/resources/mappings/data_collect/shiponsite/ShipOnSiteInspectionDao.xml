@@ -20,4 +20,36 @@
 		group by ship_id,inspection_date,inspection_agency
 		ORDER BY ${sqlMap.order.toSql()}
 	</select>
+	
+	<!-- 按部门统计现场监督数据（通过agency_dept表关联） -->
+	<select id="findOnSiteInspectionStatisticsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			COUNT(*) as onSiteCount,
+			SUM(CASE WHEN osi.has_issue = 1 THEN 1 ELSE 0 END) as abnormalCount
+		FROM (
+			SELECT 
+				osi.ship_name_cn,
+				DATE(osi.inspection_date) as inspection_date,
+				osi.inspection_agency,
+				CASE WHEN MAX(CASE WHEN osi.issue_found = '是' THEN 1 ELSE 0 END) > 0 THEN 1 ELSE 0 END as has_issue
+			FROM ship_on_site_inspection osi
+			<where>
+				<if test="startDate != null and startDate != ''">
+					AND osi.inspection_date >= #{startDate}
+				</if>
+				<if test="endDate != null and endDate != ''">
+					AND osi.inspection_date &lt;= #{endDate}
+				</if>
+			</where>
+			GROUP BY osi.ship_name_cn, DATE(osi.inspection_date), osi.inspection_agency
+		) osi
+		INNER JOIN agency_dept ad ON osi.inspection_agency = ad.agency
+		<if test="department != null and department != ''">
+			WHERE ad.dept = #{department}
+		</if>
+		GROUP BY ad.dept
+		ORDER BY ad.dept
+	</select>
+	
 </mapper>

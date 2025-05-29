@@ -24,12 +24,15 @@ import org.springframework.web.multipart.MultipartFile;
 import com.jeesite.common.web.BaseController;
 import com.jeesite.modules.data_collect.weekly.entity.WeeklyReport;
 import com.jeesite.modules.data_collect.weekly.service.WeeklyReportService;
+import com.jeesite.modules.data_collect.weekly.dao.WeeklyReportDao;
 import com.jeesite.modules.data_collect.ship.entity.ShipInspection;
 import com.jeesite.modules.data_collect.ship.service.ShipInspectionService;
 import com.jeesite.modules.data_collect.psc.entity.PscInspection;
 import com.jeesite.modules.data_collect.psc.service.PscInspectionService;
 import com.jeesite.modules.data_collect.shiponsite.entity.ShipOnSiteInspection;
 import com.jeesite.modules.data_collect.shiponsite.service.ShipOnSiteInspectionService;
+import com.jeesite.modules.data_collect.ship.web.ShipInspectionController;
+import com.jeesite.modules.data_collect.shiponsite.web.ShipOnSiteInspectionController;
 
 /**
  * 周工作数据表Controller
@@ -51,6 +54,15 @@ public class WeeklyReportController extends BaseController {
 	
 	@Autowired
 	private ShipOnSiteInspectionService shipOnSiteInspectionService;
+	
+	@Autowired
+	private WeeklyReportDao weeklyReportDao;
+	
+	@Autowired
+	private ShipInspectionController shipInspectionController;
+	
+	@Autowired
+	private ShipOnSiteInspectionController shipOnSiteInspectionController;
 
 	/**
 	 * 获取数据
@@ -252,6 +264,15 @@ public class WeeklyReportController extends BaseController {
 	@RequestMapping(value = "chart")
 	public String chart(){
 		return "data_collect/weekly/weeklyReportChart";
+	}
+
+	/**
+	 * 跳转到月度报表图表页面
+	 * @return
+	 */
+	@RequestMapping(value = "monthlyChart")
+	public String monthlyChart(){
+		return "data_collect/weekly/monthlyReportChart";
 	}
 
 
@@ -763,7 +784,7 @@ public class WeeklyReportController extends BaseController {
 	}
 
 	/**
-	 * 从原始数据表获取统计数据 - 用于周数据看板
+	 * 从原始数据表获取统计数据 - 用于周数据看板，按部门分组
 	 */
 	@GetMapping("getOriginalDataStatistics")
 	@ResponseBody
@@ -771,311 +792,63 @@ public class WeeklyReportController extends BaseController {
 		Map<String, Object> result = new HashMap<>();
 		
 		try {
-			// 获取当前周期的各类型数据
-			Map<String, Object> shipData = getShipInspectionStatistics(startDate, endDate);
+			// 获取当前周期的各类型数据（限制为张家港海事局的四家机构）
+			Map<String, Object> shipData = getShipInspectionStatisticsForZhangjiagang(startDate, endDate);
 			Map<String, Object> pscData = getPscInspectionStatistics(startDate, endDate);
-			Map<String, Object> onSiteData = getOnSiteInspectionStatistics(startDate, endDate);
+			Map<String, Object> onSiteData = getOnSiteInspectionStatisticsForZhangjiagang(startDate, endDate);
 			
 			// 计算上一周期的日期范围
 			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
 			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
 			
 			if (startDateObj != null && endDateObj != null) {
-				long daysDiff = (endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24);
-				daysDiff++; // 包含起始日期
+				// 计算上一周期的日期范围（向前推7天）
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(startDateObj);
+				cal.add(Calendar.DAY_OF_MONTH, -7);
+				Date prevStartDate = cal.getTime();
 				
-				// 计算上一周期的起止日期
-				Date prevStartDateObj = DateUtils.addDays(startDateObj, (int)-daysDiff);
-				Date prevEndDateObj = DateUtils.addDays(endDateObj, (int)-daysDiff);
+				cal.setTime(endDateObj);
+				cal.add(Calendar.DAY_OF_MONTH, -7);
+				Date prevEndDate = cal.getTime();
 				
-				String prevStartDate = DateUtils.formatDate(prevStartDateObj);
-				String prevEndDate = DateUtils.formatDate(prevEndDateObj);
+				String prevStartDateStr = DateUtils.formatDate(prevStartDate);
+				String prevEndDateStr = DateUtils.formatDate(prevEndDate);
 				
-				// 获取上一周期的各类型数据
-				Map<String, Object> prevShipData = getShipInspectionStatistics(prevStartDate, prevEndDate);
-				Map<String, Object> prevPscData = getPscInspectionStatistics(prevStartDate, prevEndDate);
-				Map<String, Object> prevOnSiteData = getOnSiteInspectionStatistics(prevStartDate, prevEndDate);
+				// 获取上一周期的数据
+				Map<String, Object> prevShipData = getShipInspectionStatisticsForZhangjiagang(prevStartDateStr, prevEndDateStr);
+				Map<String, Object> prevPscData = getPscInspectionStatistics(prevStartDateStr, prevEndDateStr);
+				Map<String, Object> prevOnSiteData = getOnSiteInspectionStatisticsForZhangjiagang(prevStartDateStr, prevEndDateStr);
 				
-				// 将上周数据放入result，以便前端使用
+				// 计算环比变化率并构建部门数据列表
+				List<Map<String, Object>> agencyDataList = buildDepartmentDataListForZhangjiagang(shipData, onSiteData, prevShipData, prevOnSiteData);
+				result.put("agencyDataList", agencyDataList);
+				
+				// 添加上期数据到结果中
 				result.put("prevShipData", prevShipData);
 				result.put("prevPscData", prevPscData);
 				result.put("prevOnSiteData", prevOnSiteData);
 				
-				// 计算海船安检环比变化
-				long seaShipCount = (long) shipData.getOrDefault("seaShipCount", 0L);
-				long prevSeaShipCount = (long) prevShipData.getOrDefault("seaShipCount", 0L);
-				double seaShipCountRate = calculateChangeRate(seaShipCount, prevSeaShipCount);
-				result.put("seaShipCountRate", seaShipCountRate);
-				
-				// 计算海船缺陷环比变化
-				long seaShipDefectCount = (long) shipData.getOrDefault("seaShipDefectCount", 0L);
-				long prevSeaShipDefectCount = (long) prevShipData.getOrDefault("seaShipDefectCount", 0L);
-				double seaShipDefectRate = calculateChangeRate(seaShipDefectCount, prevSeaShipDefectCount);
-				result.put("seaShipDefectRate", seaShipDefectRate);
-				
-				// 计算海船滞留环比变化
-				long seaShipDetainedCount = (long) shipData.getOrDefault("seaShipDetainedCount", 0L);
-				long prevSeaShipDetainedCount = (long) prevShipData.getOrDefault("seaShipDetainedCount", 0L);
-				double seaShipDetainedRate = calculateChangeRate(seaShipDetainedCount, prevSeaShipDetainedCount);
-				result.put("seaShipDetainedRate", seaShipDetainedRate);
-				
-				// 计算内河船安检环比变化
-				long riverShipCount = (long) shipData.getOrDefault("riverShipCount", 0L);
-				long prevRiverShipCount = (long) prevShipData.getOrDefault("riverShipCount", 0L);
-				double riverShipCountRate = calculateChangeRate(riverShipCount, prevRiverShipCount);
-				result.put("riverShipCountRate", riverShipCountRate);
-				
-				// 计算内河船缺陷环比变化
-				long riverShipDefectCount = (long) shipData.getOrDefault("riverShipDefectCount", 0L);
-				long prevRiverShipDefectCount = (long) prevShipData.getOrDefault("riverShipDefectCount", 0L);
-				double riverShipDefectRate = calculateChangeRate(riverShipDefectCount, prevRiverShipDefectCount);
-				result.put("riverShipDefectRate", riverShipDefectRate);
-				
-				// 计算内河船滞留环比变化
-				long riverShipDetainedCount = (long) shipData.getOrDefault("riverShipDetainedCount", 0L);
-				long prevRiverShipDetainedCount = (long) prevShipData.getOrDefault("riverShipDetainedCount", 0L);
-				double riverShipDetainedRate = calculateChangeRate(riverShipDetainedCount, prevRiverShipDetainedCount);
-				result.put("riverShipDetainedRate", riverShipDetainedRate);
-				
-				// 计算PSC检查环比变化
-				long pscCount = (long) pscData.getOrDefault("pscCount", 0L);
-				long prevPscCount = (long) prevPscData.getOrDefault("pscCount", 0L);
-				double pscCountRate = calculateChangeRate(pscCount, prevPscCount);
-				result.put("pscCountRate", pscCountRate);
-				
-				// 计算PSC缺陷环比变化
-				long pscDefectCount = (long) pscData.getOrDefault("pscDefectCount", 0L);
-				long prevPscDefectCount = (long) prevPscData.getOrDefault("pscDefectCount", 0L);
-				double pscDefectRate = calculateChangeRate(pscDefectCount, prevPscDefectCount);
-				result.put("pscDefectRate", pscDefectRate);
-				
-				// 计算PSC滞留环比变化
-				long pscDetentionCount = (long) pscData.getOrDefault("pscDetentionCount", 0L);
-				long prevPscDetentionCount = (long) prevPscData.getOrDefault("pscDetentionCount", 0L);
-				double pscDetentionRate = calculateChangeRate(pscDetentionCount, prevPscDetentionCount);
-				result.put("pscDetentionRate", pscDetentionRate);
-				
-				// 计算现场监督环比变化
-				long onSiteCount = (long) onSiteData.getOrDefault("onSiteCount", 0L);
-				long prevOnSiteCount = (long) prevOnSiteData.getOrDefault("onSiteCount", 0L);
-				double onSiteCountRate = calculateChangeRate(onSiteCount, prevOnSiteCount);
-				result.put("onSiteCountRate", onSiteCountRate);
-				
-				// 计算现场监督异常环比变化
-				long abnormalCount = (long) onSiteData.getOrDefault("abnormalCount", 0L);
-				long prevAbnormalCount = (long) prevOnSiteData.getOrDefault("abnormalCount", 0L);
-				double abnormalCountRate = calculateChangeRate(abnormalCount, prevAbnormalCount);
-				result.put("abnormalCountRate", abnormalCountRate);
-				
-				// 按部门计算环比变化率
-				Map<String, Long> agencySeaShipCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
-				Map<String, Long> prevAgencySeaShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
-				
-				Map<String, Long> agencySeaShipDefectCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
-				Map<String, Long> prevAgencySeaShipDefectCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
-				
-				Map<String, Long> agencySeaShipDetainedCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
-				Map<String, Long> prevAgencySeaShipDetainedCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
-				
-				Map<String, Long> agencyRiverShipCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
-				Map<String, Long> prevAgencyRiverShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
-				
-				Map<String, Long> agencyRiverShipDefectCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
-				Map<String, Long> prevAgencyRiverShipDefectCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
-				
-				Map<String, Long> agencyRiverShipDetainedCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
-				Map<String, Long> prevAgencyRiverShipDetainedCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
-				
-				Map<String, Long> agencyOnSiteCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
-				Map<String, Long> prevAgencyOnSiteCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
-				
-				Map<String, Long> agencyAbnormalCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
-				Map<String, Long> prevAgencyAbnormalCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
-				
-				// 计算各部门环比变化率
-				Map<String, Double> agencySeaShipRates = new HashMap<>();
-				Map<String, Double> agencySeaShipDefectRates = new HashMap<>();
-				Map<String, Double> agencySeaShipDetainedRates = new HashMap<>();
-				Map<String, Double> agencyRiverShipRates = new HashMap<>();
-				Map<String, Double> agencyRiverShipDefectRates = new HashMap<>();
-				Map<String, Double> agencyRiverShipDetainedRates = new HashMap<>();
-				Map<String, Double> agencyOnSiteRates = new HashMap<>();
-				Map<String, Double> agencyAbnormalRates = new HashMap<>();
-				
-				// 合并当前和上一周期的所有部门
-				Set<String> allAgencies = new HashSet<>();
-				allAgencies.addAll(agencySeaShipCounts.keySet());
-				allAgencies.addAll(prevAgencySeaShipCounts.keySet());
-				allAgencies.addAll(agencyRiverShipCounts.keySet());
-				allAgencies.addAll(prevAgencyRiverShipCounts.keySet());
-				allAgencies.addAll(agencyOnSiteCounts.keySet());
-				allAgencies.addAll(prevAgencyOnSiteCounts.keySet());
-				
-				// 计算每个部门的各项数据环比变化率
-				for (String agency : allAgencies) {
-					// 海船安检数量环比
-					long currSeaShipCount = agencySeaShipCounts.getOrDefault(agency, 0L);
-					long lastSeaShipCount = prevAgencySeaShipCounts.getOrDefault(agency, 0L);
-					agencySeaShipRates.put(agency, calculateChangeRate(currSeaShipCount, lastSeaShipCount));
-					
-					// 海船缺陷数量环比
-					long currSeaShipDefectCount = agencySeaShipDefectCounts.getOrDefault(agency, 0L);
-					long lastSeaShipDefectCount = prevAgencySeaShipDefectCounts.getOrDefault(agency, 0L);
-					agencySeaShipDefectRates.put(agency, calculateChangeRate(currSeaShipDefectCount, lastSeaShipDefectCount));
-					
-					// 海船滞留数量环比
-					long currSeaShipDetainedCount = agencySeaShipDetainedCounts.getOrDefault(agency, 0L);
-					long lastSeaShipDetainedCount = prevAgencySeaShipDetainedCounts.getOrDefault(agency, 0L);
-					agencySeaShipDetainedRates.put(agency, calculateChangeRate(currSeaShipDetainedCount, lastSeaShipDetainedCount));
-					
-					// 内河船安检数量环比
-					long currRiverShipCount = agencyRiverShipCounts.getOrDefault(agency, 0L);
-					long lastRiverShipCount = prevAgencyRiverShipCounts.getOrDefault(agency, 0L);
-					agencyRiverShipRates.put(agency, calculateChangeRate(currRiverShipCount, lastRiverShipCount));
-					
-					// 内河船缺陷数量环比
-					long currRiverShipDefectCount = agencyRiverShipDefectCounts.getOrDefault(agency, 0L);
-					long lastRiverShipDefectCount = prevAgencyRiverShipDefectCounts.getOrDefault(agency, 0L);
-					agencyRiverShipDefectRates.put(agency, calculateChangeRate(currRiverShipDefectCount, lastRiverShipDefectCount));
-					
-					// 内河船滞留数量环比
-					long currRiverShipDetainedCount = agencyRiverShipDetainedCounts.getOrDefault(agency, 0L);
-					long lastRiverShipDetainedCount = prevAgencyRiverShipDetainedCounts.getOrDefault(agency, 0L);
-					agencyRiverShipDetainedRates.put(agency, calculateChangeRate(currRiverShipDetainedCount, lastRiverShipDetainedCount));
-					
-					// 现场监督数量环比
-					long currOnSiteCount = agencyOnSiteCounts.getOrDefault(agency, 0L);
-					long lastOnSiteCount = prevAgencyOnSiteCounts.getOrDefault(agency, 0L);
-					agencyOnSiteRates.put(agency, calculateChangeRate(currOnSiteCount, lastOnSiteCount));
-					
-					// 现场监督异常数量环比
-					long currAbnormalCount = agencyAbnormalCounts.getOrDefault(agency, 0L);
-					long lastAbnormalCount = prevAgencyAbnormalCounts.getOrDefault(agency, 0L);
-					agencyAbnormalRates.put(agency, calculateChangeRate(currAbnormalCount, lastAbnormalCount));
-				}
-				
-				// 把环比数据添加到结果中
-				result.put("agencySeaShipRates", agencySeaShipRates);
-				result.put("agencySeaShipDefectRates", agencySeaShipDefectRates);
-				result.put("agencySeaShipDetainedRates", agencySeaShipDetainedRates);
-				result.put("agencyRiverShipRates", agencyRiverShipRates);
-				result.put("agencyRiverShipDefectRates", agencyRiverShipDefectRates);
-				result.put("agencyRiverShipDetainedRates", agencyRiverShipDetainedRates);
-				result.put("agencyOnSiteRates", agencyOnSiteRates);
-				result.put("agencyAbnormalRates", agencyAbnormalRates);
-				
-				// 添加日期范围信息
-				result.put("currentDateRange", startDate + " 至 " + endDate);
-				result.put("prevDateRange", prevStartDate + " 至 " + prevEndDate);
+				// 计算总体环比变化率
+				calculateChangeRates(result, shipData, pscData, onSiteData, prevShipData, prevPscData, prevOnSiteData);
 			}
 			
-			// 合并数据
+			// 合并所有数据到结果中
 			result.putAll(shipData);
 			result.putAll(pscData);
 			result.putAll(onSiteData);
 			
-			// 获取部门列表
-			Set<String> agencies = new HashSet<>();
-			agencies.addAll(((Map<String, Long>)shipData.getOrDefault("agencySeaShipCounts", new HashMap<>())).keySet());
-			agencies.addAll(((Map<String, Long>)shipData.getOrDefault("agencyRiverShipCounts", new HashMap<>())).keySet());
-			agencies.addAll(((Map<String, Long>)onSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>())).keySet());
-			
-			// 转为列表并排序
-			List<String> agencyList = new ArrayList<>(agencies);
-			Collections.sort(agencyList);
-			
-			// 构建部门数据
-			List<Map<String, Object>> agencyDataList = new ArrayList<>();
-			for (String agency : agencyList) {
-				Map<String, Object> agencyData = new HashMap<>();
-				agencyData.put("agency", agency);
-				
-				// 海船安检数据
-				Map<String, Long> seaShipCounts = (Map<String, Long>)shipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
-				agencyData.put("seaShipCount", seaShipCounts.getOrDefault(agency, 0L));
-				
-				// 添加海船缺陷和滞留数据
-				Map<String, Long> seaShipDefectCounts = (Map<String, Long>)shipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
-				Map<String, Long> seaShipDetainedCounts = (Map<String, Long>)shipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
-				agencyData.put("seaShipDefectCount", seaShipDefectCounts.getOrDefault(agency, 0L));
-				agencyData.put("seaShipDetainedCount", seaShipDetainedCounts.getOrDefault(agency, 0L));
-				
-				// 内河船安检数据
-				Map<String, Long> riverShipCounts = (Map<String, Long>)shipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
-				agencyData.put("riverShipCount", riverShipCounts.getOrDefault(agency, 0L));
-				
-				// 添加内河船缺陷和滞留数据
-				Map<String, Long> riverShipDefectCounts = (Map<String, Long>)shipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
-				Map<String, Long> riverShipDetainedCounts = (Map<String, Long>)shipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
-				agencyData.put("riverShipDefectCount", riverShipDefectCounts.getOrDefault(agency, 0L));
-				agencyData.put("riverShipDetainedCount", riverShipDetainedCounts.getOrDefault(agency, 0L));
-				
-				// 现场监督数据
-				Map<String, Long> onSiteCounts = (Map<String, Long>)onSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
-				agencyData.put("onSiteCount", onSiteCounts.getOrDefault(agency, 0L));
-				
-				// 异常监督数据
-				Map<String, Long> abnormalCounts = (Map<String, Long>)onSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
-				agencyData.put("abnormalCount", abnormalCounts.getOrDefault(agency, 0L));
-				
-				// PSC数据 - 仅张家港海事局有
-				if (agency.contains("张家港海事局")) {
-					agencyData.put("pscCount", pscData.getOrDefault("pscCount", 0L));
-					agencyData.put("pscDefectCount", pscData.getOrDefault("pscDefectCount", 0L));
-					agencyData.put("pscDetentionCount", pscData.getOrDefault("pscDetentionCount", 0L));
-				} else {
-					agencyData.put("pscCount", 0L);
-					agencyData.put("pscDefectCount", 0L);
-					agencyData.put("pscDetentionCount", 0L);
-				}
-				
-				// 添加环比数据
-				if (result.containsKey("agencySeaShipRates")) {
-					Map<String, Double> agencySeaShipRates = (Map<String, Double>) result.get("agencySeaShipRates");
-					Map<String, Double> agencySeaShipDefectRates = (Map<String, Double>) result.get("agencySeaShipDefectRates");
-					Map<String, Double> agencySeaShipDetainedRates = (Map<String, Double>) result.get("agencySeaShipDetainedRates");
-					Map<String, Double> agencyRiverShipRates = (Map<String, Double>) result.get("agencyRiverShipRates");
-					Map<String, Double> agencyRiverShipDefectRates = (Map<String, Double>) result.get("agencyRiverShipDefectRates");
-					Map<String, Double> agencyRiverShipDetainedRates = (Map<String, Double>) result.get("agencyRiverShipDetainedRates");
-					Map<String, Double> agencyOnSiteRates = (Map<String, Double>) result.get("agencyOnSiteRates");
-					Map<String, Double> agencyAbnormalRates = (Map<String, Double>) result.get("agencyAbnormalRates");
-					
-					agencyData.put("seaShipCountRate", agencySeaShipRates.getOrDefault(agency, 0.0));
-					agencyData.put("seaShipDefectRate", agencySeaShipDefectRates.getOrDefault(agency, 0.0));
-					agencyData.put("seaShipDetainedRate", agencySeaShipDetainedRates.getOrDefault(agency, 0.0));
-					agencyData.put("riverShipCountRate", agencyRiverShipRates.getOrDefault(agency, 0.0));
-					agencyData.put("riverShipDefectRate", agencyRiverShipDefectRates.getOrDefault(agency, 0.0));
-					agencyData.put("riverShipDetainedRate", agencyRiverShipDetainedRates.getOrDefault(agency, 0.0));
-					agencyData.put("onSiteCountRate", agencyOnSiteRates.getOrDefault(agency, 0.0));
-					agencyData.put("abnormalCountRate", agencyAbnormalRates.getOrDefault(agency, 0.0));
-					
-					// PSC环比数据 - 仅张家港海事局有
-					if (agency.contains("张家港海事局")) {
-						agencyData.put("pscCountRate", result.getOrDefault("pscCountRate", 0.0));
-						agencyData.put("pscDefectRate", result.getOrDefault("pscDefectRate", 0.0));
-						agencyData.put("pscDetentionRate", result.getOrDefault("pscDetentionRate", 0.0));
-					} else {
-						agencyData.put("pscCountRate", 0.0);
-						agencyData.put("pscDefectRate", 0.0);
-						agencyData.put("pscDetentionRate", 0.0);
-					}
-				}
-				
-				agencyDataList.add(agencyData);
-			}
-			
-			result.put("agencies", agencyList);
-			result.put("agencyDataList", agencyDataList);
 			result.put("status", "success");
+			
 		} catch (Exception e) {
 			logger.error("获取原始数据统计失败", e);
 			result.put("status", "error");
-			result.put("message", e.getMessage());
+			result.put("message", "获取数据失败: " + e.getMessage());
 		}
 		
 		return result;
 	}
-	
+
 	/**
 	 * 获取船舶安全检查统计数据
 	 */
@@ -1342,10 +1115,9 @@ public class WeeklyReportController extends BaseController {
 			// 统计监督数量
 			long onSiteCount = onSiteMap.size();
 			
-			// 统计异常数量
-			long abnormalCount = onSiteMap.values().stream()
-				.filter(list -> list.stream()
-					.anyMatch(inspection -> "是".equals(inspection.getIssueFound())))
+			// 统计异常数量 - 使用issueFound字段判断是否发现问题
+			long abnormalCount = onSiteList.stream()
+				.filter(inspection -> "是".equals(inspection.getIssueFound()))
 				.count();
 			
 			// 按机构统计
@@ -1379,4 +1151,1097 @@ public class WeeklyReportController extends BaseController {
 		return result;
 	}
 
+	/**
+	 * 从原始数据表获取统计数据 - 用于月度数据看板，支持部门筛选
+	 */
+	@GetMapping("getMonthlyDataStatistics")
+	@ResponseBody
+	public Map<String, Object> getMonthlyDataStatistics(String startDate, String endDate, String department) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 获取当前周期的各类型数据（使用新的DAO方法按部门分组）
+			Map<String, Object> shipData = getShipInspectionStatisticsByDept(startDate, endDate, department);
+			Map<String, Object> pscData = getPscInspectionStatistics(startDate, endDate);
+			Map<String, Object> onSiteData = getOnSiteInspectionStatisticsByDept(startDate, endDate, department);
+			
+			// 计算上一周期的日期范围
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			Map<String, Object> prevShipData = new HashMap<>();
+			Map<String, Object> prevPscData = new HashMap<>();
+			Map<String, Object> prevOnSiteData = new HashMap<>();
+			
+			if (startDateObj != null && endDateObj != null) {
+				long daysDiff = (endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24);
+				daysDiff++; // 包含起始日期
+				
+				// 计算上一周期的起止日期
+				Date prevStartDateObj = DateUtils.addDays(startDateObj, (int)-daysDiff);
+				Date prevEndDateObj = DateUtils.addDays(endDateObj, (int)-daysDiff);
+				
+				String prevStartDate = DateUtils.formatDate(prevStartDateObj);
+				String prevEndDate = DateUtils.formatDate(prevEndDateObj);
+				
+				// 获取上一周期的各类型数据（使用新的DAO方法按部门分组）
+				prevShipData = getShipInspectionStatisticsByDept(prevStartDate, prevEndDate, department);
+				prevPscData = getPscInspectionStatistics(prevStartDate, prevEndDate);
+				prevOnSiteData = getOnSiteInspectionStatisticsByDept(prevStartDate, prevEndDate, department);
+				
+				// 计算环比变化率
+				long seaShipCount = (long) shipData.getOrDefault("seaShipCount", 0L);
+				long prevSeaShipCount = (long) prevShipData.getOrDefault("seaShipCount", 0L);
+				double seaShipCountRate = calculateChangeRate(seaShipCount, prevSeaShipCount);
+				result.put("seaShipCountRate", seaShipCountRate);
+				
+				long seaShipDefectCount = (long) shipData.getOrDefault("seaShipDefectCount", 0L);
+				long prevSeaShipDefectCount = (long) prevShipData.getOrDefault("seaShipDefectCount", 0L);
+				double seaShipDefectRate = calculateChangeRate(seaShipDefectCount, prevSeaShipDefectCount);
+				result.put("seaShipDefectRate", seaShipDefectRate);
+				
+				long seaShipDetainedCount = (long) shipData.getOrDefault("seaShipDetainedCount", 0L);
+				long prevSeaShipDetainedCount = (long) prevShipData.getOrDefault("seaShipDetainedCount", 0L);
+				double seaShipDetainedRate = calculateChangeRate(seaShipDetainedCount, prevSeaShipDetainedCount);
+				result.put("seaShipDetainedRate", seaShipDetainedRate);
+				
+				long riverShipCount = (long) shipData.getOrDefault("riverShipCount", 0L);
+				long prevRiverShipCount = (long) prevShipData.getOrDefault("riverShipCount", 0L);
+				double riverShipCountRate = calculateChangeRate(riverShipCount, prevRiverShipCount);
+				result.put("riverShipCountRate", riverShipCountRate);
+				
+				long riverShipDefectCount = (long) shipData.getOrDefault("riverShipDefectCount", 0L);
+				long prevRiverShipDefectCount = (long) prevShipData.getOrDefault("riverShipDefectCount", 0L);
+				double riverShipDefectRate = calculateChangeRate(riverShipDefectCount, prevRiverShipDefectCount);
+				result.put("riverShipDefectRate", riverShipDefectRate);
+				
+				long riverShipDetainedCount = (long) shipData.getOrDefault("riverShipDetainedCount", 0L);
+				long prevRiverShipDetainedCount = (long) prevShipData.getOrDefault("riverShipDetainedCount", 0L);
+				double riverShipDetainedRate = calculateChangeRate(riverShipDetainedCount, prevRiverShipDetainedCount);
+				result.put("riverShipDetainedRate", riverShipDetainedRate);
+				
+				long pscCount = (long) pscData.getOrDefault("pscCount", 0L);
+				long prevPscCount = (long) prevPscData.getOrDefault("pscCount", 0L);
+				double pscCountRate = calculateChangeRate(pscCount, prevPscCount);
+				result.put("pscCountRate", pscCountRate);
+				
+				long pscDefectCount = (long) pscData.getOrDefault("pscDefectCount", 0L);
+				long prevPscDefectCount = (long) prevPscData.getOrDefault("pscDefectCount", 0L);
+				double pscDefectRate = calculateChangeRate(pscDefectCount, prevPscDefectCount);
+				result.put("pscDefectRate", pscDefectRate);
+				
+				long pscDetentionCount = (long) pscData.getOrDefault("pscDetentionCount", 0L);
+				long prevPscDetentionCount = (long) prevPscData.getOrDefault("pscDetentionCount", 0L);
+				double pscDetentionRate = calculateChangeRate(pscDetentionCount, prevPscDetentionCount);
+				result.put("pscDetentionRate", pscDetentionRate);
+				
+				long onSiteCount = (long) onSiteData.getOrDefault("onSiteCount", 0L);
+				long prevOnSiteCount = (long) prevOnSiteData.getOrDefault("onSiteCount", 0L);
+				double onSiteCountRate = calculateChangeRate(onSiteCount, prevOnSiteCount);
+				result.put("onSiteCountRate", onSiteCountRate);
+				
+				long abnormalCount = (long) onSiteData.getOrDefault("abnormalCount", 0L);
+				long prevAbnormalCount = (long) prevOnSiteData.getOrDefault("abnormalCount", 0L);
+				double abnormalCountRate = calculateChangeRate(abnormalCount, prevAbnormalCount);
+				result.put("abnormalCountRate", abnormalCountRate);
+			}
+			
+			// 合并当前数据到结果中
+			result.putAll(shipData);
+			result.putAll(pscData);
+			result.putAll(onSiteData);
+			
+			// 构建按部门分组的数据列表
+			List<Map<String, Object>> deptDataList = buildMonthlyDepartmentDataList(shipData, onSiteData, pscData, prevShipData, prevOnSiteData, prevPscData);
+			result.put("deptDataList", deptDataList);
+			
+			// 获取部门列表（使用新的DAO方法）
+			List<String> departments = weeklyReportDao.findAllDepartments();
+			result.put("departments", departments);
+			
+			// 获取机构列表（从shipData中获取）
+			if (shipData.containsKey("agencyDeptList")) {
+				result.put("agencyDeptList", shipData.get("agencyDeptList"));
+			}
+			
+			result.put("status", "success");
+		} catch (Exception e) {
+			logger.error("获取月度统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取月度统计数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
+
+	/**
+	 * 获取船舶检查统计数据 - 支持部门筛选
+	 */
+	private Map<String, Object> getShipInspectionStatisticsWithDept(String startDate, String endDate, String department) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			// 创建查询条件 - 海船安检
+			ShipInspection seaShipQuery = new ShipInspection();
+			seaShipQuery.setInspectionType("初查");
+			seaShipQuery.setShipType("海船");
+			if (startDateObj != null) {
+				seaShipQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				seaShipQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 创建查询条件 - 内河船安检
+			ShipInspection riverShipQuery = new ShipInspection();
+			riverShipQuery.setInspectionType("初查");
+			riverShipQuery.setShipType("内河船");
+			if (startDateObj != null) {
+				riverShipQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				riverShipQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 执行查询
+			List<ShipInspection> seaShipList = shipInspectionService.findList(seaShipQuery);
+			List<ShipInspection> riverShipList = shipInspectionService.findList(riverShipQuery);
+			
+			// 如果指定了部门，则通过agency_dept表进行筛选
+			if (com.jeesite.common.lang.StringUtils.isNotBlank(department)) {
+				seaShipList = seaShipList.stream()
+					.filter(ship -> isDepartmentMatch(ship.getInspectionAgency(), department))
+					.collect(Collectors.toList());
+				riverShipList = riverShipList.stream()
+					.filter(ship -> isDepartmentMatch(ship.getInspectionAgency(), department))
+					.collect(Collectors.toList());
+			}
+			
+			// 去重统计 - 海船安检
+			Map<String, List<ShipInspection>> seaShipMap = seaShipList.stream()
+				.collect(Collectors.groupingBy(ship -> 
+					ship.getShipNameCn() + "_" + 
+					DateUtils.formatDate(ship.getInspectionDate(), "yyyy-MM-dd") + "_" + 
+					ship.getInspectionAgency()
+				));
+			
+			// 去重统计 - 内河船安检
+			Map<String, List<ShipInspection>> riverShipMap = riverShipList.stream()
+				.collect(Collectors.groupingBy(ship ->
+					ship.getShipNameCn() + "_" + 
+					DateUtils.formatDate(ship.getInspectionDate(), "yyyy-MM-dd") + "_" + 
+					ship.getInspectionAgency()
+				));
+			
+			// 统计结果
+			long seaShipCount = seaShipMap.size();
+			long riverShipCount = riverShipMap.size();
+			
+			// 统计缺陷
+			long seaShipDefectCount = seaShipMap.values().stream()
+				.mapToLong(list -> {
+					if (!list.isEmpty()) {
+						ShipInspection ship = list.get(0);
+						return ship.getDefectCount() != null ? ship.getDefectCount() : 0;
+					}
+					return 0;
+				})
+				.sum();
+			
+			long riverShipDefectCount = riverShipMap.values().stream()
+				.mapToLong(list -> {
+					if (!list.isEmpty()) {
+						ShipInspection ship = list.get(0);
+						return ship.getDefectCount() != null ? ship.getDefectCount() : 0;
+					}
+					return 0;
+				})
+				.sum();
+			
+			// 统计滞留
+			long seaShipDetainedCount = seaShipMap.values().stream()
+				.filter(list -> list.stream()
+					.anyMatch(ship -> "是".equals(ship.getDetained())))
+				.count();
+			
+			long riverShipDetainedCount = riverShipMap.values().stream()
+				.filter(list -> list.stream()
+					.anyMatch(ship -> "是".equals(ship.getDetained())))
+				.count();
+			
+			// 组装返回数据
+			result.put("seaShipCount", seaShipCount);
+			result.put("riverShipCount", riverShipCount);
+			result.put("seaShipDefectCount", seaShipDefectCount);
+			result.put("riverShipDefectCount", riverShipDefectCount);
+			result.put("seaShipDetainedCount", seaShipDetainedCount);
+			result.put("riverShipDetainedCount", riverShipDetainedCount);
+		} catch (Exception e) {
+			logger.error("获取船舶检查统计数据失败", e);
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取现场监督统计数据 - 支持部门筛选
+	 */
+	private Map<String, Object> getOnSiteInspectionStatisticsWithDept(String startDate, String endDate, String department) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			// 创建查询条件
+			ShipOnSiteInspection onSiteQuery = new ShipOnSiteInspection();
+			if (startDateObj != null) {
+				onSiteQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				onSiteQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 执行查询
+			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findList(onSiteQuery);
+			
+			// 如果指定了部门，则通过agency_dept表进行筛选
+			if (com.jeesite.common.lang.StringUtils.isNotBlank(department)) {
+				onSiteList = onSiteList.stream()
+					.filter(inspection -> isDepartmentMatch(inspection.getInspectionAgency(), department))
+					.collect(Collectors.toList());
+			}
+			
+			// 统计现场监督数量
+			long onSiteCount = onSiteList.size();
+			
+			// 统计异常数量 - 使用issueFound字段判断是否发现问题
+			long abnormalCount = onSiteList.stream()
+				.filter(inspection -> "是".equals(inspection.getIssueFound()))
+				.count();
+			
+			// 组装返回数据
+			result.put("onSiteCount", onSiteCount);
+			result.put("abnormalCount", abnormalCount);
+		} catch (Exception e) {
+			logger.error("获取现场监督统计数据失败", e);
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 检查机构是否属于指定部门
+	 */
+	private boolean isDepartmentMatch(String agency, String department) {
+		// 这里需要查询agency_dept表来判断
+		// 简化实现：如果部门是"张家港海事局"，则只返回张家港相关的数据
+		if ("张家港海事局".equals(department)) {
+			return agency != null && agency.contains("张家港");
+		}
+		// 其他部门的匹配逻辑可以在这里添加
+		return true;
+	}
+	
+
+	/**
+	 * 获取船舶检查统计数据 - 按部门分组（使用DAO方法）
+	 */
+	private Map<String, Object> getShipInspectionStatisticsByDept(String startDate, String endDate, String department) {
+		// 直接调用ShipInspectionController的新方法
+		return shipInspectionController.getInspectionStatisticsByDepartment(startDate, endDate, department);
+	}
+	
+	/**
+	 * 获取现场监督统计数据 - 按部门分组（使用DAO方法）
+	 */
+	private Map<String, Object> getOnSiteInspectionStatisticsByDept(String startDate, String endDate, String department) {
+		// 直接调用ShipOnSiteInspectionController的新方法
+		return shipOnSiteInspectionController.getOnSiteInspectionStatisticsByDepartment(startDate, endDate, department);
+	}
+	
+	/**
+	 * 计算环比变化率
+	 */
+	private void calculateChangeRates(Map<String, Object> result, 
+			Map<String, Object> shipData, Map<String, Object> prevShipData,
+			Map<String, Object> pscData, Map<String, Object> prevPscData,
+			Map<String, Object> onSiteData, Map<String, Object> prevOnSiteData) {
+				
+				// 计算海船安检环比变化
+				long seaShipCount = (long) shipData.getOrDefault("seaShipCount", 0L);
+				long prevSeaShipCount = (long) prevShipData.getOrDefault("seaShipCount", 0L);
+				double seaShipCountRate = calculateChangeRate(seaShipCount, prevSeaShipCount);
+				result.put("seaShipCountRate", seaShipCountRate);
+				
+				// 计算海船缺陷环比变化
+				long seaShipDefectCount = (long) shipData.getOrDefault("seaShipDefectCount", 0L);
+				long prevSeaShipDefectCount = (long) prevShipData.getOrDefault("seaShipDefectCount", 0L);
+				double seaShipDefectRate = calculateChangeRate(seaShipDefectCount, prevSeaShipDefectCount);
+				result.put("seaShipDefectRate", seaShipDefectRate);
+				
+				// 计算海船滞留环比变化
+				long seaShipDetainedCount = (long) shipData.getOrDefault("seaShipDetainedCount", 0L);
+				long prevSeaShipDetainedCount = (long) prevShipData.getOrDefault("seaShipDetainedCount", 0L);
+				double seaShipDetainedRate = calculateChangeRate(seaShipDetainedCount, prevSeaShipDetainedCount);
+				result.put("seaShipDetainedRate", seaShipDetainedRate);
+				
+				// 计算内河船安检环比变化
+				long riverShipCount = (long) shipData.getOrDefault("riverShipCount", 0L);
+				long prevRiverShipCount = (long) prevShipData.getOrDefault("riverShipCount", 0L);
+				double riverShipCountRate = calculateChangeRate(riverShipCount, prevRiverShipCount);
+				result.put("riverShipCountRate", riverShipCountRate);
+				
+				// 计算内河船缺陷环比变化
+				long riverShipDefectCount = (long) shipData.getOrDefault("riverShipDefectCount", 0L);
+				long prevRiverShipDefectCount = (long) prevShipData.getOrDefault("riverShipDefectCount", 0L);
+				double riverShipDefectRate = calculateChangeRate(riverShipDefectCount, prevRiverShipDefectCount);
+				result.put("riverShipDefectRate", riverShipDefectRate);
+				
+				// 计算内河船滞留环比变化
+				long riverShipDetainedCount = (long) shipData.getOrDefault("riverShipDetainedCount", 0L);
+				long prevRiverShipDetainedCount = (long) prevShipData.getOrDefault("riverShipDetainedCount", 0L);
+				double riverShipDetainedRate = calculateChangeRate(riverShipDetainedCount, prevRiverShipDetainedCount);
+				result.put("riverShipDetainedRate", riverShipDetainedRate);
+				
+				// 计算PSC检查环比变化
+				long pscCount = (long) pscData.getOrDefault("pscCount", 0L);
+				long prevPscCount = (long) prevPscData.getOrDefault("pscCount", 0L);
+				double pscCountRate = calculateChangeRate(pscCount, prevPscCount);
+				result.put("pscCountRate", pscCountRate);
+				
+				// 计算PSC缺陷环比变化
+				long pscDefectCount = (long) pscData.getOrDefault("pscDefectCount", 0L);
+				long prevPscDefectCount = (long) prevPscData.getOrDefault("pscDefectCount", 0L);
+				double pscDefectRate = calculateChangeRate(pscDefectCount, prevPscDefectCount);
+				result.put("pscDefectRate", pscDefectRate);
+				
+				// 计算PSC滞留环比变化
+				long pscDetentionCount = (long) pscData.getOrDefault("pscDetentionCount", 0L);
+				long prevPscDetentionCount = (long) prevPscData.getOrDefault("pscDetentionCount", 0L);
+				double pscDetentionRate = calculateChangeRate(pscDetentionCount, prevPscDetentionCount);
+				result.put("pscDetentionRate", pscDetentionRate);
+				
+				// 计算现场监督环比变化
+				long onSiteCount = (long) onSiteData.getOrDefault("onSiteCount", 0L);
+				long prevOnSiteCount = (long) prevOnSiteData.getOrDefault("onSiteCount", 0L);
+				double onSiteCountRate = calculateChangeRate(onSiteCount, prevOnSiteCount);
+				result.put("onSiteCountRate", onSiteCountRate);
+				
+				// 计算现场监督异常环比变化
+				long abnormalCount = (long) onSiteData.getOrDefault("abnormalCount", 0L);
+				long prevAbnormalCount = (long) prevOnSiteData.getOrDefault("abnormalCount", 0L);
+				double abnormalCountRate = calculateChangeRate(abnormalCount, prevAbnormalCount);
+				result.put("abnormalCountRate", abnormalCountRate);
+				
+				// 按部门计算环比变化率
+		calculateDepartmentChangeRates(result, shipData, prevShipData, onSiteData, prevOnSiteData, pscData);
+	}
+	
+	/**
+	 * 计算各部门环比变化率
+	 */
+	private void calculateDepartmentChangeRates(Map<String, Object> result,
+			Map<String, Object> shipData, Map<String, Object> prevShipData,
+			Map<String, Object> onSiteData, Map<String, Object> prevOnSiteData,
+			Map<String, Object> pscData) {
+		
+				Map<String, Long> agencySeaShipCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
+				Map<String, Long> prevAgencySeaShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
+				
+				Map<String, Long> agencySeaShipDefectCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
+				Map<String, Long> prevAgencySeaShipDefectCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
+				
+				Map<String, Long> agencySeaShipDetainedCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
+				Map<String, Long> prevAgencySeaShipDetainedCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
+				
+				Map<String, Long> agencyRiverShipCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
+				Map<String, Long> prevAgencyRiverShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
+				
+				Map<String, Long> agencyRiverShipDefectCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
+				Map<String, Long> prevAgencyRiverShipDefectCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
+				
+				Map<String, Long> agencyRiverShipDetainedCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
+				Map<String, Long> prevAgencyRiverShipDetainedCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
+				
+				Map<String, Long> agencyOnSiteCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
+				Map<String, Long> prevAgencyOnSiteCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
+				
+				Map<String, Long> agencyAbnormalCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
+				Map<String, Long> prevAgencyAbnormalCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
+				
+				// 计算各部门环比变化率
+				Map<String, Double> agencySeaShipRates = new HashMap<>();
+				Map<String, Double> agencySeaShipDefectRates = new HashMap<>();
+				Map<String, Double> agencySeaShipDetainedRates = new HashMap<>();
+				Map<String, Double> agencyRiverShipRates = new HashMap<>();
+				Map<String, Double> agencyRiverShipDefectRates = new HashMap<>();
+				Map<String, Double> agencyRiverShipDetainedRates = new HashMap<>();
+				Map<String, Double> agencyOnSiteRates = new HashMap<>();
+				Map<String, Double> agencyAbnormalRates = new HashMap<>();
+				
+				// 合并当前和上一周期的所有部门
+				Set<String> allAgencies = new HashSet<>();
+				allAgencies.addAll(agencySeaShipCounts.keySet());
+				allAgencies.addAll(prevAgencySeaShipCounts.keySet());
+				allAgencies.addAll(agencyRiverShipCounts.keySet());
+				allAgencies.addAll(prevAgencyRiverShipCounts.keySet());
+				allAgencies.addAll(agencyOnSiteCounts.keySet());
+				allAgencies.addAll(prevAgencyOnSiteCounts.keySet());
+				
+				// 计算每个部门的各项数据环比变化率
+				for (String agency : allAgencies) {
+					// 海船安检数量环比
+					long currSeaShipCount = agencySeaShipCounts.getOrDefault(agency, 0L);
+					long lastSeaShipCount = prevAgencySeaShipCounts.getOrDefault(agency, 0L);
+					agencySeaShipRates.put(agency, calculateChangeRate(currSeaShipCount, lastSeaShipCount));
+					
+					// 海船缺陷数量环比
+					long currSeaShipDefectCount = agencySeaShipDefectCounts.getOrDefault(agency, 0L);
+					long lastSeaShipDefectCount = prevAgencySeaShipDefectCounts.getOrDefault(agency, 0L);
+					agencySeaShipDefectRates.put(agency, calculateChangeRate(currSeaShipDefectCount, lastSeaShipDefectCount));
+					
+					// 海船滞留数量环比
+					long currSeaShipDetainedCount = agencySeaShipDetainedCounts.getOrDefault(agency, 0L);
+					long lastSeaShipDetainedCount = prevAgencySeaShipDetainedCounts.getOrDefault(agency, 0L);
+					agencySeaShipDetainedRates.put(agency, calculateChangeRate(currSeaShipDetainedCount, lastSeaShipDetainedCount));
+					
+					// 内河船安检数量环比
+					long currRiverShipCount = agencyRiverShipCounts.getOrDefault(agency, 0L);
+					long lastRiverShipCount = prevAgencyRiverShipCounts.getOrDefault(agency, 0L);
+					agencyRiverShipRates.put(agency, calculateChangeRate(currRiverShipCount, lastRiverShipCount));
+					
+					// 内河船缺陷数量环比
+					long currRiverShipDefectCount = agencyRiverShipDefectCounts.getOrDefault(agency, 0L);
+					long lastRiverShipDefectCount = prevAgencyRiverShipDefectCounts.getOrDefault(agency, 0L);
+					agencyRiverShipDefectRates.put(agency, calculateChangeRate(currRiverShipDefectCount, lastRiverShipDefectCount));
+					
+					// 内河船滞留数量环比
+					long currRiverShipDetainedCount = agencyRiverShipDetainedCounts.getOrDefault(agency, 0L);
+					long lastRiverShipDetainedCount = prevAgencyRiverShipDetainedCounts.getOrDefault(agency, 0L);
+					agencyRiverShipDetainedRates.put(agency, calculateChangeRate(currRiverShipDetainedCount, lastRiverShipDetainedCount));
+					
+					// 现场监督数量环比
+					long currOnSiteCount = agencyOnSiteCounts.getOrDefault(agency, 0L);
+					long lastOnSiteCount = prevAgencyOnSiteCounts.getOrDefault(agency, 0L);
+					agencyOnSiteRates.put(agency, calculateChangeRate(currOnSiteCount, lastOnSiteCount));
+					
+					// 现场监督异常数量环比
+					long currAbnormalCount = agencyAbnormalCounts.getOrDefault(agency, 0L);
+					long lastAbnormalCount = prevAgencyAbnormalCounts.getOrDefault(agency, 0L);
+					agencyAbnormalRates.put(agency, calculateChangeRate(currAbnormalCount, lastAbnormalCount));
+				}
+				
+				// 把环比数据添加到结果中
+				result.put("agencySeaShipRates", agencySeaShipRates);
+				result.put("agencySeaShipDefectRates", agencySeaShipDefectRates);
+				result.put("agencySeaShipDetainedRates", agencySeaShipDetainedRates);
+				result.put("agencyRiverShipRates", agencyRiverShipRates);
+				result.put("agencyRiverShipDefectRates", agencyRiverShipDefectRates);
+				result.put("agencyRiverShipDetainedRates", agencyRiverShipDetainedRates);
+				result.put("agencyOnSiteRates", agencyOnSiteRates);
+				result.put("agencyAbnormalRates", agencyAbnormalRates);
+	}
+	
+	/**
+	 * 构建部门数据列表
+	 */
+	private List<Map<String, Object>> buildDepartmentDataList(List<String> agencyList,
+			Map<String, Object> shipData, Map<String, Object> onSiteData,
+			Map<String, Object> pscData, Map<String, Object> result) {
+		
+			List<Map<String, Object>> agencyDataList = new ArrayList<>();
+		
+			for (String agency : agencyList) {
+				Map<String, Object> agencyData = new HashMap<>();
+				agencyData.put("agency", agency);
+				
+				// 海船安检数据
+				Map<String, Long> seaShipCounts = (Map<String, Long>)shipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
+				agencyData.put("seaShipCount", seaShipCounts.getOrDefault(agency, 0L));
+				
+				// 添加海船缺陷和滞留数据
+				Map<String, Long> seaShipDefectCounts = (Map<String, Long>)shipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
+				Map<String, Long> seaShipDetainedCounts = (Map<String, Long>)shipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
+				agencyData.put("seaShipDefectCount", seaShipDefectCounts.getOrDefault(agency, 0L));
+				agencyData.put("seaShipDetainedCount", seaShipDetainedCounts.getOrDefault(agency, 0L));
+				
+				// 内河船安检数据
+				Map<String, Long> riverShipCounts = (Map<String, Long>)shipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
+				agencyData.put("riverShipCount", riverShipCounts.getOrDefault(agency, 0L));
+				
+				// 添加内河船缺陷和滞留数据
+				Map<String, Long> riverShipDefectCounts = (Map<String, Long>)shipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
+				Map<String, Long> riverShipDetainedCounts = (Map<String, Long>)shipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
+				agencyData.put("riverShipDefectCount", riverShipDefectCounts.getOrDefault(agency, 0L));
+				agencyData.put("riverShipDetainedCount", riverShipDetainedCounts.getOrDefault(agency, 0L));
+				
+				// 现场监督数据
+				Map<String, Long> onSiteCounts = (Map<String, Long>)onSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
+				agencyData.put("onSiteCount", onSiteCounts.getOrDefault(agency, 0L));
+				
+				// 异常监督数据
+				Map<String, Long> abnormalCounts = (Map<String, Long>)onSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
+				agencyData.put("abnormalCount", abnormalCounts.getOrDefault(agency, 0L));
+				
+				// PSC数据 - 仅张家港海事局有
+				if (agency.contains("张家港海事局")) {
+					agencyData.put("pscCount", pscData.getOrDefault("pscCount", 0L));
+					agencyData.put("pscDefectCount", pscData.getOrDefault("pscDefectCount", 0L));
+					agencyData.put("pscDetentionCount", pscData.getOrDefault("pscDetentionCount", 0L));
+				} else {
+					agencyData.put("pscCount", 0L);
+					agencyData.put("pscDefectCount", 0L);
+					agencyData.put("pscDetentionCount", 0L);
+				}
+				
+				// 添加环比数据
+				if (result.containsKey("agencySeaShipRates")) {
+					Map<String, Double> agencySeaShipRates = (Map<String, Double>) result.get("agencySeaShipRates");
+					Map<String, Double> agencySeaShipDefectRates = (Map<String, Double>) result.get("agencySeaShipDefectRates");
+					Map<String, Double> agencySeaShipDetainedRates = (Map<String, Double>) result.get("agencySeaShipDetainedRates");
+					Map<String, Double> agencyRiverShipRates = (Map<String, Double>) result.get("agencyRiverShipRates");
+					Map<String, Double> agencyRiverShipDefectRates = (Map<String, Double>) result.get("agencyRiverShipDefectRates");
+					Map<String, Double> agencyRiverShipDetainedRates = (Map<String, Double>) result.get("agencyRiverShipDetainedRates");
+					Map<String, Double> agencyOnSiteRates = (Map<String, Double>) result.get("agencyOnSiteRates");
+					Map<String, Double> agencyAbnormalRates = (Map<String, Double>) result.get("agencyAbnormalRates");
+					
+					agencyData.put("seaShipCountRate", agencySeaShipRates.getOrDefault(agency, 0.0));
+					agencyData.put("seaShipDefectRate", agencySeaShipDefectRates.getOrDefault(agency, 0.0));
+					agencyData.put("seaShipDetainedRate", agencySeaShipDetainedRates.getOrDefault(agency, 0.0));
+					agencyData.put("riverShipCountRate", agencyRiverShipRates.getOrDefault(agency, 0.0));
+					agencyData.put("riverShipDefectRate", agencyRiverShipDefectRates.getOrDefault(agency, 0.0));
+					agencyData.put("riverShipDetainedRate", agencyRiverShipDetainedRates.getOrDefault(agency, 0.0));
+					agencyData.put("onSiteCountRate", agencyOnSiteRates.getOrDefault(agency, 0.0));
+					agencyData.put("abnormalCountRate", agencyAbnormalRates.getOrDefault(agency, 0.0));
+					
+					// PSC环比数据 - 仅张家港海事局有
+					if (agency.contains("张家港海事局")) {
+						agencyData.put("pscCountRate", result.getOrDefault("pscCountRate", 0.0));
+						agencyData.put("pscDefectRate", result.getOrDefault("pscDefectRate", 0.0));
+						agencyData.put("pscDetentionRate", result.getOrDefault("pscDetentionRate", 0.0));
+					} else {
+						agencyData.put("pscCountRate", 0.0);
+						agencyData.put("pscDefectRate", 0.0);
+						agencyData.put("pscDetentionRate", 0.0);
+					}
+				}
+				
+				agencyDataList.add(agencyData);
+			}
+			
+		return agencyDataList;
+	}
+
+	/**
+	 * 获取部门列表
+	 */
+	private List<String> getDepartmentList() {
+		// 返回部门列表，这里可以从agency_dept表查询
+		List<String> departments = new ArrayList<>();
+		departments.add("张家港海事局");
+		departments.add("江阴海事局");
+		departments.add("常熟海事局");
+		departments.add("太仓海事局");
+		return departments;
+	}
+
+	/**
+	 * 获取船舶检查统计数据 - 限制为张家港海事局四家机构
+	 */
+	private Map<String, Object> getShipInspectionStatisticsForZhangjiagang(String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			// 创建查询条件
+			ShipInspection shipQuery = new ShipInspection();
+			shipQuery.setInspectionType("初查");
+			if (startDateObj != null) {
+				shipQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				shipQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 执行查询
+			List<ShipInspection> shipList = shipInspectionService.findDistinctList(shipQuery);
+			
+			// 定义张家港海事局的四家机构
+			List<String> targetAgencies = Arrays.asList(
+				"保税区海事处(筹)", 
+				"港区海事处", 
+				"锦丰海事处", 
+				"张家港海事局"
+			);
+			
+			// 筛选只包含目标机构的数据
+			shipList = shipList.stream()
+				.filter(ship -> targetAgencies.stream()
+					.anyMatch(agency -> ship.getInspectionAgency() != null && 
+						ship.getInspectionAgency().contains(agency)))
+				.collect(Collectors.toList());
+			
+			// 初始化统计数据
+			long seaShipCount = 0;
+			long riverShipCount = 0;
+			long seaShipDefectCount = 0;
+			long riverShipDefectCount = 0;
+			long seaShipDetainedCount = 0;
+			long riverShipDetainedCount = 0;
+			
+			Map<String, Long> agencySeaShipCounts = new HashMap<>();
+			Map<String, Long> agencyRiverShipCounts = new HashMap<>();
+			Map<String, Long> agencySeaShipDefectCounts = new HashMap<>();
+			Map<String, Long> agencyRiverShipDefectCounts = new HashMap<>();
+			Map<String, Long> agencySeaShipDetainedCounts = new HashMap<>();
+			Map<String, Long> agencyRiverShipDetainedCounts = new HashMap<>();
+			
+			// 初始化各机构的统计数据
+			for (String agency : targetAgencies) {
+				agencySeaShipCounts.put(agency, 0L);
+				agencyRiverShipCounts.put(agency, 0L);
+				agencySeaShipDefectCounts.put(agency, 0L);
+				agencyRiverShipDefectCounts.put(agency, 0L);
+				agencySeaShipDetainedCounts.put(agency, 0L);
+				agencyRiverShipDetainedCounts.put(agency, 0L);
+			}
+			
+			// 处理查询结果
+			for (ShipInspection ship : shipList) {
+				String shipType = ship.getShipType();
+				String agency = ship.getInspectionAgency();
+				
+				// 找到匹配的机构
+				String matchedAgency = targetAgencies.stream()
+					.filter(targetAgency -> agency != null && agency.contains(targetAgency))
+					.findFirst()
+					.orElse(null);
+				
+				if (matchedAgency != null) {
+					if ("海船".equals(shipType)) {
+						seaShipCount++;
+						agencySeaShipCounts.put(matchedAgency, agencySeaShipCounts.get(matchedAgency) + 1);
+						
+						// 缺陷数量统计
+						if (ship.getDefectCount() != null && ship.getDefectCount() > 0) {
+							seaShipDefectCount += ship.getDefectCount();
+							agencySeaShipDefectCounts.put(matchedAgency, 
+								agencySeaShipDefectCounts.get(matchedAgency) + ship.getDefectCount());
+						}
+						
+						// 滞留数量统计
+						if ("是".equals(ship.getDetained())) {
+							seaShipDetainedCount++;
+							agencySeaShipDetainedCounts.put(matchedAgency, 
+								agencySeaShipDetainedCounts.get(matchedAgency) + 1);
+						}
+					} else if ("内河船".equals(shipType)) {
+						riverShipCount++;
+						agencyRiverShipCounts.put(matchedAgency, agencyRiverShipCounts.get(matchedAgency) + 1);
+						
+						// 缺陷数量统计
+						if (ship.getDefectCount() != null && ship.getDefectCount() > 0) {
+							riverShipDefectCount += ship.getDefectCount();
+							agencyRiverShipDefectCounts.put(matchedAgency, 
+								agencyRiverShipDefectCounts.get(matchedAgency) + ship.getDefectCount());
+						}
+						
+						// 滞留数量统计
+						if ("是".equals(ship.getDetained())) {
+							riverShipDetainedCount++;
+							agencyRiverShipDetainedCounts.put(matchedAgency, 
+								agencyRiverShipDetainedCounts.get(matchedAgency) + 1);
+						}
+					}
+				}
+			}
+			
+			// 构建结果
+			result.put("seaShipCount", seaShipCount);
+			result.put("riverShipCount", riverShipCount);
+			result.put("seaShipDefectCount", seaShipDefectCount);
+			result.put("riverShipDefectCount", riverShipDefectCount);
+			result.put("seaShipDetainedCount", seaShipDetainedCount);
+			result.put("riverShipDetainedCount", riverShipDetainedCount);
+			
+			result.put("agencySeaShipCounts", agencySeaShipCounts);
+			result.put("agencyRiverShipCounts", agencyRiverShipCounts);
+			result.put("agencySeaShipDefectCounts", agencySeaShipDefectCounts);
+			result.put("agencyRiverShipDefectCounts", agencyRiverShipDefectCounts);
+			result.put("agencySeaShipDetainedCounts", agencySeaShipDetainedCounts);
+			result.put("agencyRiverShipDetainedCounts", agencyRiverShipDetainedCounts);
+			
+			// 添加机构列表
+			result.put("agencies", targetAgencies);
+			
+		} catch (Exception e) {
+			logger.error("获取船舶检查统计数据失败", e);
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取现场监督统计数据 - 限制为张家港海事局四家机构
+	 */
+	private Map<String, Object> getOnSiteInspectionStatisticsForZhangjiagang(String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 解析日期
+			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			
+			// 创建查询条件
+			ShipOnSiteInspection onSiteQuery = new ShipOnSiteInspection();
+			if (startDateObj != null) {
+				onSiteQuery.setInspectionDate_gte(startDateObj);
+			}
+			if (endDateObj != null) {
+				onSiteQuery.setInspectionDate_lte(endDateObj);
+			}
+			
+			// 执行查询
+			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findDistinctList(onSiteQuery);
+			
+			// 定义张家港海事局的四家机构
+			List<String> targetAgencies = Arrays.asList(
+				"保税区海事处(筹)", 
+				"港区海事处", 
+				"锦丰海事处", 
+				"张家港海事局"
+			);
+			
+			// 筛选只包含目标机构的数据
+			onSiteList = onSiteList.stream()
+				.filter(onSite -> targetAgencies.stream()
+					.anyMatch(agency -> onSite.getInspectionAgency() != null && 
+						onSite.getInspectionAgency().contains(agency)))
+				.collect(Collectors.toList());
+			
+			// 初始化统计数据
+			long onSiteCount = 0;
+			long abnormalCount = 0;
+			Map<String, Long> agencyOnSiteCounts = new HashMap<>();
+			Map<String, Long> agencyAbnormalCounts = new HashMap<>();
+			
+			// 初始化各机构的统计数据
+			for (String agency : targetAgencies) {
+				agencyOnSiteCounts.put(agency, 0L);
+				agencyAbnormalCounts.put(agency, 0L);
+			}
+			
+			// 使用去重逻辑：按船名+日期+机构分组
+			Map<String, List<ShipOnSiteInspection>> groupedData = onSiteList.stream()
+				.collect(Collectors.groupingBy(onSite -> 
+					onSite.getShipNameCn() + "|" + 
+					DateUtils.formatDate(onSite.getInspectionDate()) + "|" + 
+					onSite.getInspectionAgency()));
+			
+			// 处理分组后的数据
+			for (Map.Entry<String, List<ShipOnSiteInspection>> entry : groupedData.entrySet()) {
+				List<ShipOnSiteInspection> group = entry.getValue();
+				if (!group.isEmpty()) {
+					ShipOnSiteInspection representative = group.get(0);
+					String agency = representative.getInspectionAgency();
+					
+					// 找到匹配的机构
+					String matchedAgency = targetAgencies.stream()
+						.filter(targetAgency -> agency != null && agency.contains(targetAgency))
+						.findFirst()
+						.orElse(null);
+					
+					if (matchedAgency != null) {
+						onSiteCount++;
+						agencyOnSiteCounts.put(matchedAgency, agencyOnSiteCounts.get(matchedAgency) + 1);
+						
+						// 检查该分组是否有异常（任何一条记录有问题就算异常）
+						boolean hasIssue = group.stream()
+							.anyMatch(onSite -> "是".equals(onSite.getIssueFound()));
+						
+						if (hasIssue) {
+							abnormalCount++;
+							agencyAbnormalCounts.put(matchedAgency, agencyAbnormalCounts.get(matchedAgency) + 1);
+						}
+					}
+				}
+			}
+			
+			// 构建结果
+			result.put("onSiteCount", onSiteCount);
+			result.put("abnormalCount", abnormalCount);
+			result.put("agencyOnSiteCounts", agencyOnSiteCounts);
+			result.put("agencyAbnormalCounts", agencyAbnormalCounts);
+			
+		} catch (Exception e) {
+			logger.error("获取现场监督统计数据失败", e);
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 构建张家港海事局四家机构的部门数据列表
+	 */
+	private List<Map<String, Object>> buildDepartmentDataListForZhangjiagang(
+			Map<String, Object> shipData, Map<String, Object> onSiteData,
+			Map<String, Object> prevShipData, Map<String, Object> prevOnSiteData) {
+		
+		List<Map<String, Object>> agencyDataList = new ArrayList<>();
+		
+		// 定义张家港海事局的四家机构
+		List<String> targetAgencies = Arrays.asList(
+			"保税区海事处(筹)", 
+			"港区海事处", 
+			"锦丰海事处", 
+			"张家港海事局"
+		);
+		
+		// 获取当前数据
+		Map<String, Long> agencySeaShipCounts = (Map<String, Long>) shipData.get("agencySeaShipCounts");
+		Map<String, Long> agencyRiverShipCounts = (Map<String, Long>) shipData.get("agencyRiverShipCounts");
+		Map<String, Long> agencySeaShipDefectCounts = (Map<String, Long>) shipData.get("agencySeaShipDefectCounts");
+		Map<String, Long> agencyRiverShipDefectCounts = (Map<String, Long>) shipData.get("agencyRiverShipDefectCounts");
+		Map<String, Long> agencySeaShipDetainedCounts = (Map<String, Long>) shipData.get("agencySeaShipDetainedCounts");
+		Map<String, Long> agencyRiverShipDetainedCounts = (Map<String, Long>) shipData.get("agencyRiverShipDetainedCounts");
+		Map<String, Long> agencyOnSiteCounts = (Map<String, Long>) onSiteData.get("agencyOnSiteCounts");
+		Map<String, Long> agencyAbnormalCounts = (Map<String, Long>) onSiteData.get("agencyAbnormalCounts");
+		
+		// 获取上期数据
+		Map<String, Long> prevAgencySeaShipCounts = prevShipData != null ? 
+			(Map<String, Long>) prevShipData.get("agencySeaShipCounts") : new HashMap<>();
+		Map<String, Long> prevAgencyRiverShipCounts = prevShipData != null ? 
+			(Map<String, Long>) prevShipData.get("agencyRiverShipCounts") : new HashMap<>();
+		Map<String, Long> prevAgencySeaShipDefectCounts = prevShipData != null ? 
+			(Map<String, Long>) prevShipData.get("agencySeaShipDefectCounts") : new HashMap<>();
+		Map<String, Long> prevAgencyRiverShipDefectCounts = prevShipData != null ? 
+			(Map<String, Long>) prevShipData.get("agencyRiverShipDefectCounts") : new HashMap<>();
+		Map<String, Long> prevAgencySeaShipDetainedCounts = prevShipData != null ? 
+			(Map<String, Long>) prevShipData.get("agencySeaShipDetainedCounts") : new HashMap<>();
+		Map<String, Long> prevAgencyRiverShipDetainedCounts = prevShipData != null ? 
+			(Map<String, Long>) prevShipData.get("agencyRiverShipDetainedCounts") : new HashMap<>();
+		Map<String, Long> prevAgencyOnSiteCounts = prevOnSiteData != null ? 
+			(Map<String, Long>) prevOnSiteData.get("agencyOnSiteCounts") : new HashMap<>();
+		Map<String, Long> prevAgencyAbnormalCounts = prevOnSiteData != null ? 
+			(Map<String, Long>) prevOnSiteData.get("agencyAbnormalCounts") : new HashMap<>();
+		
+		// 为每个机构构建数据
+		for (String agency : targetAgencies) {
+			Map<String, Object> agencyData = new HashMap<>();
+			agencyData.put("agency", agency);
+			
+			// 当前数据
+			long seaShipCount = agencySeaShipCounts.getOrDefault(agency, 0L);
+			long riverShipCount = agencyRiverShipCounts.getOrDefault(agency, 0L);
+			long seaShipDefectCount = agencySeaShipDefectCounts.getOrDefault(agency, 0L);
+			long riverShipDefectCount = agencyRiverShipDefectCounts.getOrDefault(agency, 0L);
+			long seaShipDetainedCount = agencySeaShipDetainedCounts.getOrDefault(agency, 0L);
+			long riverShipDetainedCount = agencyRiverShipDetainedCounts.getOrDefault(agency, 0L);
+			long onSiteCount = agencyOnSiteCounts.getOrDefault(agency, 0L);
+			long abnormalCount = agencyAbnormalCounts.getOrDefault(agency, 0L);
+			
+			// 上期数据
+			long prevSeaShipCount = prevAgencySeaShipCounts.getOrDefault(agency, 0L);
+			long prevRiverShipCount = prevAgencyRiverShipCounts.getOrDefault(agency, 0L);
+			long prevSeaShipDefectCount = prevAgencySeaShipDefectCounts.getOrDefault(agency, 0L);
+			long prevRiverShipDefectCount = prevAgencyRiverShipDefectCounts.getOrDefault(agency, 0L);
+			long prevSeaShipDetainedCount = prevAgencySeaShipDetainedCounts.getOrDefault(agency, 0L);
+			long prevRiverShipDetainedCount = prevAgencyRiverShipDetainedCounts.getOrDefault(agency, 0L);
+			long prevOnSiteCount = prevAgencyOnSiteCounts.getOrDefault(agency, 0L);
+			long prevAbnormalCount = prevAgencyAbnormalCounts.getOrDefault(agency, 0L);
+			
+			// 设置当前数据
+			agencyData.put("seaShipCount", seaShipCount);
+			agencyData.put("riverShipCount", riverShipCount);
+			agencyData.put("seaShipDefectCount", seaShipDefectCount);
+			agencyData.put("riverShipDefectCount", riverShipDefectCount);
+			agencyData.put("seaShipDetainedCount", seaShipDetainedCount);
+			agencyData.put("riverShipDetainedCount", riverShipDetainedCount);
+			agencyData.put("onSiteCount", onSiteCount);
+			agencyData.put("abnormalCount", abnormalCount);
+			
+			// 计算环比变化率
+			agencyData.put("seaShipCountRate", calculateRate(seaShipCount, prevSeaShipCount));
+			agencyData.put("riverShipCountRate", calculateRate(riverShipCount, prevRiverShipCount));
+			agencyData.put("seaShipDefectRate", calculateRate(seaShipDefectCount, prevSeaShipDefectCount));
+			agencyData.put("riverShipDefectRate", calculateRate(riverShipDefectCount, prevRiverShipDefectCount));
+			agencyData.put("seaShipDetainedRate", calculateRate(seaShipDetainedCount, prevSeaShipDetainedCount));
+			agencyData.put("riverShipDetainedRate", calculateRate(riverShipDetainedCount, prevRiverShipDetainedCount));
+			agencyData.put("onSiteCountRate", calculateRate(onSiteCount, prevOnSiteCount));
+			agencyData.put("abnormalCountRate", calculateRate(abnormalCount, prevAbnormalCount));
+			
+			// PSC数据（只有张家港海事局有）
+			if ("张家港海事局".equals(agency)) {
+				agencyData.put("pscCount", 0L); // PSC数据需要单独处理
+				agencyData.put("pscDefectCount", 0L);
+				agencyData.put("pscDetentionCount", 0L);
+				agencyData.put("pscCountRate", 0.0);
+				agencyData.put("pscDefectRate", 0.0);
+				agencyData.put("pscDetentionRate", 0.0);
+			} else {
+				agencyData.put("pscCount", 0L);
+				agencyData.put("pscDefectCount", 0L);
+				agencyData.put("pscDetentionCount", 0L);
+				agencyData.put("pscCountRate", 0.0);
+				agencyData.put("pscDefectRate", 0.0);
+				agencyData.put("pscDetentionRate", 0.0);
+			}
+			
+			agencyDataList.add(agencyData);
+		}
+		
+		return agencyDataList;
+	}
+
+	/**
+	 * 计算环比变化率
+	 */
+	private double calculateRate(long current, long previous) {
+		if (previous == 0) {
+			return current > 0 ? 100.0 : 0.0;
+		}
+		return ((double) (current - previous) / previous) * 100.0;
+	}
+	
+	/**
+	 * 构建月度报表按部门分组的数据列表
+	 */
+	private List<Map<String, Object>> buildMonthlyDepartmentDataList(
+			Map<String, Object> shipData, Map<String, Object> onSiteData, Map<String, Object> pscData,
+			Map<String, Object> prevShipData, Map<String, Object> prevOnSiteData, Map<String, Object> prevPscData) {
+		
+		List<Map<String, Object>> deptDataList = new ArrayList<>();
+		
+		try {
+			// 获取所有部门列表
+			List<String> departments = weeklyReportDao.findAllDepartments();
+			
+			// 获取当前期间各部门的数据
+			Map<String, Long> agencySeaShipCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
+			Map<String, Long> agencyRiverShipCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
+			Map<String, Long> agencySeaShipDefectCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
+			Map<String, Long> agencyRiverShipDefectCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
+			Map<String, Long> agencySeaShipDetainedCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
+			Map<String, Long> agencyRiverShipDetainedCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
+			Map<String, Long> agencyOnSiteCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
+			Map<String, Long> agencyAbnormalCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
+			
+			// 获取上期各部门的数据
+			Map<String, Long> prevAgencySeaShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
+			Map<String, Long> prevAgencyRiverShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipCounts", new HashMap<>());
+			Map<String, Long> prevAgencySeaShipDefectCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipDefectCounts", new HashMap<>());
+			Map<String, Long> prevAgencyRiverShipDefectCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipDefectCounts", new HashMap<>());
+			Map<String, Long> prevAgencySeaShipDetainedCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipDetainedCounts", new HashMap<>());
+			Map<String, Long> prevAgencyRiverShipDetainedCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
+			Map<String, Long> prevAgencyOnSiteCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
+			Map<String, Long> prevAgencyAbnormalCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
+			
+			for (String dept : departments) {
+				Map<String, Object> deptData = new HashMap<>();
+				deptData.put("dept", dept);
+				
+				// 海船安检数据
+				long seaShipCount = agencySeaShipCounts.getOrDefault(dept, 0L);
+				long prevSeaShipCount = prevAgencySeaShipCounts.getOrDefault(dept, 0L);
+				long seaShipDefectCount = agencySeaShipDefectCounts.getOrDefault(dept, 0L);
+				long prevSeaShipDefectCount = prevAgencySeaShipDefectCounts.getOrDefault(dept, 0L);
+				long seaShipDetainedCount = agencySeaShipDetainedCounts.getOrDefault(dept, 0L);
+				long prevSeaShipDetainedCount = prevAgencySeaShipDetainedCounts.getOrDefault(dept, 0L);
+				
+				deptData.put("seaShipCount", seaShipCount);
+				deptData.put("prevSeaShipCount", prevSeaShipCount);
+				
+				deptData.put("seaShipCountRate", calculateRate(seaShipCount, prevSeaShipCount));
+				deptData.put("seaShipDefectCount", seaShipDefectCount);
+				deptData.put("prevSeaShipDefectCount", prevSeaShipDefectCount);
+				
+				deptData.put("seaShipDefectRate", calculateRate(seaShipDefectCount, prevSeaShipDefectCount));
+				deptData.put("seaShipDetainedCount", seaShipDetainedCount);
+				deptData.put("prevSeaShipDetainedCount", prevSeaShipDetainedCount);
+				
+				deptData.put("seaShipDetainedRate", calculateRate(seaShipDetainedCount, prevSeaShipDetainedCount));
+				
+				// 内河船安检数据
+				long riverShipCount = agencyRiverShipCounts.getOrDefault(dept, 0L);
+				long prevRiverShipCount = prevAgencyRiverShipCounts.getOrDefault(dept, 0L);
+				long riverShipDefectCount = agencyRiverShipDefectCounts.getOrDefault(dept, 0L);
+				long prevRiverShipDefectCount = prevAgencyRiverShipDefectCounts.getOrDefault(dept, 0L);
+				long riverShipDetainedCount = agencyRiverShipDetainedCounts.getOrDefault(dept, 0L);
+				long prevRiverShipDetainedCount = prevAgencyRiverShipDetainedCounts.getOrDefault(dept, 0L);
+				
+				deptData.put("riverShipCount", riverShipCount);
+				deptData.put("prevRiverShipCount", prevRiverShipCount);
+				
+				deptData.put("riverShipCountRate", calculateRate(riverShipCount, prevRiverShipCount));
+				deptData.put("riverShipDefectCount", riverShipDefectCount);
+				deptData.put("prevRiverShipDefectCount", prevRiverShipDefectCount);
+				
+				deptData.put("riverShipDefectRate", calculateRate(riverShipDefectCount, prevRiverShipDefectCount));
+				deptData.put("riverShipDetainedCount", riverShipDetainedCount);
+				deptData.put("prevRiverShipDetainedCount", prevRiverShipDetainedCount);
+				
+				deptData.put("riverShipDetainedRate", calculateRate(riverShipDetainedCount, prevRiverShipDetainedCount));
+				
+				// PSC检查数据（只有张家港海事局有PSC数据）
+				long pscCount = 0L;
+				long prevPscCount = 0L;
+				long pscDefectCount = 0L;
+				long prevPscDefectCount = 0L;
+				long pscDetentionCount = 0L;
+				long prevPscDetentionCount = 0L;
+				
+				if ("张家港海事局".equals(dept)) {
+					pscCount = (long) pscData.getOrDefault("pscCount", 0L);
+					prevPscCount = (long) prevPscData.getOrDefault("pscCount", 0L);
+					pscDefectCount = (long) pscData.getOrDefault("pscDefectCount", 0L);
+					prevPscDefectCount = (long) prevPscData.getOrDefault("pscDefectCount", 0L);
+					pscDetentionCount = (long) pscData.getOrDefault("pscDetentionCount", 0L);
+					prevPscDetentionCount = (long) prevPscData.getOrDefault("pscDetentionCount", 0L);
+				}
+				
+				deptData.put("pscCount", pscCount);
+				deptData.put("prevPscCount", prevPscCount);
+				
+				deptData.put("pscCountRate", calculateRate(pscCount, prevPscCount));
+				deptData.put("pscDefectCount", pscDefectCount);
+				deptData.put("prevPscDefectCount", prevPscDefectCount);
+				
+				deptData.put("pscDefectRate", calculateRate(pscDefectCount, prevPscDefectCount));
+				deptData.put("pscDetentionCount", pscDetentionCount);
+				deptData.put("prevPscDetentionCount", prevPscDetentionCount);
+				
+				deptData.put("pscDetentionRate", calculateRate(pscDetentionCount, prevPscDetentionCount));
+				
+				// 现场监督数据
+				long onSiteCount = agencyOnSiteCounts.getOrDefault(dept, 0L);
+				long prevOnSiteCount = prevAgencyOnSiteCounts.getOrDefault(dept, 0L);
+				long abnormalCount = agencyAbnormalCounts.getOrDefault(dept, 0L);
+				long prevAbnormalCount = prevAgencyAbnormalCounts.getOrDefault(dept, 0L);
+				
+				deptData.put("onSiteCount", onSiteCount);
+				deptData.put("prevOnSiteCount", prevOnSiteCount);
+				
+				deptData.put("onSiteCountRate", calculateRate(onSiteCount, prevOnSiteCount));
+				deptData.put("abnormalCount", abnormalCount);
+				deptData.put("prevAbnormalCount", prevAbnormalCount);
+				
+				deptData.put("abnormalCountRate", calculateRate(abnormalCount, prevAbnormalCount));
+				
+				deptDataList.add(deptData);
+			}
+		} catch (Exception e) {
+			logger.error("构建月度部门数据列表失败", e);
+		}
+		
+		return deptDataList;
+	}
 }

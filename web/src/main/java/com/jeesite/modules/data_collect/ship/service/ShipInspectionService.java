@@ -157,4 +157,11 @@ public class ShipInspectionService extends CrudService<ShipInspectionDao, ShipIn
 	public List<ShipInspection> findDistinctList(ShipInspection shipInspection) {
 		return shipInspectionDao.findDistinctList(shipInspection);
 	}
+
+	/**
+	 * 按部门统计船舶检查数据（通过agency_dept表关联）
+	 */
+	public List<java.util.Map<String, Object>> findShipInspectionStatisticsByDepartment(String startDate, String endDate, String department) {
+		return shipInspectionDao.findShipInspectionStatisticsByDepartment(startDate, endDate, department);
+	}
 }

@@ -263,6 +263,84 @@ public class ShipInspectionController extends BaseController {
 		
 		return result;
 	}
+
+	/**
+	 * 获取船舶检查数据统计 - 按部门分组（通过agency_dept表关联）
+	 */
+	@GetMapping("getInspectionStatisticsByDepartment")
+	@ResponseBody
+	public Map<String, Object> getInspectionStatisticsByDepartment(String startDate, String endDate, String department) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 使用DAO方法获取按部门分组的船舶检查数据
+			List<Map<String, Object>> shipStatistics = shipInspectionService.findShipInspectionStatisticsByDepartment(startDate, endDate, department);
+			
+			// 初始化统计数据
+			long seaShipCount = 0;
+			long riverShipCount = 0;
+			long seaShipDefectCount = 0;
+			long riverShipDefectCount = 0;
+			long seaShipDetainedCount = 0;
+			long riverShipDetainedCount = 0;
+			
+			Map<String, Long> agencySeaShipCounts = new HashMap<>();
+			Map<String, Long> agencyRiverShipCounts = new HashMap<>();
+			Map<String, Long> agencySeaShipDefectCounts = new HashMap<>();
+			Map<String, Long> agencyRiverShipDefectCounts = new HashMap<>();
+			Map<String, Long> agencySeaShipDetainedCounts = new HashMap<>();
+			Map<String, Long> agencyRiverShipDetainedCounts = new HashMap<>();
+			
+			// 处理查询结果
+			for (Map<String, Object> stat : shipStatistics) {
+				String dept = (String) stat.get("department");
+				String shipType = (String) stat.get("shipType");
+				Long inspectionCount = ((Number) stat.get("inspectionCount")).longValue();
+				Long defectCount = ((Number) stat.get("defectCount")).longValue();
+				Long detainedCount = ((Number) stat.get("detainedCount")).longValue();
+				
+				if ("海船".equals(shipType)) {
+					seaShipCount += inspectionCount;
+					seaShipDefectCount += defectCount;
+					seaShipDetainedCount += detainedCount;
+					
+					agencySeaShipCounts.put(dept, agencySeaShipCounts.getOrDefault(dept, 0L) + inspectionCount);
+					agencySeaShipDefectCounts.put(dept, agencySeaShipDefectCounts.getOrDefault(dept, 0L) + defectCount);
+					agencySeaShipDetainedCounts.put(dept, agencySeaShipDetainedCounts.getOrDefault(dept, 0L) + detainedCount);
+				} else if ("内河船".equals(shipType)) {
+					riverShipCount += inspectionCount;
+					riverShipDefectCount += defectCount;
+					riverShipDetainedCount += detainedCount;
+					
+					agencyRiverShipCounts.put(dept, agencyRiverShipCounts.getOrDefault(dept, 0L) + inspectionCount);
+					agencyRiverShipDefectCounts.put(dept, agencyRiverShipDefectCounts.getOrDefault(dept, 0L) + defectCount);
+					agencyRiverShipDetainedCounts.put(dept, agencyRiverShipDetainedCounts.getOrDefault(dept, 0L) + detainedCount);
+				}
+			}
+			
+			// 组装返回数据
+			result.put("seaShipCount", seaShipCount);
+			result.put("riverShipCount", riverShipCount);
+			result.put("seaShipDefectCount", seaShipDefectCount);
+			result.put("riverShipDefectCount", riverShipDefectCount);
+			result.put("seaShipDetainedCount", seaShipDetainedCount);
+			result.put("riverShipDetainedCount", riverShipDetainedCount);
+			result.put("agencySeaShipCounts", agencySeaShipCounts);
+			result.put("agencyRiverShipCounts", agencyRiverShipCounts);
+			result.put("agencySeaShipDefectCounts", agencySeaShipDefectCounts);
+			result.put("agencyRiverShipDefectCounts", agencyRiverShipDefectCounts);
+			result.put("agencySeaShipDetainedCounts", agencySeaShipDetainedCounts);
+			result.put("agencyRiverShipDetainedCounts", agencyRiverShipDetainedCounts);
+			
+			result.put("status", "success");
+		} catch (Exception e) {
+			logger.error("获取船舶检查统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
 	
 	/**
 	 * 删除数据

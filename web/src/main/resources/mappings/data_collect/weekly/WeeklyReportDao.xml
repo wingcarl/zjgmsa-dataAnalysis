@@ -12,4 +12,59 @@
 		ORDER BY ${sqlMap.order.toSql()}
 	</select> -->
 	
+	<!-- 获取所有部门列表（通过agency_dept表） -->
+	<select id="findAllDepartments" resultType="String">
+		SELECT DISTINCT dept 
+		FROM agency_dept 
+		WHERE dept IS NOT NULL AND dept != ''
+		ORDER BY dept
+	</select>
+	
+	<!-- 按部门统计船舶检查数据（通过agency_dept表关联） -->
+	<select id="findShipInspectionStatisticsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			si.ship_type as shipType,
+			COUNT(DISTINCT CONCAT(si.ship_name_cn, '_', DATE(si.inspection_date), '_', si.inspection_agency)) as inspectionCount,
+			COALESCE(SUM(si.defect_count), 0) as defectCount,
+			SUM(CASE WHEN si.detained = '是' THEN 1 ELSE 0 END) as detainedCount
+		FROM ship_inspection si
+		INNER JOIN agency_dept ad ON si.inspection_agency = ad.agency
+		WHERE si.inspection_type = '初查'
+		<if test="startDate != null and startDate != ''">
+			AND si.inspection_date >= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND si.inspection_date &lt;= #{endDate}
+		</if>
+		<if test="department != null and department != ''">
+			AND ad.dept = #{department}
+		</if>
+		GROUP BY ad.dept, si.ship_type
+		ORDER BY ad.dept, si.ship_type
+	</select>
+	
+	<!-- 按部门统计现场监督数据（通过agency_dept表关联） -->
+	<select id="findOnSiteInspectionStatisticsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			COUNT(*) as onSiteCount,
+			SUM(CASE WHEN osi.issue_found = '是' THEN 1 ELSE 0 END) as abnormalCount
+		FROM ship_on_site_inspection osi
+		INNER JOIN agency_dept ad ON osi.inspection_agency = ad.agency
+		<where>
+			<if test="startDate != null and startDate != ''">
+				AND osi.inspection_date >= #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND osi.inspection_date &lt;= #{endDate}
+			</if>
+			<if test="department != null and department != ''">
+				AND ad.dept = #{department}
+			</if>
+		</where>
+		GROUP BY ad.dept
+		ORDER BY ad.dept
+	</select>
+	
 </mapper>
