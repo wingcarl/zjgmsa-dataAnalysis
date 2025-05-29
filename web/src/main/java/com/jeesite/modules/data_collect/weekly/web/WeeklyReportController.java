@@ -1162,7 +1162,7 @@ public class WeeklyReportController extends BaseController {
 		try {
 			// 获取当前周期的各类型数据（使用新的DAO方法按部门分组）
 			Map<String, Object> shipData = getShipInspectionStatisticsByDept(startDate, endDate, department);
-			Map<String, Object> pscData = getPscInspectionStatistics(startDate, endDate);
+			Map<String, Object> pscData = getPscInspectionStatisticsByDept(startDate, endDate, department);
 			Map<String, Object> onSiteData = getOnSiteInspectionStatisticsByDept(startDate, endDate, department);
 			
 			// 计算上一周期的日期范围
@@ -1186,7 +1186,7 @@ public class WeeklyReportController extends BaseController {
 				
 				// 获取上一周期的各类型数据（使用新的DAO方法按部门分组）
 				prevShipData = getShipInspectionStatisticsByDept(prevStartDate, prevEndDate, department);
-				prevPscData = getPscInspectionStatistics(prevStartDate, prevEndDate);
+				prevPscData = getPscInspectionStatisticsByDept(prevStartDate, prevEndDate, department);
 				prevOnSiteData = getOnSiteInspectionStatisticsByDept(prevStartDate, prevEndDate, department);
 				
 				// 计算环比变化率
@@ -1463,6 +1463,59 @@ public class WeeklyReportController extends BaseController {
 	private Map<String, Object> getOnSiteInspectionStatisticsByDept(String startDate, String endDate, String department) {
 		// 直接调用ShipOnSiteInspectionController的新方法
 		return shipOnSiteInspectionController.getOnSiteInspectionStatisticsByDepartment(startDate, endDate, department);
+	}
+	
+	/**
+	 * 获取PSC检查统计数据 - 按部门分组（使用DAO方法）
+	 */
+	private Map<String, Object> getPscInspectionStatisticsByDept(String startDate, String endDate, String department) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 使用DAO方法获取按部门分组的PSC统计数据
+			List<Map<String, Object>> pscStatsList = weeklyReportDao.findPscInspectionStatisticsByDepartment(startDate, endDate, department);
+			
+			// 初始化总计数据
+			long totalPscCount = 0L;
+			long totalPscDefectCount = 0L;
+			long totalPscDetentionCount = 0L;
+			
+			// 按部门统计数据
+			Map<String, Long> agencyPscCounts = new HashMap<>();
+			Map<String, Long> agencyPscDefectCounts = new HashMap<>();
+			Map<String, Long> agencyPscDetentionCounts = new HashMap<>();
+			
+			// 处理查询结果
+			for (Map<String, Object> pscStats : pscStatsList) {
+				String dept = (String) pscStats.get("department");
+				Long pscCount = ((Number) pscStats.get("pscCount")).longValue();
+				Long pscDefectCount = ((Number) pscStats.get("pscDefectCount")).longValue();
+				Long pscDetentionCount = ((Number) pscStats.get("pscDetentionCount")).longValue();
+				
+				// 累计总数
+				totalPscCount += pscCount;
+				totalPscDefectCount += pscDefectCount;
+				totalPscDetentionCount += pscDetentionCount;
+				
+				// 按部门统计
+				agencyPscCounts.put(dept, pscCount);
+				agencyPscDefectCounts.put(dept, pscDefectCount);
+				agencyPscDetentionCounts.put(dept, pscDetentionCount);
+			}
+			
+			// 组装返回数据
+			result.put("pscCount", totalPscCount);
+			result.put("pscDefectCount", totalPscDefectCount);
+			result.put("pscDetentionCount", totalPscDetentionCount);
+			result.put("agencyPscCounts", agencyPscCounts);
+			result.put("agencyPscDefectCounts", agencyPscDefectCounts);
+			result.put("agencyPscDetentionCounts", agencyPscDetentionCounts);
+			
+		} catch (Exception e) {
+			logger.error("获取PSC检查统计数据失败", e);
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -2134,6 +2187,9 @@ public class WeeklyReportController extends BaseController {
 			Map<String, Long> agencyRiverShipDetainedCounts = (Map<String, Long>) shipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
 			Map<String, Long> agencyOnSiteCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
 			Map<String, Long> agencyAbnormalCounts = (Map<String, Long>) onSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
+			Map<String, Long> agencyPscCounts = (Map<String, Long>) pscData.getOrDefault("agencyPscCounts", new HashMap<>());
+			Map<String, Long> agencyPscDefectCounts = (Map<String, Long>) pscData.getOrDefault("agencyPscDefectCounts", new HashMap<>());
+			Map<String, Long> agencyPscDetentionCounts = (Map<String, Long>) pscData.getOrDefault("agencyPscDetentionCounts", new HashMap<>());
 			
 			// 获取上期各部门的数据
 			Map<String, Long> prevAgencySeaShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
@@ -2144,6 +2200,9 @@ public class WeeklyReportController extends BaseController {
 			Map<String, Long> prevAgencyRiverShipDetainedCounts = (Map<String, Long>) prevShipData.getOrDefault("agencyRiverShipDetainedCounts", new HashMap<>());
 			Map<String, Long> prevAgencyOnSiteCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyOnSiteCounts", new HashMap<>());
 			Map<String, Long> prevAgencyAbnormalCounts = (Map<String, Long>) prevOnSiteData.getOrDefault("agencyAbnormalCounts", new HashMap<>());
+			Map<String, Long> prevAgencyPscCounts = (Map<String, Long>) prevPscData.getOrDefault("agencyPscCounts", new HashMap<>());
+			Map<String, Long> prevAgencyPscDefectCounts = (Map<String, Long>) prevPscData.getOrDefault("agencyPscDefectCounts", new HashMap<>());
+			Map<String, Long> prevAgencyPscDetentionCounts = (Map<String, Long>) prevPscData.getOrDefault("agencyPscDetentionCounts", new HashMap<>());
 			
 			for (String dept : departments) {
 				Map<String, Object> deptData = new HashMap<>();
@@ -2191,34 +2250,22 @@ public class WeeklyReportController extends BaseController {
 				
 				deptData.put("riverShipDetainedRate", calculateRate(riverShipDetainedCount, prevRiverShipDetainedCount));
 				
-				// PSC检查数据（只有张家港海事局有PSC数据）
-				long pscCount = 0L;
-				long prevPscCount = 0L;
-				long pscDefectCount = 0L;
-				long prevPscDefectCount = 0L;
-				long pscDetentionCount = 0L;
-				long prevPscDetentionCount = 0L;
-				
-				if ("张家港海事局".equals(dept)) {
-					pscCount = (long) pscData.getOrDefault("pscCount", 0L);
-					prevPscCount = (long) prevPscData.getOrDefault("pscCount", 0L);
-					pscDefectCount = (long) pscData.getOrDefault("pscDefectCount", 0L);
-					prevPscDefectCount = (long) prevPscData.getOrDefault("pscDefectCount", 0L);
-					pscDetentionCount = (long) pscData.getOrDefault("pscDetentionCount", 0L);
-					prevPscDetentionCount = (long) prevPscData.getOrDefault("pscDetentionCount", 0L);
-				}
+				// PSC检查数据（从各部门的PSC数据Map中获取）
+				long pscCount = agencyPscCounts.getOrDefault(dept, 0L);
+				long prevPscCount = prevAgencyPscCounts.getOrDefault(dept, 0L);
+				long pscDefectCount = agencyPscDefectCounts.getOrDefault(dept, 0L);
+				long prevPscDefectCount = prevAgencyPscDefectCounts.getOrDefault(dept, 0L);
+				long pscDetentionCount = agencyPscDetentionCounts.getOrDefault(dept, 0L);
+				long prevPscDetentionCount = prevAgencyPscDetentionCounts.getOrDefault(dept, 0L);
 				
 				deptData.put("pscCount", pscCount);
 				deptData.put("prevPscCount", prevPscCount);
-				
 				deptData.put("pscCountRate", calculateRate(pscCount, prevPscCount));
 				deptData.put("pscDefectCount", pscDefectCount);
 				deptData.put("prevPscDefectCount", prevPscDefectCount);
-				
 				deptData.put("pscDefectRate", calculateRate(pscDefectCount, prevPscDefectCount));
 				deptData.put("pscDetentionCount", pscDetentionCount);
 				deptData.put("prevPscDetentionCount", prevPscDetentionCount);
-				
 				deptData.put("pscDetentionRate", calculateRate(pscDetentionCount, prevPscDetentionCount));
 				
 				// 现场监督数据

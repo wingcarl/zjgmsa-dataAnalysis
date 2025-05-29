@@ -461,7 +461,16 @@
             </div>
             <div class="filter-row">
                 <div class="row">
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
+                        <div class="form-group">
+                            <label for="department">部门：</label>
+                            <select id="department" class="form-control filter-select">
+                                <option value="">全部</option>
+                                <!-- 动态填充 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
                         <div class="form-group">
                             <label for="inspectionAgency">检查机构：</label>
                             <select id="inspectionAgency" class="form-control filter-select">
@@ -470,7 +479,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
                         <div class="form-group">
                             <label for="shipType">船舶类型：</label>
                             <select id="shipType" class="form-control filter-select">
@@ -480,7 +489,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-2">
+                    <div class="col-md-3 mb-2">
                         <div class="form-group">
                             <label for="inspectionType">检查类型：</label>
                             <select id="inspectionType" class="form-control filter-select">
@@ -727,7 +736,7 @@
 
     <!-- 部门图表部分 -->
         <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>各部门海船安检情况</h5>
@@ -737,7 +746,10 @@
             </div>
             </div>
         </div>
-        <div class="col-md-6">
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
             <div class="card mb-4">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>各部门内河船安检情况</h5>
@@ -750,7 +762,7 @@
     </div>
 
         <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card mb-4">
                 <div class="card-header bg-warning text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>各部门船舶现场监督情况</h5>
@@ -816,25 +828,25 @@
             }, 350);
         });
 
-        // 计算默认日期范围（与weeklyReportPenatyChart.html一致）
+        // 计算默认日期范围（月度报表逻辑）
         function calculateDefaultDateRange() {
             var today = new Date();
-            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
+            var currentDay = today.getDate();
+            var currentMonth = today.getMonth();
+            var currentYear = today.getFullYear();
             
-            var endDate = new Date(today);
-            var startDate = new Date(today);
+            var endDate = new Date();
+            var startDate = new Date();
             
-            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
-            if (dayOfWeek >= 5) {
-                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            if (currentDay <= 25) {
+                // 如果当前日期为本月25日之前，则为上上月的26至本月的25日
+                endDate = new Date(currentYear, currentMonth, 25);
+                startDate = new Date(currentYear, currentMonth - 2, 26);
             } else {
-                // 否则结束日期是上周四
-                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+                // 如果当前日期为本月25日之后，则为上月的26至本月的25日
+                endDate = new Date(currentYear, currentMonth, 25);
+                startDate = new Date(currentYear, currentMonth - 1, 26);
             }
-            
-            // 开始日期是结束日期往前推6天（周五）
-            startDate = new Date(endDate);
-            startDate.setDate(endDate.getDate() - 6);
             
             return {
                 start: startDate.toISOString().slice(0, 10),
@@ -853,6 +865,7 @@
         var fetchDataButton = $('#fetchDataButton');
         
         // 获取筛选条件元素
+        var departmentSelect = $('#department');
         var inspectionAgencySelect = $('#inspectionAgency');
         var shipTypeSelect = $('#shipType');
         var inspectionTypeSelect = $('#inspectionType');
@@ -892,6 +905,7 @@
             return {
                 startDate: startDateInput.val(),
                 endDate: endDateInput.val(),
+                department: departmentSelect.val(),
                 inspectionAgency: inspectionAgencySelect.val(),
                 shipType: shipTypeSelect.val(),
                 inspectionType: inspectionTypeSelect.val()
@@ -910,7 +924,7 @@
 
                 // 发送 AJAX 请求获取数据
                 $.ajax({
-                    url: 'getOriginalDataStatistics',
+                    url: 'getMonthlyDataStatistics',
                     type: 'GET',
                     dataType: 'json',
                     data: params,
@@ -921,15 +935,16 @@
                             // 渲染各部分数据
                             renderDataCards(data);
                             renderDepartmentTable(data);
-                            // 移除下面三个图表渲染函数调用
-                            // renderSeaRiverShipChart(data);
-                            // renderPscInspectionChart(data);
-                            // renderOnSiteInspectionChart(data);
                             renderDepartmentCharts(data);
                             
+                            // 动态填充部门下拉框
+                            if (data.departments && data.departments.length > 0) {
+                                fillDepartmentDropdown(data.departments);
+                            }
+                            
                             // 动态填充检查机构下拉框
-                            if (data.agencies && data.agencies.length > 0) {
-                                fillAgencyDropdown(data.agencies);
+                            if (data.agencyDeptList && data.agencyDeptList.length > 0) {
+                                fillAgencyDropdown(data.agencyDeptList);
                             }
                         } else {
                         Swal.fire({
@@ -969,6 +984,21 @@
             });
             
             inspectionAgencySelect.html(options);
+        }
+
+        // 填充部门下拉框
+        function fillDepartmentDropdown(departments) {
+            if (!departments || departments.length === 0) return;
+            
+            var currentValue = departmentSelect.val();
+            var options = '<option value="">全部</option>';
+            
+            departments.forEach(function(department) {
+                var selected = currentValue === department ? 'selected' : '';
+                options += '<option value="' + department + '" ' + selected + '>' + department + '</option>';
+            });
+            
+            departmentSelect.html(options);
         }
 
         // 渲染数据卡片
@@ -1038,112 +1068,69 @@
             var tableBody = $('#department-data-body');
             tableBody.empty();
 
-            // 获取部门数据列表
-            var agencyDataList = data.agencyDataList || [];
+            // 获取部门数据列表 - 月度报表按部门分组
+            var deptDataList = data.deptDataList || [];
 
-            agencyDataList.forEach(function(agency) {
+            deptDataList.forEach(function(dept) {
                 var row = $('<tr></tr>');
 
                 // 添加部门名称
-                row.append('<td>' + agency.agency + '</td>');
-                
-                // 获取上周数据
-                var prevSeaShipCount = 0;
-                var prevSeaShipDefectCount = 0;
-                var prevSeaShipDetainedCount = 0;
-                
-                if (data.prevShipData) {
-                    prevSeaShipCount = data.prevShipData.agencySeaShipCounts ? (data.prevShipData.agencySeaShipCounts[agency.agency] || 0) : 0;
-                    prevSeaShipDefectCount = data.prevShipData.agencySeaShipDefectCounts ? (data.prevShipData.agencySeaShipDefectCounts[agency.agency] || 0) : 0;
-                    prevSeaShipDetainedCount = data.prevShipData.agencySeaShipDetainedCounts ? (data.prevShipData.agencySeaShipDetainedCounts[agency.agency] || 0) : 0;
-                }
+                row.append('<td>' + dept.dept + '</td>');
                 
                 // 海船安检数据（检查数量）
-                row.append('<td>' + prevSeaShipCount + '</td>');
-                row.append('<td>' + (agency.seaShipCount || 0) + '</td>');
-                row.append(createRateCell(agency.seaShipCountRate || 0));
+                row.append('<td>' + (dept.prevSeaShipCount || 0) + '</td>');
+                row.append('<td>' + (dept.seaShipCount || 0) + '</td>');
+                row.append(createRateCell(dept.seaShipCountRate || 0));
                 
                 // 海船安检数据（缺陷数量）
-                row.append('<td>' + prevSeaShipDefectCount + '</td>');
-                row.append('<td>' + (agency.seaShipDefectCount || 0) + '</td>');
-                row.append(createRateCell(agency.seaShipDefectRate || 0));
+                row.append('<td>' + (dept.prevSeaShipDefectCount || 0) + '</td>');
+                row.append('<td>' + (dept.seaShipDefectCount || 0) + '</td>');
+                row.append(createRateCell(dept.seaShipDefectRate || 0));
                 
                 // 海船安检数据（滞留数量）
-                row.append('<td>' + prevSeaShipDetainedCount + '</td>');
-                row.append('<td>' + (agency.seaShipDetainedCount || 0) + '</td>');
-                row.append(createRateCell(agency.seaShipDetainedRate || 0));
-                
-                // 获取内河船上周数据
-                var prevRiverShipCount = 0;
-                var prevRiverShipDefectCount = 0;
-                var prevRiverShipDetainedCount = 0;
-                
-                if (data.prevShipData) {
-                    prevRiverShipCount = data.prevShipData.agencyRiverShipCounts ? (data.prevShipData.agencyRiverShipCounts[agency.agency] || 0) : 0;
-                    prevRiverShipDefectCount = data.prevShipData.agencyRiverShipDefectCounts ? (data.prevShipData.agencyRiverShipDefectCounts[agency.agency] || 0) : 0;
-                    prevRiverShipDetainedCount = data.prevShipData.agencyRiverShipDetainedCounts ? (data.prevShipData.agencyRiverShipDetainedCounts[agency.agency] || 0) : 0;
-                }
+                row.append('<td>' + (dept.prevSeaShipDetainedCount || 0) + '</td>');
+                row.append('<td>' + (dept.seaShipDetainedCount || 0) + '</td>');
+                row.append(createRateCell(dept.seaShipDetainedRate || 0));
                 
                 // 内河船安检数据（检查数量）
-                row.append('<td>' + prevRiverShipCount + '</td>');
-                row.append('<td>' + (agency.riverShipCount || 0) + '</td>');
-                row.append(createRateCell(agency.riverShipCountRate || 0));
+                row.append('<td>' + (dept.prevRiverShipCount || 0) + '</td>');
+                row.append('<td>' + (dept.riverShipCount || 0) + '</td>');
+                row.append(createRateCell(dept.riverShipCountRate || 0));
                 
                 // 内河船安检数据（缺陷数量）
-                row.append('<td>' + prevRiverShipDefectCount + '</td>');
-                row.append('<td>' + (agency.riverShipDefectCount || 0) + '</td>');
-                row.append(createRateCell(agency.riverShipDefectRate || 0));
+                row.append('<td>' + (dept.prevRiverShipDefectCount || 0) + '</td>');
+                row.append('<td>' + (dept.riverShipDefectCount || 0) + '</td>');
+                row.append(createRateCell(dept.riverShipDefectRate || 0));
                 
                 // 内河船安检数据（滞留数量）
-                row.append('<td>' + prevRiverShipDetainedCount + '</td>');
-                row.append('<td>' + (agency.riverShipDetainedCount || 0) + '</td>');
-                row.append(createRateCell(agency.riverShipDetainedRate || 0));
+                row.append('<td>' + (dept.prevRiverShipDetainedCount || 0) + '</td>');
+                row.append('<td>' + (dept.riverShipDetainedCount || 0) + '</td>');
+                row.append(createRateCell(dept.riverShipDetainedRate || 0));
 
-                // PSC检查数据
-                var prevPscCount = 0;
-                var prevPscDefectCount = 0;
-                var prevPscDetentionCount = 0;
-                
-                // 如果是张家港海事局才有PSC数据
-                if (agency.agency.includes("张家港海事局") && data.prevPscData) {
-                    prevPscCount = data.prevPscData.pscCount || 0;
-                    prevPscDefectCount = data.prevPscData.pscDefectCount || 0;
-                    prevPscDetentionCount = data.prevPscData.pscDetentionCount || 0;
-                }
-                
                 // PSC检查数据（检查数量）
-                row.append('<td>' + prevPscCount + '</td>');
-                row.append('<td>' + (agency.pscCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscCountRate || 0));
+                row.append('<td>' + (dept.prevPscCount || 0) + '</td>');
+                row.append('<td>' + (dept.pscCount || 0) + '</td>');
+                row.append(createRateCell(dept.pscCountRate || 0));
                 
                 // PSC检查数据（缺陷数量）
-                row.append('<td>' + prevPscDefectCount + '</td>');
-                row.append('<td>' + (agency.pscDefectCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscDefectRate || 0));
+                row.append('<td>' + (dept.prevPscDefectCount || 0) + '</td>');
+                row.append('<td>' + (dept.pscDefectCount || 0) + '</td>');
+                row.append(createRateCell(dept.pscDefectRate || 0));
                 
                 // PSC检查数据（滞留数量）
-                row.append('<td>' + prevPscDetentionCount + '</td>');
-                row.append('<td>' + (agency.pscDetentionCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscDetentionRate || 0));
-                
-                // 获取现场监督上周数据
-                var prevOnSiteCount = 0;
-                var prevAbnormalCount = 0;
-                
-                if (data.prevOnSiteData) {
-                    prevOnSiteCount = data.prevOnSiteData.agencyOnSiteCounts ? (data.prevOnSiteData.agencyOnSiteCounts[agency.agency] || 0) : 0;
-                    prevAbnormalCount = data.prevOnSiteData.agencyAbnormalCounts ? (data.prevOnSiteData.agencyAbnormalCounts[agency.agency] || 0) : 0;
-                }
+                row.append('<td>' + (dept.prevPscDetentionCount || 0) + '</td>');
+                row.append('<td>' + (dept.pscDetentionCount || 0) + '</td>');
+                row.append(createRateCell(dept.pscDetentionRate || 0));
                 
                 // 现场监督数据（检查数量）
-                row.append('<td>' + prevOnSiteCount + '</td>');
-                row.append('<td>' + (agency.onSiteCount || 0) + '</td>');
-                row.append(createRateCell(agency.onSiteCountRate || 0));
+                row.append('<td>' + (dept.prevOnSiteCount || 0) + '</td>');
+                row.append('<td>' + (dept.onSiteCount || 0) + '</td>');
+                row.append(createRateCell(dept.onSiteCountRate || 0));
                 
                 // 现场监督数据（异常数量）
-                row.append('<td>' + prevAbnormalCount + '</td>');
-                row.append('<td>' + (agency.abnormalCount || 0) + '</td>');
-                row.append(createRateCell(agency.abnormalCountRate || 0));
+                row.append('<td>' + (dept.prevAbnormalCount || 0) + '</td>');
+                row.append('<td>' + (dept.abnormalCount || 0) + '</td>');
+                row.append(createRateCell(dept.abnormalCountRate || 0));
 
                 tableBody.append(row);
             });
@@ -1281,114 +1268,102 @@
 
         // 渲染各部门图表
         function renderDepartmentCharts(data) {
-            // 处理数据
-            var agencyDataList = data.agencyDataList || [];
-            var agencies = agencyDataList.map(function(item) {
-                return item.agency;
+            // 处理数据 - 月度报表按部门分组
+            var deptDataList = data.deptDataList || [];
+            var departments = deptDataList.map(function(item) {
+                return item.dept;
             });
-            
-            // 获取上期数据
-            var prevData = {
-                agencySeaShipCounts: data.prevShipData ? data.prevShipData.agencySeaShipCounts || {} : {},
-                agencySeaShipDefectCounts: data.prevShipData ? data.prevShipData.agencySeaShipDefectCounts || {} : {},
-                agencySeaShipDetainedCounts: data.prevShipData ? data.prevShipData.agencySeaShipDetainedCounts || {} : {},
-                agencyRiverShipCounts: data.prevShipData ? data.prevShipData.agencyRiverShipCounts || {} : {},
-                agencyRiverShipDefectCounts: data.prevShipData ? data.prevShipData.agencyRiverShipDefectCounts || {} : {},
-                agencyRiverShipDetainedCounts: data.prevShipData ? data.prevShipData.agencyRiverShipDetainedCounts || {} : {},
-                agencyOnSiteCounts: data.prevOnSiteData ? data.prevOnSiteData.agencyOnSiteCounts || {} : {},
-                agencyAbnormalCounts: data.prevOnSiteData ? data.prevOnSiteData.agencyAbnormalCounts || {} : {}
-            };
             
             // 海船安检数据
             var seaShipCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.seaShipCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencySeaShipCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevSeaShipCount || 0;
                 })
             };
             
             var seaShipDefectCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.seaShipDefectCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencySeaShipDefectCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevSeaShipDefectCount || 0;
                 })
             };
             
             var seaShipDetainedCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.seaShipDetainedCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencySeaShipDetainedCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevSeaShipDetainedCount || 0;
                 })
             };
             
             // 内河船安检数据
             var riverShipCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.riverShipCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencyRiverShipCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevRiverShipCount || 0;
                 })
             };
             
             var riverShipDefectCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.riverShipDefectCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencyRiverShipDefectCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevRiverShipDefectCount || 0;
                 })
             };
             
             var riverShipDetainedCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.riverShipDetainedCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencyRiverShipDetainedCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevRiverShipDetainedCount || 0;
                 })
             };
             
             // 现场监督数据
             var onSiteCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.onSiteCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencyOnSiteCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevOnSiteCount || 0;
                 })
             };
             
             var abnormalCounts = {
-                current: agencyDataList.map(function(item) {
+                current: deptDataList.map(function(item) {
                     return item.abnormalCount || 0;
                 }),
-                last: agencies.map(function(agency) {
-                    return prevData.agencyAbnormalCounts[agency] || 0;
+                last: deptDataList.map(function(item) {
+                    return item.prevAbnormalCount || 0;
                 })
             };
             
             // 渲染各部门海船安检图表
-            renderDepartmentSeaShipChart(agencies, seaShipCounts, seaShipDefectCounts, seaShipDetainedCounts, data);
+            renderDepartmentSeaShipChart(departments, seaShipCounts, seaShipDefectCounts, seaShipDetainedCounts, data);
             
             // 渲染各部门内河船安检图表
-            renderDepartmentRiverShipChart(agencies, riverShipCounts, riverShipDefectCounts, riverShipDetainedCounts, data);
+            renderDepartmentRiverShipChart(departments, riverShipCounts, riverShipDefectCounts, riverShipDetainedCounts, data);
             
             // 渲染各部门现场监督图表
-            renderDepartmentOnSiteChart(agencies, onSiteCounts, abnormalCounts, data);
+            renderDepartmentOnSiteChart(departments, onSiteCounts, abnormalCounts, data);
             
             // 渲染各部门单船缺陷数量图表
-            renderDepartmentDefectRateCharts(agencies, seaShipCounts, seaShipDefectCounts, riverShipCounts, riverShipDefectCounts, data);
+            renderDepartmentDefectRateCharts(departments, seaShipCounts, seaShipDefectCounts, riverShipCounts, riverShipDefectCounts, data);
         }
 
         // 渲染各部门海船安检图表
-        function renderDepartmentSeaShipChart(agencies, seaShipCounts, seaShipDefectCounts, seaShipDetainedCounts, data) {
+        function renderDepartmentSeaShipChart(departments, seaShipCounts, seaShipDefectCounts, seaShipDetainedCounts, data) {
             var chartOption = {
                 title: {
                     text: '各部门海船安检情况',
@@ -1446,7 +1421,7 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: agencies,
+                    data: departments,
                     axisLabel: {
                         interval: 0,
                         rotate: 30,
@@ -1603,7 +1578,7 @@
         }
 
         // 渲染各部门内河船安检图表
-        function renderDepartmentRiverShipChart(agencies, riverShipCounts, riverShipDefectCounts, riverShipDetainedCounts, data) {
+        function renderDepartmentRiverShipChart(departments, riverShipCounts, riverShipDefectCounts, riverShipDetainedCounts, data) {
             var chartOption = {
                 title: {
                     text: '各部门内河船安检情况',
@@ -1661,7 +1636,7 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: agencies,
+                    data: departments,
                     axisLabel: {
                         interval: 0,
                         rotate: 30,
@@ -1818,7 +1793,7 @@
         }
 
         // 渲染各部门现场监督图表
-        function renderDepartmentOnSiteChart(agencies, onSiteCounts, abnormalCounts, data) {
+        function renderDepartmentOnSiteChart(departments, onSiteCounts, abnormalCounts, data) {
             var chartOption = {
                 title: {
                     text: '各部门船舶现场监督情况',
@@ -1874,7 +1849,7 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: agencies,
+                    data: departments,
                     axisLabel: {
                         interval: 0,
                         rotate: 30,
@@ -1988,19 +1963,19 @@
         }
 
         // 渲染各部门单船缺陷数量图表
-        function renderDepartmentDefectRateCharts(agencies, seaShipCounts, seaShipDefectCounts, riverShipCounts, riverShipDefectCounts, data) {
+        function renderDepartmentDefectRateCharts(departments, seaShipCounts, seaShipDefectCounts, riverShipCounts, riverShipDefectCounts, data) {
             // 计算海船单船缺陷数量
             var seaShipDefectRates = [];
             var seaShipDepartmentData = [];
             
-            for (var i = 0; i < agencies.length; i++) {
-                var agency = agencies[i];
+            for (var i = 0; i < departments.length; i++) {
+                var dept = departments[i];
                 var inspectionCount = seaShipCounts.current[i] || 0;
                 var defectCount = seaShipDefectCounts.current[i] || 0;
                 var defectRate = inspectionCount > 0 ? (defectCount / inspectionCount) : 0;
                 
                 seaShipDepartmentData.push({
-                    name: agency,
+                    name: dept,
                     value: parseFloat(defectRate.toFixed(2)),
                     inspectionCount: inspectionCount,
                     defectCount: defectCount
@@ -2010,7 +1985,7 @@
             // 按缺陷率从高到低排序
             seaShipDepartmentData.sort((a, b) => b.value - a.value);
             
-            var sortedSeaAgencies = seaShipDepartmentData.map(item => item.name);
+            var sortedSeaDepartments = seaShipDepartmentData.map(item => item.name);
             var sortedSeaDefectRates = seaShipDepartmentData.map(item => item.value);
             
             // 渲染海船单船缺陷数量图表
@@ -2048,7 +2023,7 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: sortedSeaAgencies,
+                    data: sortedSeaDepartments,
                     axisLabel: {
                         interval: 0,
                         rotate: 30,
@@ -2094,14 +2069,14 @@
             // 计算内河船单船缺陷数量
             var riverShipDepartmentData = [];
             
-            for (var i = 0; i < agencies.length; i++) {
-                var agency = agencies[i];
+            for (var i = 0; i < departments.length; i++) {
+                var dept = departments[i];
                 var inspectionCount = riverShipCounts.current[i] || 0;
                 var defectCount = riverShipDefectCounts.current[i] || 0;
                 var defectRate = inspectionCount > 0 ? (defectCount / inspectionCount) : 0;
                 
                 riverShipDepartmentData.push({
-                    name: agency,
+                    name: dept,
                     value: parseFloat(defectRate.toFixed(2)),
                     inspectionCount: inspectionCount,
                     defectCount: defectCount
@@ -2111,7 +2086,7 @@
             // 按缺陷率从高到低排序
             riverShipDepartmentData.sort((a, b) => b.value - a.value);
             
-            var sortedRiverAgencies = riverShipDepartmentData.map(item => item.name);
+            var sortedRiverDepartments = riverShipDepartmentData.map(item => item.name);
             var sortedRiverDefectRates = riverShipDepartmentData.map(item => item.value);
             
             // 渲染内河船单船缺陷数量图表
@@ -2149,7 +2124,7 @@
                 },
                 xAxis: {
                     type: 'category',
-                    data: sortedRiverAgencies,
+                    data: sortedRiverDepartments,
                     axisLabel: {
                         interval: 0,
                         rotate: 30,

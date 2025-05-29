@@ -67,4 +67,27 @@
 		ORDER BY ad.dept
 	</select>
 	
+	<!-- 按部门统计PSC检查数据（通过agency_dept表关联） -->
+	<select id="findPscInspectionStatisticsByDepartment" resultType="Map">
+		SELECT 
+			ad.dept as department,
+			COUNT(*) as pscCount,
+			COALESCE(SUM(CAST(psc.deficiencies AS UNSIGNED)), 0) as pscDefectCount,
+			SUM(CASE WHEN psc.detention = 'Y' THEN 1 ELSE 0 END) as pscDetentionCount
+		FROM psc_inspection psc
+		INNER JOIN agency_dept ad ON psc.port = ad.agency
+		WHERE psc.type = 'INITIAL'
+		<if test="startDate != null and startDate != ''">
+			AND psc.inspection_date >= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND psc.inspection_date &lt;= #{endDate}
+		</if>
+		<if test="department != null and department != ''">
+			AND ad.dept = #{department}
+		</if>
+		GROUP BY ad.dept
+		ORDER BY ad.dept
+	</select>
+	
 </mapper>

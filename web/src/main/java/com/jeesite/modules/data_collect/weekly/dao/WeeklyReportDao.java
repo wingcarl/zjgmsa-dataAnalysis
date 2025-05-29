@@ -38,4 +38,13 @@ public interface WeeklyReportDao extends CrudDao<WeeklyReport> {
 		@Param("endDate") String endDate,
 		@Param("department") String department
 	);
+	
+	/**
+	 * 按部门统计PSC检查数据（通过agency_dept表关联）
+	 */
+	List<Map<String, Object>> findPscInspectionStatisticsByDepartment(
+		@Param("startDate") String startDate,
+		@Param("endDate") String endDate,
+		@Param("department") String department
+	);
 }
