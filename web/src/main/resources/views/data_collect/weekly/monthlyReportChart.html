@@ -761,6 +761,20 @@
         </div>
     </div>
 
+    <!-- 新增各部门PSC检查情况图表 -->
+        <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>各部门PSC检查情况</h5>
+                </div>
+                <div class="card-body">
+                    <div id="department-psc-chart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <div class="row">
         <div class="col-md-12">
             <div class="card mb-4">
@@ -797,6 +811,111 @@
             </div>
         </div>
     </div>
+    
+    <!-- 新增PSC检查单船缺陷和现场监督异常发现率图表 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>各部门PSC检查单船缺陷数量</h5>
+                </div>
+                <div class="card-body">
+                    <div id="department-psc-defect-rate-chart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>各部门现场监督检查异常发现率</h5>
+                </div>
+                <div class="card-body">
+                    <div id="department-onsite-abnormal-rate-chart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增缺陷类型分布图表 -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>海船安检常见缺陷类型分布</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 缺陷类型筛选条件 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="seaShipDefectDepartment">部门筛选：</label>
+                            <select id="seaShipDefectDepartment" class="form-control">
+                                <option value="">全部部门</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="seaShipDefectDetention">是否滞留：</label>
+                            <select id="seaShipDefectDetention" class="form-control">
+                                <option value="">全部</option>
+                                <option value="1">滞留缺陷</option>
+                                <option value="0">非滞留缺陷</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="sea-ship-defect-type-chart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>内河船安检常见缺陷类型分布</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 缺陷类型筛选条件 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="riverShipDefectDepartment">部门筛选：</label>
+                            <select id="riverShipDefectDepartment" class="form-control">
+                                <option value="">全部部门</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="riverShipDefectDetention">是否滞留：</label>
+                            <select id="riverShipDefectDetention" class="form-control">
+                                <option value="">全部</option>
+                                <option value="1">滞留缺陷</option>
+                                <option value="0">非滞留缺陷</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="river-ship-defect-type-chart" class="chart-container"></div>
+            </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增现场监督内容异常率图表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>现场监督内容异常率分析</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 现场监督内容筛选条件 -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="onSiteContentDepartment">部门筛选：</label>
+                            <select id="onSiteContentDepartment" class="form-control">
+                                <option value="">全部部门</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="onsite-content-abnormal-rate-chart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Bootstrap JS and dependencies -->
@@ -810,8 +929,14 @@
         var departmentSeaShipChart = echarts.init(document.getElementById('department-sea-ship-chart'));
         var departmentRiverShipChart = echarts.init(document.getElementById('department-river-ship-chart'));
         var departmentOnSiteChart = echarts.init(document.getElementById('department-onsite-chart'));
+        var departmentPscChart = echarts.init(document.getElementById('department-psc-chart'));
         var departmentSeaShipDefectRateChart = echarts.init(document.getElementById('department-sea-ship-defect-rate-chart'));
         var departmentRiverShipDefectRateChart = echarts.init(document.getElementById('department-river-ship-defect-rate-chart'));
+        var departmentPscDefectRateChart = echarts.init(document.getElementById('department-psc-defect-rate-chart'));
+        var departmentOnSiteAbnormalRateChart = echarts.init(document.getElementById('department-onsite-abnormal-rate-chart'));
+        var seaShipDefectTypeChart = echarts.init(document.getElementById('sea-ship-defect-type-chart'));
+        var riverShipDefectTypeChart = echarts.init(document.getElementById('river-ship-defect-type-chart'));
+        var onSiteContentAbnormalRateChart = echarts.init(document.getElementById('onsite-content-abnormal-rate-chart'));
 
         // 筛选条件折叠功能
         $('#filterToggle').on('click', function() {
@@ -825,6 +950,11 @@
                 departmentOnSiteChart.resize();
                 departmentSeaShipDefectRateChart.resize();
                 departmentRiverShipDefectRateChart.resize();
+                departmentPscDefectRateChart.resize();
+                departmentOnSiteAbnormalRateChart.resize();
+                seaShipDefectTypeChart.resize();
+                riverShipDefectTypeChart.resize();
+                onSiteContentAbnormalRateChart.resize();
             }, 350);
         });
 
@@ -887,6 +1017,20 @@
         $('.filter-select').on('change', function() {
             fetchDataAndRenderCharts();
         });
+        
+        // 缺陷类型筛选条件变化事件
+        $('#seaShipDefectDepartment, #seaShipDefectDetention').on('change', function() {
+            fetchDefectTypeData();
+        });
+        
+        $('#riverShipDefectDepartment, #riverShipDefectDetention').on('change', function() {
+            fetchDefectTypeData();
+        });
+        
+        // 现场监督内容筛选条件变化事件
+        $('#onSiteContentDepartment').on('change', function() {
+            fetchOnSiteContentData();
+        });
 
         // 日期改变事件
         startDateInput.on('change', function() {
@@ -946,6 +1090,22 @@
                             if (data.agencyDeptList && data.agencyDeptList.length > 0) {
                                 fillAgencyDropdown(data.agencyDeptList);
                             }
+                            
+                            // 填充缺陷类型筛选的部门下拉框
+                            if (data.departments && data.departments.length > 0) {
+                                fillDefectTypeDepartmentDropdown(data.departments);
+                            }
+                            
+                            // 填充现场监督内容筛选的部门下拉框
+                            if (data.departments && data.departments.length > 0) {
+                                fillOnSiteContentDepartmentDropdown(data.departments);
+                            }
+                            
+                            // 获取缺陷类型数据
+                            fetchDefectTypeData();
+                            
+                            // 获取现场监督内容数据
+                            fetchOnSiteContentData();
                         } else {
                         Swal.fire({
                                 title: '错误!',
@@ -999,6 +1159,36 @@
             });
             
             departmentSelect.html(options);
+        }
+        
+        // 填充缺陷类型筛选的部门下拉框
+        function fillDefectTypeDepartmentDropdown(departments) {
+            if (!departments || departments.length === 0) return;
+            
+            var seaShipDefectDepartmentSelect = $('#seaShipDefectDepartment');
+            var riverShipDefectDepartmentSelect = $('#riverShipDefectDepartment');
+            
+            var options = '<option value="">全部部门</option>';
+            departments.forEach(function(department) {
+                options += '<option value="' + department + '">' + department + '</option>';
+            });
+            
+            seaShipDefectDepartmentSelect.html(options);
+            riverShipDefectDepartmentSelect.html(options);
+        }
+        
+        // 填充现场监督内容筛选的部门下拉框
+        function fillOnSiteContentDepartmentDropdown(departments) {
+            if (!departments || departments.length === 0) return;
+            
+            var onSiteContentDepartmentSelect = $('#onSiteContentDepartment');
+            
+            var options = '<option value="">全部部门</option>';
+            departments.forEach(function(department) {
+                options += '<option value="' + department + '">' + department + '</option>';
+            });
+            
+            onSiteContentDepartmentSelect.html(options);
         }
 
         // 渲染数据卡片
@@ -1106,7 +1296,7 @@
                 row.append('<td>' + (dept.prevRiverShipDetainedCount || 0) + '</td>');
                 row.append('<td>' + (dept.riverShipDetainedCount || 0) + '</td>');
                 row.append(createRateCell(dept.riverShipDetainedRate || 0));
-
+                
                 // PSC检查数据（检查数量）
                 row.append('<td>' + (dept.prevPscCount || 0) + '</td>');
                 row.append('<td>' + (dept.pscCount || 0) + '</td>');
@@ -1349,17 +1539,51 @@
                 })
             };
             
+            // PSC检查数据
+            var pscCounts = {
+                current: deptDataList.map(function(item) {
+                    return item.pscCount || 0;
+                }),
+                last: deptDataList.map(function(item) {
+                    return item.prevPscCount || 0;
+                })
+            };
+            
+            var pscDefectCounts = {
+                current: deptDataList.map(function(item) {
+                    return item.pscDefectCount || 0;
+                }),
+                last: deptDataList.map(function(item) {
+                    return item.prevPscDefectCount || 0;
+                })
+            };
+            
+            var pscDetentionCounts = {
+                current: deptDataList.map(function(item) {
+                    return item.pscDetentionCount || 0;
+                }),
+                last: deptDataList.map(function(item) {
+                    return item.prevPscDetentionCount || 0;
+                })
+            };
+            
             // 渲染各部门海船安检图表
             renderDepartmentSeaShipChart(departments, seaShipCounts, seaShipDefectCounts, seaShipDetainedCounts, data);
             
             // 渲染各部门内河船安检图表
             renderDepartmentRiverShipChart(departments, riverShipCounts, riverShipDefectCounts, riverShipDetainedCounts, data);
             
+            // 渲染各部门PSC检查图表
+            renderDepartmentPscChart(departments, pscCounts, pscDefectCounts, pscDetentionCounts, data);
+            
             // 渲染各部门现场监督图表
             renderDepartmentOnSiteChart(departments, onSiteCounts, abnormalCounts, data);
             
             // 渲染各部门单船缺陷数量图表
             renderDepartmentDefectRateCharts(departments, seaShipCounts, seaShipDefectCounts, riverShipCounts, riverShipDefectCounts, data);
+            
+            // 渲染PSC检查单船缺陷图表和现场监督异常发现率图表
+            renderDepartmentPscAndOnSiteRateCharts(departments, pscCounts, pscDefectCounts, onSiteCounts, abnormalCounts, data);
         }
 
         // 渲染各部门海船安检图表
@@ -1792,6 +2016,221 @@
             departmentRiverShipChart.setOption(chartOption);
         }
 
+        // 渲染各部门PSC检查图表
+        function renderDepartmentPscChart(departments, pscCounts, pscDefectCounts, pscDetentionCounts, data) {
+            var chartOption = {
+                title: {
+                    text: '各部门PSC检查情况',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var colorSpan = color => '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                        var result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            if (item.seriesName.includes('上期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        params.forEach(item => {
+                            if (item.seriesName.includes('本期')) {
+                                result += colorSpan(item.color) + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['检查数量(上期)', '检查数量(本期)', '缺陷数量(上期)', '缺陷数量(本期)', '滞留数量(上期)', '滞留数量(本期)'],
+                    textStyle: {
+                        color: '#0466c8'
+                    },
+                    top: 40,
+                    left: 'center',
+                    selected: {
+                        '检查数量(上期)': true,
+                        '检查数量(本期)': true,
+                        '缺陷数量(上期)': false,
+                        '缺陷数量(本期)': false,
+                        '滞留数量(上期)': true,
+                        '滞留数量(本期)': true
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 100,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: departments,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30,
+                        color: '#0466c8'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#0466c8'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                barCategoryGap: '30%',  // 类目间柱形距离
+                barGap: '10%',          // 同一类目下柱形间距离
+                series: [
+                    {
+                        name: '检查数量(上期)',
+                        type: 'bar',
+                        stack: '上期检查',
+                        data: pscCounts.last,
+                        itemStyle: {
+                            color: '#17A2B8',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '检查数量(本期)',
+                        type: 'bar',
+                        stack: '本期检查',
+                        data: pscCounts.current,
+                        itemStyle: {
+                            color: '#17A2B8'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = pscCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
+                        }
+                    },
+                    {
+                        name: '缺陷数量(上期)',
+                        type: 'bar',
+                        stack: '上期缺陷',
+                        data: pscDefectCounts.last,
+                        itemStyle: {
+                            color: '#F56C6C',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '缺陷数量(本期)',
+                        type: 'bar',
+                        stack: '本期缺陷',
+                        data: pscDefectCounts.current,
+                        itemStyle: {
+                            color: '#F56C6C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = pscDefectCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
+                        }
+                    },
+                    {
+                        name: '滞留数量(上期)',
+                        type: 'bar',
+                        stack: '上期滞留',
+                        data: pscDetentionCounts.last,
+                        itemStyle: {
+                            color: '#E6A23C',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '滞留数量(本期)',
+                        type: 'bar',
+                        stack: '本期滞留',
+                        data: pscDetentionCounts.current,
+                        itemStyle: {
+                            color: '#E6A23C'
+                        },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                // 计算环比变化率
+                                var currentValue = params.value;
+                                var lastValue = pscDetentionCounts.last[params.dataIndex] || 0;
+                                if (lastValue === 0) return currentValue;
+                                
+                                var rate = ((currentValue - lastValue) / lastValue * 100).toFixed(2);
+                                var rateText = rate > 0 ? '+' + rate + '%' : rate + '%';
+                                return currentValue + ' (' + rateText + ')';
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            departmentPscChart.setOption(chartOption);
+        }
+
         // 渲染各部门现场监督图表
         function renderDepartmentOnSiteChart(departments, onSiteCounts, abnormalCounts, data) {
             var chartOption = {
@@ -2168,6 +2607,369 @@
             departmentRiverShipDefectRateChart.setOption(riverShipDefectRateOption);
         }
 
+        // 渲染PSC检查单船缺陷图表
+        function renderDepartmentPscDefectRateChart(departments, pscDefectCounts, pscDetentionCounts, data) {
+            var chartOption = {
+                title: {
+                    text: '各部门PSC检查单船缺陷数量',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var dataIndex = params[0].dataIndex;
+                        var deptData = pscDefectCounts[dataIndex];
+                        return deptData.name + '<br/>' +
+                               '缺陷数量: ' + deptData.defectCount + '<br/>' +
+                               '单船缺陷数量: ' + deptData.value.toFixed(2);
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: departments,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30,
+                        color: '#0466c8'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '单船缺陷数量',
+                    axisLabel: {
+                        color: '#0466c8',
+                        formatter: '{value}'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '单船缺陷数量',
+                    type: 'bar',
+                    data: pscDefectCounts.map(item => item.value),
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#ff6b6b'},
+                            {offset: 1, color: '#ee5a52'}
+                        ])
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}'
+                    }
+                }]
+            };
+            
+            departmentPscDefectRateChart.setOption(chartOption);
+        }
+
+        // 渲染现场监督异常发现率图表
+        function renderDepartmentOnSiteAbnormalRateChart(departments, onSiteCounts, abnormalCounts, data) {
+            var chartOption = {
+                title: {
+                    text: '各部门现场监督检查异常发现率',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var dataIndex = params[0].dataIndex;
+                        var deptData = abnormalCounts[dataIndex];
+                        return deptData.name + '<br/>' +
+                               '异常数量: ' + deptData.abnormalCount + '<br/>' +
+                               '异常发现率: ' + (deptData.abnormalCount / deptData.inspectionCount * 100).toFixed(2) + '%';
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: departments,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30,
+                        color: '#0466c8'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '异常发现率',
+                    axisLabel: {
+                        color: '#0466c8',
+                        formatter: '{value} %'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '异常发现率',
+                    type: 'bar',
+                    data: abnormalCounts.map(item => item.abnormalCount / item.inspectionCount * 100),
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#ff6b6b'},
+                            {offset: 1, color: '#ee5a52'}
+                        ])
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c} %'
+                    }
+                }]
+            };
+            
+            departmentOnSiteAbnormalRateChart.setOption(chartOption);
+        }
+
+        // 渲染PSC检查单船缺陷图表和现场监督异常发现率图表
+        function renderDepartmentPscAndOnSiteRateCharts(departments, pscCounts, pscDefectCounts, onSiteCounts, abnormalCounts, data) {
+            // 计算PSC检查单船缺陷数量
+            var pscDefectRateData = [];
+            
+            for (var i = 0; i < departments.length; i++) {
+                var dept = departments[i];
+                var inspectionCount = pscCounts.current[i] || 0;
+                var defectCount = pscDefectCounts.current[i] || 0;
+                var defectRate = inspectionCount > 0 ? (defectCount / inspectionCount) : 0;
+                
+                pscDefectRateData.push({
+                    name: dept,
+                    value: parseFloat(defectRate.toFixed(2)),
+                    inspectionCount: inspectionCount,
+                    defectCount: defectCount
+                });
+            }
+            
+            // 按缺陷率从高到低排序
+            pscDefectRateData.sort((a, b) => b.value - a.value);
+            
+            var sortedPscDepartments = pscDefectRateData.map(item => item.name);
+            var sortedPscDefectRates = pscDefectRateData.map(item => item.value);
+            
+            // 渲染PSC检查单船缺陷图表
+            var pscDefectRateOption = {
+                title: {
+                    text: '各部门PSC检查单船缺陷数量',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var dataIndex = params[0].dataIndex;
+                        var deptData = pscDefectRateData[dataIndex];
+                        return deptData.name + '<br/>' +
+                               'PSC检查数量: ' + deptData.inspectionCount + '<br/>' +
+                               'PSC缺陷数量: ' + deptData.defectCount + '<br/>' +
+                               '单船缺陷数量: ' + deptData.value.toFixed(2);
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: sortedPscDepartments,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30,
+                        color: '#0466c8'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '单船缺陷数量',
+                    axisLabel: {
+                        color: '#0466c8',
+                        formatter: '{value}'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '单船缺陷数量',
+                    type: 'bar',
+                    data: sortedPscDefectRates,
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#17A2B8'},
+                            {offset: 1, color: '#138496'}
+                        ])
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}'
+                    }
+                }]
+            };
+            
+            departmentPscDefectRateChart.setOption(pscDefectRateOption);
+            
+            // 计算现场监督异常发现率
+            var onSiteAbnormalRateData = [];
+            
+            for (var i = 0; i < departments.length; i++) {
+                var dept = departments[i];
+                var inspectionCount = onSiteCounts.current[i] || 0;
+                var abnormalCount = abnormalCounts.current[i] || 0;
+                var abnormalRate = inspectionCount > 0 ? (abnormalCount / inspectionCount * 100) : 0;
+                
+                onSiteAbnormalRateData.push({
+                    name: dept,
+                    value: parseFloat(abnormalRate.toFixed(2)),
+                    inspectionCount: inspectionCount,
+                    abnormalCount: abnormalCount
+                });
+            }
+            
+            // 按异常发现率从高到低排序
+            onSiteAbnormalRateData.sort((a, b) => b.value - a.value);
+            
+            var sortedOnSiteDepartments = onSiteAbnormalRateData.map(item => item.name);
+            var sortedOnSiteAbnormalRates = onSiteAbnormalRateData.map(item => item.value);
+            
+            // 渲染现场监督异常发现率图表
+            var onSiteAbnormalRateOption = {
+                title: {
+                    text: '各部门现场监督检查异常发现率',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var dataIndex = params[0].dataIndex;
+                        var deptData = onSiteAbnormalRateData[dataIndex];
+                        return deptData.name + '<br/>' +
+                               '监督检查数量: ' + deptData.inspectionCount + '<br/>' +
+                               '异常数量: ' + deptData.abnormalCount + '<br/>' +
+                               '异常发现率: ' + deptData.value.toFixed(2) + '%';
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: sortedOnSiteDepartments,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30,
+                        color: '#0466c8'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '异常发现率(%)',
+                    axisLabel: {
+                        color: '#0466c8',
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '异常发现率',
+                    type: 'bar',
+                    data: sortedOnSiteAbnormalRates,
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#FFC107'},
+                            {offset: 1, color: '#FF8F00'}
+                        ])
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}%'
+                    }
+                }]
+            };
+            
+            departmentOnSiteAbnormalRateChart.setOption(onSiteAbnormalRateOption);
+        }
+
         // 窗口大小变化时调整图表大小
         $(window).resize(function() {
             departmentSeaShipChart.resize();
@@ -2175,7 +2977,395 @@
             departmentOnSiteChart.resize();
             departmentSeaShipDefectRateChart.resize();
             departmentRiverShipDefectRateChart.resize();
+            departmentPscDefectRateChart.resize();
+            departmentOnSiteAbnormalRateChart.resize();
+            seaShipDefectTypeChart.resize();
+            riverShipDefectTypeChart.resize();
+            onSiteContentAbnormalRateChart.resize();
         });
+
+        // 获取缺陷类型数据
+        function fetchDefectTypeData() {
+            var params = getQueryParams();
+            
+            // 获取海船缺陷类型筛选条件
+            var seaShipDefectParams = {
+                startDate: params.startDate,
+                endDate: params.endDate,
+                shipType: '海船',
+                department: $('#seaShipDefectDepartment').val(),
+                detention: $('#seaShipDefectDetention').val()
+            };
+            
+            // 获取内河船缺陷类型筛选条件
+            var riverShipDefectParams = {
+                startDate: params.startDate,
+                endDate: params.endDate,
+                shipType: '内河船',
+                department: $('#riverShipDefectDepartment').val(),
+                detention: $('#riverShipDefectDetention').val()
+            };
+            console.log(seaShipDefectParams);
+            // 获取海船缺陷类型数据
+            $.ajax({
+                url: 'getDefectTypeStatistics',
+                type: 'GET',
+                dataType: 'json',
+                data: seaShipDefectParams,
+                success: function(data) {
+                    if (data.status === "success") {
+                        renderSeaShipDefectTypeChart(data.defectTypeList || []);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error fetching sea ship defect type data:', error);
+                }
+            });
+            
+            // 获取内河船缺陷类型数据
+            $.ajax({
+                url: 'getDefectTypeStatistics',
+                type: 'GET',
+                dataType: 'json',
+                data: riverShipDefectParams,
+                success: function(data) {
+                    if (data.status === "success") {
+                        renderRiverShipDefectTypeChart(data.defectTypeList || []);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error fetching river ship defect type data:', error);
+                }
+            });
+        }
+        
+        // 渲染海船缺陷类型图表
+        function renderSeaShipDefectTypeChart(defectTypeList) {
+            // 取前15个缺陷类型
+            var top15DefectTypes = defectTypeList.slice(0, 15);
+            
+            var defectNames = top15DefectTypes.map(function(item) {
+                return item.defectName || item.defectCode;
+            });
+            
+            var defectCounts = top15DefectTypes.map(function(item) {
+                return item.count || 0;
+            });
+            
+            var chartOption = {
+                title: {
+                    text: '海船安检常见缺陷类型分布（TOP15）',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var item = params[0];
+                        return item.name + '<br/>' +
+                               '缺陷数量: ' + item.value;
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#0466c8'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: defectNames,
+                    axisLabel: {
+                        color: '#0466c8',
+                        interval: 0,
+                        formatter: function(value) {
+                            // 限制标签长度，超过20个字符则截断
+                            return value.length > 20 ? value.substring(0, 20) + '...' : value;
+                        }
+                    }
+                },
+                series: [{
+                    name: '缺陷数量',
+                    type: 'bar',
+                    data: defectCounts,
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            {offset: 0, color: '#409EFF'},
+                            {offset: 1, color: '#66B1FF'}
+                        ])
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}'
+                    }
+                }]
+            };
+            
+            seaShipDefectTypeChart.setOption(chartOption);
+        }
+        
+        // 渲染内河船缺陷类型图表
+        function renderRiverShipDefectTypeChart(defectTypeList) {
+            // 取前15个缺陷类型
+            var top15DefectTypes = defectTypeList.slice(0, 15);
+            
+            var defectNames = top15DefectTypes.map(function(item) {
+                return item.defectName || item.defectCode;
+            });
+            
+            var defectCounts = top15DefectTypes.map(function(item) {
+                return item.count || 0;
+            });
+            
+            var chartOption = {
+                title: {
+                    text: '内河船安检常见缺陷类型分布（TOP15）',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var item = params[0];
+                        return item.name + '<br/>' +
+                               '缺陷数量: ' + item.value;
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#0466c8'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: defectNames,
+                    axisLabel: {
+                        color: '#0466c8',
+                        interval: 0,
+                        formatter: function(value) {
+                            // 限制标签长度，超过20个字符则截断
+                            return value.length > 20 ? value.substring(0, 20) + '...' : value;
+                        }
+                    }
+                },
+                series: [{
+                    name: '缺陷数量',
+                    type: 'bar',
+                    data: defectCounts,
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            {offset: 0, color: '#67C23A'},
+                            {offset: 1, color: '#85CE61'}
+                        ])
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}'
+                    }
+                }]
+            };
+            
+            riverShipDefectTypeChart.setOption(chartOption);
+        }
+        
+        // 获取现场监督内容数据
+        function fetchOnSiteContentData() {
+            var params = getQueryParams();
+            
+            // 获取现场监督内容筛选条件
+            var onSiteContentParams = {
+                startDate: params.startDate,
+                endDate: params.endDate,
+                department: $('#onSiteContentDepartment').val()
+            };
+            
+            // 获取现场监督内容异常率数据
+            $.ajax({
+                url: 'getOnSiteContentAbnormalRate',
+                type: 'GET',
+                dataType: 'json',
+                data: onSiteContentParams,
+                success: function(data) {
+                    if (data.status === "success") {
+                        renderOnSiteContentAbnormalRateChart(data.contentList || []);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error fetching onsite content data:', error);
+                }
+            });
+        }
+        
+        // 渲染现场监督内容异常率图表
+        function renderOnSiteContentAbnormalRateChart(contentList) {
+            // 按异常率从高到低排序
+            contentList.sort(function(a, b) {
+                return b.abnormalRate - a.abnormalRate;
+            });
+            
+            // 取前20个监督内容
+            var top20Contents = contentList.slice(0, 20);
+            
+            var contentNames = top20Contents.map(function(item) {
+                return item.inspectionContent || '未知内容';
+            });
+            
+            var abnormalRates = top20Contents.map(function(item) {
+                return parseFloat((item.abnormalRate || 0).toFixed(2));
+            });
+            
+            var chartOption = {
+                title: {
+                    text: '现场监督内容异常率分析（TOP20）',
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var item = params[0];
+                        var dataIndex = item.dataIndex;
+                        var contentData = top20Contents[dataIndex];
+                        return item.name + '<br/>' +
+                               '检查总数: ' + (contentData.totalCount || 0) + '<br/>' +
+                               '异常数量: ' + (contentData.abnormalCount || 0) + '<br/>' +
+                               '异常率: ' + item.value + '%';
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    name: '异常率(%)',
+                    axisLabel: {
+                        color: '#0466c8',
+                        formatter: '{value}%'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: contentNames,
+                    axisLabel: {
+                        color: '#0466c8',
+                        interval: 0,
+                        formatter: function(value) {
+                            // 限制标签长度，超过25个字符则截断
+                            return value.length > 25 ? value.substring(0, 25) + '...' : value;
+                        }
+                    }
+                },
+                series: [{
+                    name: '异常率',
+                    type: 'bar',
+                    data: abnormalRates,
+                    itemStyle: {
+                        color: function(params) {
+                            // 根据异常率设置不同颜色
+                            var rate = params.value;
+                            if (rate >= 50) {
+                                return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                    {offset: 0, color: '#FF4757'},
+                                    {offset: 1, color: '#FF6B7A'}
+                                ]);
+                            } else if (rate >= 30) {
+                                return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                    {offset: 0, color: '#FFA726'},
+                                    {offset: 1, color: '#FFB74D'}
+                                ]);
+                            } else if (rate >= 10) {
+                                return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                    {offset: 0, color: '#FFCA28'},
+                                    {offset: 1, color: '#FFD54F'}
+                                ]);
+                            } else {
+                                return new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                    {offset: 0, color: '#66BB6A'},
+                                    {offset: 1, color: '#81C784'}
+                                ]);
+                            }
+                        }
+                    },
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}%',
+                        color: '#0466c8'
+                    }
+                }]
+            };
+            
+            onSiteContentAbnormalRateChart.setOption(chartOption);
+        }
     });
 </script>
 </body>

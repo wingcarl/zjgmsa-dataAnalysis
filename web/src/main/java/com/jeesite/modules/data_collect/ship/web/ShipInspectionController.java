@@ -263,7 +263,7 @@ public class ShipInspectionController extends BaseController {
 		
 		return result;
 	}
-
+	
 	/**
 	 * 获取船舶检查数据统计 - 按部门分组（通过agency_dept表关联）
 	 */

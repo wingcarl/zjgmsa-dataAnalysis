@@ -47,4 +47,24 @@ public interface WeeklyReportDao extends CrudDao<WeeklyReport> {
 		@Param("endDate") String endDate,
 		@Param("department") String department
 	);
+	
+	/**
+	 * 获取缺陷类型统计数据
+	 */
+	List<Map<String, Object>> findDefectTypeStatistics(
+		@Param("startDate") String startDate,
+		@Param("endDate") String endDate,
+		@Param("shipType") String shipType,
+		@Param("department") String department,
+		@Param("detention") String detention
+	);
+	
+	/**
+	 * 获取现场监督内容异常率统计数据
+	 */
+	List<Map<String, Object>> findOnSiteContentAbnormalRate(
+		@Param("startDate") String startDate,
+		@Param("endDate") String endDate,
+		@Param("department") String department
+	);
 }

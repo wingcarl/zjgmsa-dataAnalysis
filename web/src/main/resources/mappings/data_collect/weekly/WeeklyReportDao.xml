@@ -90,4 +90,76 @@
 		ORDER BY ad.dept
 	</select>
 	
+	<!-- 获取缺陷类型统计数据 -->
+	<select id="findDefectTypeStatistics" resultType="Map">
+		SELECT 
+			dc.安检项目名称 as defectName,
+			si.defect_code as defectCode,
+			COUNT(*) as count
+		FROM ship_inspection si
+		LEFT JOIN defect_code dc ON si.defect_code = dc.代码
+		<if test="department != null and department != ''">
+			INNER JOIN agency_dept ad ON si.inspection_agency = ad.agency
+		</if>
+		WHERE si.inspection_type = '初查'
+		<if test="startDate != null and startDate != ''">
+			AND si.inspection_date >= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND si.inspection_date &lt;= #{endDate}
+		</if>
+		<if test="shipType != null and shipType != ''">
+			AND si.ship_type = #{shipType}
+		</if>
+		<if test="department != null and department != ''">
+			AND ad.dept = #{department}
+		</if>
+		<if test="detention != null">
+			<choose>
+				<when test='detention == "1"'>
+					AND si.handling_comments LIKE '%滞留%'
+				</when>
+				<when test='detention == "0"'>
+					AND (si.handling_comments NOT LIKE '%滞留%' OR si.handling_comments IS NULL)
+				</when>
+			</choose>
+		</if>
+		AND si.defect_code IS NOT NULL 
+		AND si.defect_code != ''
+		GROUP BY si.defect_code, dc.安检项目名称
+		ORDER BY COUNT(*) DESC
+		LIMIT 15
+	</select>
+	
+	<!-- 获取现场监督内容异常率统计数据 -->
+	<select id="findOnSiteContentAbnormalRate" resultType="Map">
+		SELECT 
+			osi.inspection_content as inspectionContent,
+			COUNT(*) as totalCount,
+			SUM(CASE WHEN osi.issue_found = '是' THEN 1 ELSE 0 END) as abnormalCount,
+			ROUND(
+				(SUM(CASE WHEN osi.issue_found = '是' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)), 
+				2
+			) as abnormalRate
+		FROM ship_on_site_inspection osi
+		<if test="department != null and department != ''">
+			INNER JOIN agency_dept ad ON osi.inspection_agency = ad.agency
+		</if>
+		WHERE osi.inspection_content IS NOT NULL 
+		AND osi.inspection_content != ''
+		<if test="startDate != null and startDate != ''">
+			AND osi.inspection_date >= #{startDate}
+		</if>
+		<if test="endDate != null and endDate != ''">
+			AND osi.inspection_date &lt;= #{endDate}
+		</if>
+		<if test="department != null and department != ''">
+			AND ad.dept = #{department}
+		</if>
+		GROUP BY osi.inspection_content
+		HAVING COUNT(*) >= 5
+		ORDER BY abnormalRate DESC, totalCount DESC
+		LIMIT 20
+	</select>
+	
 </mapper>

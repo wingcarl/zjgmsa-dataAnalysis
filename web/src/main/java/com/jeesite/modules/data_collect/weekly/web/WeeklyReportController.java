@@ -2291,4 +2291,68 @@ public class WeeklyReportController extends BaseController {
 		
 		return deptDataList;
 	}
+	
+	/**
+	 * 获取缺陷类型统计数据
+	 */
+	@GetMapping("getDefectTypeStatistics")
+	@ResponseBody
+	public Map<String, Object> getDefectTypeStatistics(String startDate, String endDate, 
+			String shipType, String department, String detention) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 参数标准化处理 - 将空字符串转换为null
+			if (department != null && department.trim().isEmpty()) {
+				department = null;
+			}
+			if (detention != null && detention.trim().isEmpty()) {
+				detention = null;
+			}
+			if (shipType != null && shipType.trim().isEmpty()) {
+				shipType = null;
+			}
+			
+			// 添加调试日志
+			logger.info("getDefectTypeStatistics参数标准化后: startDate={}, endDate={}, shipType={}, department={}, detention={}", 
+				startDate, endDate, shipType, department, detention);
+			
+			// 获取缺陷类型统计数据
+			List<Map<String, Object>> defectTypeList = weeklyReportDao.findDefectTypeStatistics(
+				startDate, endDate, shipType, department, detention);
+			
+			result.put("status", "success");
+			result.put("defectTypeList", defectTypeList);
+		} catch (Exception e) {
+			logger.error("获取缺陷类型统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取缺陷类型统计数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 获取现场监督内容异常率统计数据
+	 */
+	@GetMapping("getOnSiteContentAbnormalRate")
+	@ResponseBody
+	public Map<String, Object> getOnSiteContentAbnormalRate(String startDate, String endDate, String department) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 获取现场监督内容异常率统计数据
+			List<Map<String, Object>> contentList = weeklyReportDao.findOnSiteContentAbnormalRate(
+				startDate, endDate, department);
+			
+			result.put("status", "success");
+			result.put("contentList", contentList);
+		} catch (Exception e) {
+			logger.error("获取现场监督内容异常率统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取现场监督内容异常率统计数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
 }

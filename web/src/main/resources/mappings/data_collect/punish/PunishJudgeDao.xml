@@ -44,10 +44,10 @@
 		ORDER BY case_reason
 	</select>
 	
-		<!-- 获取所有业务类型选项 -->
+	<!-- 获取所有业务类型选项 -->
 	<select id="findManagementCategories" resultType="String">
-		SELECT DISTINCT management_category 
-		FROM punish_judge 
+		SELECT DISTINCT management_category
+		FROM punish_judge
 		WHERE management_category IS NOT NULL AND management_category != ''
 		ORDER BY management_category
 	</select>

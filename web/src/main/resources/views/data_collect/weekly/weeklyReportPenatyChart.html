@@ -873,17 +873,17 @@
                     }
                     
                     // 加载处罚机构选项 - 只显示允许的机构
-                    var agencyOptions = '<option value="">全部</option>';
+                        var agencyOptions = '<option value="">全部</option>';
                     if (typeof allowedAgencies !== 'undefined' && Array.isArray(allowedAgencies)) {
                         allowedAgencies.forEach(function(item) {
                             agencyOptions += '<option value="' + item + '">' + item + '</option>';
                         });
                     }
-                    penaltyAgencySelect.html(agencyOptions);
-                    penaltyAgencySelect.select2({
-                        placeholder: "请选择处罚机构",
-                        allowClear: true
-                    });
+                        penaltyAgencySelect.html(agencyOptions);
+                        penaltyAgencySelect.select2({
+                            placeholder: "请选择处罚机构",
+                            allowClear: true
+                        });
                     
                     // 加载案由选项
                     if (data && data.caseReasons && Array.isArray(data.caseReasons) && data.caseReasons.length > 0) {
