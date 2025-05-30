@@ -114,6 +114,8 @@ public class DynamicEnforcementDataService extends CrudService<DynamicEnforcemen
 				try{
 					ValidatorUtils.validateWithException(dynamicEnforcementData);
 
+					// 只有在特定导入类型时才检查现有记录
+					if ("abnormal".equals(importType) || "case".equals(importType)) {
 					// 检查是否存在相同的记录
 					DynamicEnforcementData existingData = findExistingData(dynamicEnforcementData);
 
@@ -128,6 +130,12 @@ public class DynamicEnforcementDataService extends CrudService<DynamicEnforcemen
 						successNum++;
 						successMsg.append("<br/>" + successNum + "、编号 " + existingData.getId() + " 更新成功");
 					} else {
+							this.save(dynamicEnforcementData);
+							successNum++;
+							successMsg.append("<br/>" + successNum + "、编号 " + dynamicEnforcementData.getId() + " 导入成功");
+						}
+					} else {
+						// 其他导入类型直接保存新记录
 						this.save(dynamicEnforcementData);
 						successNum++;
 						successMsg.append("<br/>" + successNum + "、编号 " + dynamicEnforcementData.getId() + " 导入成功");

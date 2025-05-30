@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张家港海事局动态执法数据看板</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
+    <!-- Font Awesome - 添加图标支持 -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Custom CSS - 科技风格设计 -->
+    <style>
+        :root {
+            --primary-color: #0466c8;
+            --secondary-color: #0353a4;
+            --accent-color: #023e7d;
+            --text-color: #001845;
+            --highlight-color: #33a1fd;
+            --background-color: #f8f9fa;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --positive-color: #38b000;
+            --negative-color: #d90429;
+            --grid-line: rgba(4, 102, 200, 0.2);
+            --chart-colors: #64B5F6, #81C784, #FFB74D, #E57373, #BA68C8, #4DD0E1;
+        }
+
+        body {
+            background-color: var(--background-color);
+            background-image: linear-gradient(to bottom, rgba(4, 102, 200, 0.05), rgba(1, 22, 56, 0.1));
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+        }
+
+        .main-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: 20px 0 30px;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        .data-card {
+            border: 1px solid rgba(4, 102, 200, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-card .label {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 0;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .data-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .data-card .change-rate {
+            font-size: 1.1em;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .change-rate.positive {
+            color: var(--positive-color);
+        }
+
+        .change-rate.negative {
+            color: var(--negative-color);
+        }
+
+        .change-rate.neutral {
+            color: #607d8b;
+        }
+
+        .custom-date-input {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .custom-date-input input {
+            margin: 0 15px;
+            border-radius: 4px;
+            border: 1px solid var(--grid-line);
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--secondary-color);
+            font-weight: 600;
+            padding: 8px 20px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 表格样式优化 */
+        .table-container {
+            position: relative;
+            overflow-x: auto;
+            width: 100%;
+            margin: 20px auto 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+        }
+
+        .summary-table {
+            margin: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+            font-size: 0.95rem;
+        }
+
+        .summary-table th {
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px 4px;
+            white-space: nowrap;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .summary-table th[colspan="6"] {
+            background-color: var(--secondary-color);
+        }
+
+        .summary-table td {
+            text-align: center;
+            vertical-align: middle;
+            border-color: var(--grid-line);
+            padding: 6px 4px;
+            font-size: 1rem;
+            white-space: nowrap;
+            transition: background-color 0.3s ease;
+        }
+
+        .summary-table tbody tr:hover td {
+            background-color: rgba(4, 102, 200, 0.08);
+        }
+
+        .summary-table th:first-child,
+        .summary-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            box-shadow: 2px 0 5px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-table th:first-child {
+            background-color: var(--primary-color);
+        }
+
+        .summary-table td:first-child {
+            background-color: var(--card-bg);
+        }
+
+        .summary-table tr:hover td:first-child {
+            background-color: rgba(4, 102, 200, 0.08);
+        }
+
+        .table-section-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .table-section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--highlight-color);
+        }
+
+        .positive-change {
+            color: var(--positive-color);
+            font-weight: 600;
+        }
+
+        .negative-change {
+            color: var(--negative-color);
+            font-weight: 600;
+        }
+
+        .neutral-change {
+            color: #607d8b;
+        }
+
+        .table-active {
+            background-color: rgba(4, 102, 200, 0.08) !important;
+        }
+
+        /* 科技风格图标 */
+        .icon-box {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        /* 科技风格图表区域 */
+        .charts-section {
+            background-color: rgba(248, 249, 250, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .charts-title {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* 数据分类导航 */
+        .data-nav {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .data-nav .nav-link {
+            color: var(--text-color);
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .data-nav .nav-link:hover,
+        .data-nav .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* 调整日期选择器的响应式布局 */
+        @media (max-width: 768px) {
+            .custom-date-input {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .custom-date-input input {
+                margin: 10px 0;
+                width: 100%;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+            
+            /* 修改卡片布局，在平板设备上保持一行三个 */
+            .col-md-4 {
+                width: 33.333333%;
+                float: left;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 2em;
+            }
+            
+            .data-card .label {
+                font-size: 1rem;
+            }
+        }
+        
+        /* 添加手机设备的媒体查询 */
+        @media (max-width: 576px) {
+            .col-md-4 {
+                width: 100%;
+                float: none;
+            }
+            
+            .data-card {
+                margin-bottom: 15px;
+            }
+            
+            .data-card .value {
+                font-size: 1.8em;
+            }
+            
+            .data-card .label {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 返回主页按钮样式 */
+        .btn-back-home {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--primary-color);
+            border: 2px solid white;
+            border-radius: 50px;
+            padding: 8px 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+        
+        .btn-back-home:hover {
+            background-color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .main-header .container .d-flex {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .btn-back-home {
+                margin-bottom: 10px;
+            }
+            
+            .main-title {
+                font-size: 22px;
+                margin: 10px 0;
+            }
+        }
+
+        .filter-section {
+            background: linear-gradient(to right, rgba(4, 102, 200, 0.05), rgba(51, 161, 253, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border: 1px solid rgba(4, 102, 200, 0.1);
+        }
+        
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .filter-header .section-title {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .date-range-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            margin-bottom: 15px;
+            border: 1px solid rgba(4, 102, 200, 0.1);
+        }
+
+        /* 增加Select2选择框宽度 */
+        .select2-container {
+            width: 100% !important;
+        }
+        
+        /* 增加下拉选项的最大宽度 */
+        .select2-dropdown {
+            min-width: 400px !important;
+        }
+        
+        /* 确保选项文本完整显示 */
+        .select2-results__option {
+            white-space: normal;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+        
+        /* 增加选中项目的显示宽度 */
+        .select2-selection__rendered {
+            max-width: 100%;
+            white-space: normal !important;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+        
+        /* 为高亮效果添加的样式 */
+        .form-group {
+            transition: background-color 0.5s ease;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        .has-success {
+            border: 1px solid #3c763d;
+        }
+        
+        /* 分页控件样式 */
+        .swal2-html-container .pagination-info {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .swal2-html-container .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            border-radius: 0.25rem;
+            margin: 0 2px;
+        }
+        
+        .swal2-html-container .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        
+        .swal2-html-container .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .swal2-html-container .btn-outline-secondary {
+            opacity: 0.6;
+        }
+        
+        /* 详情弹窗表格样式优化 */
+        .swal2-html-container .table {
+            margin-bottom: 0;
+            font-size: 0.9rem;
+        }
+        
+        .swal2-html-container .table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+            padding: 12px 8px;
+            border: none;
+        }
+        
+        .swal2-html-container .table td {
+            padding: 10px 8px;
+            vertical-align: middle;
+            border-color: rgba(4, 102, 200, 0.2);
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+        
+        .swal2-html-container .table tbody tr:hover {
+            background-color: rgba(4, 102, 200, 0.05);
+        }
+    </style>
+    <!-- jQuery 和 ECharts -->
+    <!-- jQuery 和 ECharts -->
+    <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
+    <script src="${ctxStatic}/nickjs/echarts.js"></script>
+    <!-- Scripts -->
+    <script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
+    <script src="${ctxStatic}/nickjs/sweetalert2.min.js"></script></head>
+
+<body>
+<div class="main-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="btn btn-light btn-back-home">
+                <i class="fas fa-home mr-2"></i>返回主页
+            </a>
+            <h1 class="main-title">张家港海事局动态执法数据看板</h1>
+            <div style="width: 115px;"></div> <!-- 用于平衡布局的空div -->
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="custom-date-input">
+        <label style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+            <i class="far fa-calendar-alt icon-box"></i>选择时间段：
+        </label>
+        <label for="startDate" style="margin-right: 5px;">开始时间:</label>
+        <input type="date" id="startDate" class="form-control" style="width: auto;">
+        <label for="endDate" style="margin: 0 5px 0 15px;">结束时间:</label>
+        <input type="date" id="endDate" class="form-control" style="width: auto;">
+        <button type="button" id="fetchDataButton" class="btn btn-primary" style="margin-left: 15px;">
+            <i class="fas fa-sync-alt"></i> 查询数据
+        </button>
+    </div>
+
+    <!-- 增加统计卡片区域 -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-ship icon-box"></i>现场巡航发现异常</div>
+                <div class="value" id="patrol-boat-abnormal-value">0</div>
+                <div class="change-rate" id="patrol-boat-abnormal-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-gavel icon-box"></i>现场巡航立案调查</div>
+                <div class="value" id="patrol-boat-investigation-value">0</div>
+                <div class="change-rate" id="patrol-boat-investigation-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-desktop icon-box"></i>电子巡航发现异常</div>
+                <div class="value" id="electronic-patrol-abnormal-value">0</div>
+                <div class="change-rate" id="electronic-patrol-abnormal-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-search icon-box"></i>电子巡航立案调查</div>
+                <div class="value" id="electronic-patrol-investigation-value">0</div>
+                <div class="change-rate" id="electronic-patrol-investigation-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-drone icon-box"></i>无人机巡航发现异常</div>
+                <div class="value" id="drone-patrol-abnormal-value">0</div>
+                <div class="change-rate" id="drone-patrol-abnormal-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-clipboard-list icon-box"></i>无人机巡航立案调查</div>
+                <div class="value" id="drone-patrol-investigation-value">0</div>
+                <div class="change-rate" id="drone-patrol-investigation-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 将三个表格合并为一个表格 -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="table-section-title"><i class="fas fa-table icon-box"></i>巡航执法数据统计表</h4>
+            <div class="table-container">
+                <table class="table table-bordered table-striped summary-table">
+                    <thead>
+                    <tr>
+                        <th rowspan="3">部门</th>
+                        <th colspan="6">现场巡航</th>
+                        <th colspan="6">电子巡航</th>
+                        <th colspan="6">无人机巡航</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3">发现异常</th>
+                        <th colspan="3">立案调查</th>
+                        <th colspan="3">发现异常</th>
+                        <th colspan="3">立案调查</th>
+                        <th colspan="3">发现异常</th>
+                        <th colspan="3">立案调查</th>
+                    </tr>
+                    <tr>
+                        <th>上期</th>
+                        <th>本期</th>
+                        <th>环比</th>
+                        <th>上期</th>
+                        <th>本期</th>
+                        <th>环比</th>
+                        <th>上期</th>
+                        <th>本期</th>
+                        <th>环比</th>
+                        <th>上期</th>
+                        <th>本期</th>
+                        <th>环比</th>
+                        <th>上期</th>
+                        <th>本期</th>
+                        <th>环比</th>
+                        <th>上期</th>
+                        <th>本期</th>
+                        <th>环比</th>
+                    </tr>
+                    </thead>
+                    <tbody id="patrol-data-body">
+                    <!-- 数据将通过JavaScript动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-ship icon-box"></i>现场巡航统计</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="field-patrol-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-desktop icon-box"></i>电子巡航统计</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="electronic-patrol-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-drone icon-box"></i>无人机巡航统计</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="drone-patrol-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加高级统计图表区域 -->
+    <div class="filter-section mt-5" id="advanced-filter-section">
+        <div class="filter-header">
+            <h4 class="section-title"><i class="fas fa-filter icon-box"></i>高级筛选</h4>
+            <button class="btn btn-sm btn-outline-primary" id="toggle-advanced-filter">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+        <div id="advanced-filter-body" style="display: none;">
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="inspectionUnit">检查单位：</label>
+                        <select id="inspectionUnit" class="form-control">
+                            <option value="全部">全部</option>
+                            <!-- 将通过AJAX动态加载部门列表 -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="inspectionResult">处理意见：</label>
+                        <select id="inspectionResult" class="form-control">
+                            <option value="全部">全部</option>
+                            <option value="异常">异常</option>
+                            <option value="立案调查">立案调查</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cruiseTaskType">巡航方式：</label>
+                        <select id="cruiseTaskType" class="form-control">
+                            <option value="全部">全部</option>
+                            <option value="现场巡查">现场巡查</option>
+                            <option value="电子巡航">电子巡航</option>
+                            <option value="无人机巡航">无人机巡航</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="majorItemName">检查项目：</label>
+                        <select id="majorItemName" class="form-control select2">
+                            <option value="全部">全部</option>
+                            <!-- 将通过AJAX动态加载 -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12 text-center">
+                    <button id="applyAdvancedFilter" class="btn btn-primary">
+                        <i class="fas fa-search"></i> 应用筛选
+                    </button>
+                    <button id="resetAdvancedFilter" class="btn btn-secondary ml-2">
+                        <i class="fas fa-undo"></i> 重置筛选
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="data-card text-center py-4">
+                <h4 id="advanced-data-title">高级统计数据</h4>
+                <div class="h2 mt-3" id="total-inspection-count">0</div>
+                <div class="text-muted">检查总数（去重后）</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>检查项目分布</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="major-item-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-line icon-box"></i>检查数量趋势</h5>
+        <div class="row mb-3">
+            <div class="col-md-12 text-center">
+                <div class="btn-group" id="trend-type-selector">
+                    <button type="button" class="btn btn-primary active" data-trend-type="daily">日</button>
+                    <button type="button" class="btn btn-primary" data-trend-type="weekly">周</button>
+                    <button type="button" class="btn btn-primary" data-trend-type="monthly">月</button>
+                    <button type="button" class="btn btn-primary" data-trend-type="quarterly">季度</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="inspection-trend-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-building icon-box"></i>各部门检查统计</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="department-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
+<script src="${ctxStatic}/nickjs/popper.min.js"></script>
+<!-- SweetAlert2 为拉取数据时的消息提示 -->
+<script src="${ctxStatic}/nickjs/sweetalert2.min.js"></script>
+<!-- Select2 - 用于检查项目的下拉搜索 -->
+<link href="${ctxStatic}/nickjs/select2.min.css" rel="stylesheet">
+<script src="${ctxStatic}/nickjs/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // 初始化 ECharts 实例 - 将相关图表合并
+        var fieldPatrolChart = echarts.init(document.getElementById('field-patrol-chart'));
+        var electronicPatrolChart = echarts.init(document.getElementById('electronic-patrol-chart'));
+        var dronePatrolChart = echarts.init(document.getElementById('drone-patrol-chart'));
+        
+        // 初始化高级图表
+        var majorItemChart = echarts.init(document.getElementById('major-item-chart'));
+        var inspectionTrendChart = echarts.init(document.getElementById('inspection-trend-chart'));
+        var departmentChart = echarts.init(document.getElementById('department-chart'));
+
+        // 获取日期选择器和拉取数据按钮
+        var startDateInput = $('#startDate');
+        var endDateInput = $('#endDate');
+        var fetchDataButton = $('#fetchDataButton');
+
+        // 设置默认日期（当前日期所在周的上一周）
+        setDefaultDates();
+
+        // 初始化图表
+        fetchDataAndRenderCharts().then(() => {
+            // 恢复按钮状态
+            $(fetchDataButton).html('<i class="fas fa-sync-alt"></i> 查询数据');
+            $(fetchDataButton).prop('disabled', false);
+        });
+
+        // 初始化时加载部门列表
+        loadDepartments();
+
+        // 日期改变事件
+        startDateInput.on('change', function() {
+            // 可以保持这里的自动触发或者注释掉，由用户手动点击查询按钮
+            // fetchDataAndRenderCharts();
+        });
+        
+        endDateInput.on('change', function() {
+            // 可以保持这里的自动触发或者注释掉，由用户手动点击查询按钮
+            // fetchDataAndRenderCharts();
+        });
+
+        // 设置默认日期范围（月度报表逻辑：25号为分界点）
+        function setDefaultDates() {
+            var today = new Date();
+            var currentDay = today.getDate();
+            var currentMonth = today.getMonth();
+            var currentYear = today.getFullYear();
+            
+            var endDate = new Date();
+            var startDate = new Date();
+            
+            if (currentDay <= 25) {
+                // 如果当前日期为本月25日之前，则为上上月的26至上月的25日
+                endDate = new Date(currentYear, currentMonth - 1, 25);
+                startDate = new Date(currentYear, currentMonth - 2, 26);
+            } else {
+                // 如果当前日期为本月25日之后，则为上月的26至本月的25日
+                endDate = new Date(currentYear, currentMonth, 25);
+                startDate = new Date(currentYear, currentMonth - 1, 26);
+            }
+            
+            // 格式化日期为YYYY-MM-DD
+            startDateInput.val(formatDate(startDate));
+            endDateInput.val(formatDate(endDate));
+        }
+
+        // 拉取数据按钮点击事件
+        fetchDataButton.on('click', function() {
+            // 添加加载动画
+            $(this).html('<i class="fas fa-spinner fa-spin"></i> 数据加载中...');
+            $(this).prop('disabled', true);
+
+            fetchDataAndRenderCharts().then(() => {
+                // 恢复按钮状态
+                $(this).html('<i class="fas fa-sync-alt"></i> 查询数据');
+                $(this).prop('disabled', false);
+                
+                // 同时更新高级图表
+                fetchAdvancedData();
+            });
+        });
+
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        function fetchDataAndRenderCharts() {
+            return new Promise((resolve) => {
+                // 获取当前选择的开始和结束日期
+                var startDate = startDateInput.val();
+                var endDate = endDateInput.val();
+
+                // 构建请求参数
+                var params = {
+                    startDate: startDate,
+                    endDate: endDate
+                }
+
+                // 更新标题
+                var titleText = "张家港海事局动态执法数据看板 (" + startDate + " 至 " + endDate + ")";
+                $('.main-title').html('<i class="fas fa-ship icon-box"></i>' + titleText);
+
+                // 发送 AJAX 请求获取数据
+                $.ajax({
+                    url: '${ctx}/dynamic/dynamicEnforcementData/getMonthlyDynamicEnforcementData',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: params,
+                    success: function(data) {
+                        console.log(data);
+                        // 使用适配器转换数据格式，以适配图表和卡片
+                        var adaptedData = adaptDataFormat(data);
+                        renderCharts(adaptedData);
+                        renderDataCards(adaptedData);
+                        renderDataTables(adaptedData);
+                        resolve();
+                    },
+                    error: function(error) {
+                        console.error('Error fetching chart data:', error);
+                        Swal.fire({
+                            title: '错误!',
+                            text: '获取数据失败，请查看控制台错误信息。',
+                            icon: 'error',
+                            confirmButtonText: '确定'
+                        });
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        // 适配数据格式，将后端返回的数据转换为前端需要的格式
+        function adaptDataFormat(rawData) {
+            // 动态获取所有部门列表
+            var allDepartments = Object.keys(rawData.currentData || {});
+            var categories = allDepartments.slice(); // 获取所有部门，不再过滤张家港海事局
+            
+            var adaptedData = {
+                categories: categories,
+                patrolBoatAbnormalDiscoveryCurrent: [],
+                patrolBoatAbnormalDiscoveryLast: [],
+                patrolBoatInvestigationCasesCurrent: [],
+                patrolBoatInvestigationCasesLast: [],
+                electronicPatrolAbnormalDiscoveryCurrent: [],
+                electronicPatrolAbnormalDiscoveryLast: [],
+                electronicPatrolInvestigationCasesCurrent: [],
+                electronicPatrolInvestigationCasesLast: [],
+                droneAbnormalDiscoveryCurrent: [],
+                droneAbnormalDiscoveryLast: [],
+                droneInvestigationCasesCurrent: [],
+                droneInvestigationCasesLast: [],
+                currentData: {},
+                previousData: {}
+            };
+
+            // 复制原始数据
+            for (var dept in rawData.currentData) {
+                adaptedData.currentData[dept] = rawData.currentData[dept];
+            }
+            
+            for (var dept in rawData.previousData) {
+                adaptedData.previousData[dept] = rawData.previousData[dept];
+            }
+
+            // 处理每个部门的数据
+            adaptedData.categories.forEach(function(dept) {
+                var currentDeptData = rawData.currentData[dept];
+                var previousDeptData = rawData.previousData[dept];
+
+                if (currentDeptData && previousDeptData) {
+                    // 计算环比变化率
+                    function calcChangeRate(current, previous) {
+                        if (previous === 0) return current > 0 ? 100 : 0;
+                        return ((current - previous) / previous) * 100;
+                    }
+
+                    // 为每个指标添加环比变化率
+                    function createDataWithRate(current, previous) {
+                        return {
+                            value: current,
+                            changeRate: calcChangeRate(current, previous)
+                        };
+                    }
+
+                    // 现场巡航发现异常
+                    adaptedData.patrolBoatAbnormalDiscoveryCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.fieldPatrolAbnormal, 
+                            previousDeptData.fieldPatrolAbnormal
+                        )
+                    );
+                    adaptedData.patrolBoatAbnormalDiscoveryLast.push(previousDeptData.fieldPatrolAbnormal);
+
+                    // 现场巡航立案调查
+                    adaptedData.patrolBoatInvestigationCasesCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.fieldPatrolCase, 
+                            previousDeptData.fieldPatrolCase
+                        )
+                    );
+                    adaptedData.patrolBoatInvestigationCasesLast.push(previousDeptData.fieldPatrolCase);
+
+                    // 电子巡航发现异常
+                    adaptedData.electronicPatrolAbnormalDiscoveryCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.electronicPatrolAbnormal, 
+                            previousDeptData.electronicPatrolAbnormal
+                        )
+                    );
+                    adaptedData.electronicPatrolAbnormalDiscoveryLast.push(previousDeptData.electronicPatrolAbnormal);
+
+                    // 电子巡航立案调查
+                    adaptedData.electronicPatrolInvestigationCasesCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.electronicPatrolCase, 
+                            previousDeptData.electronicPatrolCase
+                        )
+                    );
+                    adaptedData.electronicPatrolInvestigationCasesLast.push(previousDeptData.electronicPatrolCase);
+
+                    // 无人机巡航发现异常
+                    adaptedData.droneAbnormalDiscoveryCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.dronePatrolAbnormal, 
+                            previousDeptData.dronePatrolAbnormal
+                        )
+                    );
+                    adaptedData.droneAbnormalDiscoveryLast.push(previousDeptData.dronePatrolAbnormal);
+
+                    // 无人机巡航立案调查
+                    adaptedData.droneInvestigationCasesCurrent.push(
+                        createDataWithRate(
+                            currentDeptData.dronePatrolCase, 
+                            previousDeptData.dronePatrolCase
+                        )
+                    );
+                    adaptedData.droneInvestigationCasesLast.push(previousDeptData.dronePatrolCase);
+                }
+            });
+
+            return adaptedData;
+        }
+
+        // 渲染数据卡片
+        function renderDataCards(data) {
+            // 计算所有部门的总计数据
+            var totalCurrentData = {
+                fieldPatrolAbnormal: 0,
+                fieldPatrolCase: 0,
+                electronicPatrolAbnormal: 0,
+                electronicPatrolCase: 0,
+                dronePatrolAbnormal: 0,
+                dronePatrolCase: 0
+            };
+            
+            var totalPrevData = {
+                fieldPatrolAbnormal: 0,
+                fieldPatrolCase: 0,
+                electronicPatrolAbnormal: 0,
+                electronicPatrolCase: 0,
+                dronePatrolAbnormal: 0,
+                dronePatrolCase: 0
+            };
+            
+            // 遍历所有部门，累加数据
+            data.categories.forEach(function(dept) {
+                if (data.currentData[dept] && data.previousData[dept]) {
+                    var currentDeptData = data.currentData[dept];
+                    var previousDeptData = data.previousData[dept];
+                    
+                    totalCurrentData.fieldPatrolAbnormal += currentDeptData.fieldPatrolAbnormal || 0;
+                    totalCurrentData.fieldPatrolCase += currentDeptData.fieldPatrolCase || 0;
+                    totalCurrentData.electronicPatrolAbnormal += currentDeptData.electronicPatrolAbnormal || 0;
+                    totalCurrentData.electronicPatrolCase += currentDeptData.electronicPatrolCase || 0;
+                    totalCurrentData.dronePatrolAbnormal += currentDeptData.dronePatrolAbnormal || 0;
+                    totalCurrentData.dronePatrolCase += currentDeptData.dronePatrolCase || 0;
+                    
+                    totalPrevData.fieldPatrolAbnormal += previousDeptData.fieldPatrolAbnormal || 0;
+                    totalPrevData.fieldPatrolCase += previousDeptData.fieldPatrolCase || 0;
+                    totalPrevData.electronicPatrolAbnormal += previousDeptData.electronicPatrolAbnormal || 0;
+                    totalPrevData.electronicPatrolCase += previousDeptData.electronicPatrolCase || 0;
+                    totalPrevData.dronePatrolAbnormal += previousDeptData.dronePatrolAbnormal || 0;
+                    totalPrevData.dronePatrolCase += previousDeptData.dronePatrolCase || 0;
+                }
+            });
+
+                // 更新各卡片数据
+                // 现场巡航发现异常
+                updateCardWithRate("patrol-boat-abnormal-value", "patrol-boat-abnormal-rate", 
+                totalCurrentData.fieldPatrolAbnormal, 
+                totalPrevData.fieldPatrolAbnormal);
+                
+                // 现场巡航立案调查
+                updateCardWithRate("patrol-boat-investigation-value", "patrol-boat-investigation-rate", 
+                totalCurrentData.fieldPatrolCase, 
+                totalPrevData.fieldPatrolCase);
+                
+                // 电子巡航发现异常
+                updateCardWithRate("electronic-patrol-abnormal-value", "electronic-patrol-abnormal-rate", 
+                totalCurrentData.electronicPatrolAbnormal, 
+                totalPrevData.electronicPatrolAbnormal);
+                
+                // 电子巡航立案调查
+                updateCardWithRate("electronic-patrol-investigation-value", "electronic-patrol-investigation-rate", 
+                totalCurrentData.electronicPatrolCase, 
+                totalPrevData.electronicPatrolCase);
+                
+                // 无人机巡航发现异常
+                updateCardWithRate("drone-patrol-abnormal-value", "drone-patrol-abnormal-rate", 
+                totalCurrentData.dronePatrolAbnormal, 
+                totalPrevData.dronePatrolAbnormal);
+                
+                // 无人机巡航立案调查
+                updateCardWithRate("drone-patrol-investigation-value", "drone-patrol-investigation-rate", 
+                totalCurrentData.dronePatrolCase, 
+                totalPrevData.dronePatrolCase);
+        }
+
+        // 辅助函数：更新卡片及其环比率
+        function updateCardWithRate(valueId, rateId, currentValue, previousValue) {
+            // 更新数值
+            $("#" + valueId).text(currentValue);
+            
+            // 计算并更新环比率
+            var rate = calculateChangeRate(currentValue, previousValue);
+            var rateText = formatRate(rate);
+            var rateClass = getRateClass(rate);
+            
+            $("#" + rateId).text("环比 " + rateText);
+            $("#" + rateId).attr("class", "change-rate " + rateClass);
+        }
+
+        // 渲染合并的巡航数据表格
+        function renderDataTables(data) {
+            const tableBody = $('#patrol-data-body');
+            tableBody.empty();
+
+            // 获取动态部门列表
+            const departments = data.categories || [];
+
+            // 为每个部门创建行
+            departments.forEach(function(department) {
+                if (!data.currentData[department] || !data.previousData[department]) return;
+                
+                const currentData = data.currentData[department];
+                const previousData = data.previousData[department];
+                
+                const row = $('<tr></tr>');
+
+                // 添加部门名称
+                row.append('<td>' + department + '</td>');
+
+                // 1. 现场巡航发现异常数据
+                const patrolBoatAbnormalLastValue = previousData.fieldPatrolAbnormal;
+                const patrolBoatAbnormalCurrentValue = currentData.fieldPatrolAbnormal;
+                const patrolBoatAbnormalChangeRate = calculateChangeRate(patrolBoatAbnormalCurrentValue, patrolBoatAbnormalLastValue);
+
+                row.append('<td>' + patrolBoatAbnormalLastValue + '</td>');
+                row.append('<td>' + patrolBoatAbnormalCurrentValue + '</td>');
+                row.append('<td class="' + getRateClass(patrolBoatAbnormalChangeRate) + '">' + formatRate(patrolBoatAbnormalChangeRate) + '</td>');
+
+                // 2. 现场巡航立案调查数据
+                const patrolBoatInvestigationLastValue = previousData.fieldPatrolCase;
+                const patrolBoatInvestigationCurrentValue = currentData.fieldPatrolCase;
+                const patrolBoatInvestigationChangeRate = calculateChangeRate(patrolBoatInvestigationCurrentValue, patrolBoatInvestigationLastValue);
+
+                row.append('<td>' + patrolBoatInvestigationLastValue + '</td>');
+                row.append('<td>' + patrolBoatInvestigationCurrentValue + '</td>');
+                row.append('<td class="' + getRateClass(patrolBoatInvestigationChangeRate) + '">' + formatRate(patrolBoatInvestigationChangeRate) + '</td>');
+
+// 3. 电子巡航发现异常数据
+                const electronicAbnormalLastValue = previousData.electronicPatrolAbnormal;
+                const electronicAbnormalCurrentValue = currentData.electronicPatrolAbnormal;
+                const electronicAbnormalChangeRate = calculateChangeRate(electronicAbnormalCurrentValue, electronicAbnormalLastValue);
+
+                row.append('<td>' + electronicAbnormalLastValue + '</td>');
+                row.append('<td>' + electronicAbnormalCurrentValue + '</td>');
+                row.append('<td class="' + getRateClass(electronicAbnormalChangeRate) + '">' + formatRate(electronicAbnormalChangeRate) + '</td>');
+
+// 4. 电子巡航立案调查数据
+                const electronicInvestigationLastValue = previousData.electronicPatrolCase;
+                const electronicInvestigationCurrentValue = currentData.electronicPatrolCase;
+                const electronicInvestigationChangeRate = calculateChangeRate(electronicInvestigationCurrentValue, electronicInvestigationLastValue);
+
+                row.append('<td>' + electronicInvestigationLastValue + '</td>');
+                row.append('<td>' + electronicInvestigationCurrentValue + '</td>');
+                row.append('<td class="' + getRateClass(electronicInvestigationChangeRate) + '">' + formatRate(electronicInvestigationChangeRate) + '</td>');
+
+// 5. 无人机巡航发现异常数据
+                const droneAbnormalLastValue = previousData.dronePatrolAbnormal;
+                const droneAbnormalCurrentValue = currentData.dronePatrolAbnormal;
+                const droneAbnormalChangeRate = calculateChangeRate(droneAbnormalCurrentValue, droneAbnormalLastValue);
+
+                row.append('<td>' + droneAbnormalLastValue + '</td>');
+                row.append('<td>' + droneAbnormalCurrentValue + '</td>');
+                row.append('<td class="' + getRateClass(droneAbnormalChangeRate) + '">' + formatRate(droneAbnormalChangeRate) + '</td>');
+
+// 6. 无人机巡航立案调查数据
+                const droneInvestigationLastValue = previousData.dronePatrolCase;
+                const droneInvestigationCurrentValue = currentData.dronePatrolCase;
+                const droneInvestigationChangeRate = calculateChangeRate(droneInvestigationCurrentValue, droneInvestigationLastValue);
+
+                row.append('<td>' + droneInvestigationLastValue + '</td>');
+                row.append('<td>' + droneInvestigationCurrentValue + '</td>');
+                row.append('<td class="' + getRateClass(droneInvestigationChangeRate) + '">' + formatRate(droneInvestigationChangeRate) + '</td>');
+
+                tableBody.append(row);
+            });
+
+// 添加合计行
+            addTotalRow(tableBody, data);
+        }
+
+        // 添加合计行
+        function addTotalRow(tableBody, data) {
+            // 计算所有部门的总计数据
+            var totalCurrentData = {
+                fieldPatrolAbnormal: 0,
+                fieldPatrolCase: 0,
+                electronicPatrolAbnormal: 0,
+                electronicPatrolCase: 0,
+                dronePatrolAbnormal: 0,
+                dronePatrolCase: 0
+            };
+            
+            var totalPrevData = {
+                fieldPatrolAbnormal: 0,
+                fieldPatrolCase: 0,
+                electronicPatrolAbnormal: 0,
+                electronicPatrolCase: 0,
+                dronePatrolAbnormal: 0,
+                dronePatrolCase: 0
+            };
+            
+            // 遍历所有部门，累加数据
+            data.categories.forEach(function(dept) {
+                if (data.currentData[dept] && data.previousData[dept]) {
+                    var currentDeptData = data.currentData[dept];
+                    var previousDeptData = data.previousData[dept];
+                    
+                    totalCurrentData.fieldPatrolAbnormal += currentDeptData.fieldPatrolAbnormal || 0;
+                    totalCurrentData.fieldPatrolCase += currentDeptData.fieldPatrolCase || 0;
+                    totalCurrentData.electronicPatrolAbnormal += currentDeptData.electronicPatrolAbnormal || 0;
+                    totalCurrentData.electronicPatrolCase += currentDeptData.electronicPatrolCase || 0;
+                    totalCurrentData.dronePatrolAbnormal += currentDeptData.dronePatrolAbnormal || 0;
+                    totalCurrentData.dronePatrolCase += currentDeptData.dronePatrolCase || 0;
+                    
+                    totalPrevData.fieldPatrolAbnormal += previousDeptData.fieldPatrolAbnormal || 0;
+                    totalPrevData.fieldPatrolCase += previousDeptData.fieldPatrolCase || 0;
+                    totalPrevData.electronicPatrolAbnormal += previousDeptData.electronicPatrolAbnormal || 0;
+                    totalPrevData.electronicPatrolCase += previousDeptData.electronicPatrolCase || 0;
+                    totalPrevData.dronePatrolAbnormal += previousDeptData.dronePatrolAbnormal || 0;
+                    totalPrevData.dronePatrolCase += previousDeptData.dronePatrolCase || 0;
+                }
+            });
+
+            // 计算各项变化率
+            const fieldPatrolAbnormalRate = calculateChangeRate(
+                totalCurrentData.fieldPatrolAbnormal,
+                totalPrevData.fieldPatrolAbnormal
+            );
+
+            const fieldPatrolCaseRate = calculateChangeRate(
+                totalCurrentData.fieldPatrolCase,
+                totalPrevData.fieldPatrolCase
+            );
+
+            const electronicPatrolAbnormalRate = calculateChangeRate(
+                totalCurrentData.electronicPatrolAbnormal,
+                totalPrevData.electronicPatrolAbnormal
+            );
+
+            const electronicPatrolCaseRate = calculateChangeRate(
+                totalCurrentData.electronicPatrolCase,
+                totalPrevData.electronicPatrolCase
+            );
+
+            const dronePatrolAbnormalRate = calculateChangeRate(
+                totalCurrentData.dronePatrolAbnormal,
+                totalPrevData.dronePatrolAbnormal
+            );
+
+            const dronePatrolCaseRate = calculateChangeRate(
+                totalCurrentData.dronePatrolCase,
+                totalPrevData.dronePatrolCase
+            );
+
+// 创建合计行
+            const totalRow = $('<tr class="table-active"></tr>');
+
+            // 添加合计标题
+            totalRow.append('<td><strong>合计</strong></td>');
+
+            // 1. 现场巡航发现异常
+            totalRow.append('<td><strong>' + totalPrevData.fieldPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td><strong>' + totalCurrentData.fieldPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(fieldPatrolAbnormalRate) + '"><strong>' + formatRate(fieldPatrolAbnormalRate) + '</strong></td>');
+
+            // 2. 现场巡航立案调查
+            totalRow.append('<td><strong>' + totalPrevData.fieldPatrolCase + '</strong></td>');
+            totalRow.append('<td><strong>' + totalCurrentData.fieldPatrolCase + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(fieldPatrolCaseRate) + '"><strong>' + formatRate(fieldPatrolCaseRate) + '</strong></td>');
+
+            // 3. 电子巡航发现异常
+            totalRow.append('<td><strong>' + totalPrevData.electronicPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td><strong>' + totalCurrentData.electronicPatrolAbnormal + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(electronicPatrolAbnormalRate) + '"><strong>' + formatRate(electronicPatrolAbnormalRate) + '</strong></td>');
+
+            // 4. 电子巡航立案调查
+            totalRow.append('<td><strong>' + totalPrevData.electronicPatrolCase + '</strong></td>');
+            totalRow.append('<td><strong>' + totalCurrentData.electronicPatrolCase + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(electronicPatrolCaseRate) + '"><strong>' + formatRate(electronicPatrolCaseRate) + '</strong></td>');
+
+            // 5. 无人机巡航发现异常
+            totalRow.append('<td><strong>' + totalPrevData.dronePatrolAbnormal + '</strong></td>');
+            totalRow.append('<td><strong>' + totalCurrentData.dronePatrolAbnormal + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(dronePatrolAbnormalRate) + '"><strong>' + formatRate(dronePatrolAbnormalRate) + '</strong></td>');
+
+            // 6. 无人机巡航立案调查
+            totalRow.append('<td><strong>' + totalPrevData.dronePatrolCase + '</strong></td>');
+            totalRow.append('<td><strong>' + totalCurrentData.dronePatrolCase + '</strong></td>');
+            totalRow.append('<td class="' + getRateClass(dronePatrolCaseRate) + '"><strong>' + formatRate(dronePatrolCaseRate) + '</strong></td>');
+
+            tableBody.append(totalRow);
+        }
+
+        // 计算变化率
+        function calculateChangeRate(currentValue, previousValue) {
+            if (previousValue === 0) {
+                return currentValue > 0 ? 100 : 0;
+            }
+            return ((currentValue - previousValue) / previousValue) * 100;
+        }
+
+        // 格式化变化率显示
+        function formatRate(rate) {
+            if (rate === 0) return "0%";
+            return (rate > 0 ? "+" : "") + rate.toFixed(2) + "%";
+        }
+
+        // 获取变化率的CSS类
+        function getRateClass(rate) {
+            if (rate > 0) return "positive-change";
+            if (rate < 0) return "negative-change";
+            return "neutral-change";
+        }
+
+        // 渲染图表
+        function renderCharts(data) {
+            // 基础图表配置
+            var baseOption = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    top: 10
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.categories || [],
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                }
+            };
+
+            // 定义颜色常量，确保图例和柱状图颜色一致
+            const COLOR_PREV_ABNORMAL = '#5470c6';
+            const COLOR_CURR_ABNORMAL = '#64B5F6';
+            const COLOR_PREV_CASE = '#91cc75';
+            const COLOR_CURR_CASE = '#81C784';
+            const COLOR_PREV_ELECTRONIC_ABNORMAL = '#fac858';
+            const COLOR_CURR_ELECTRONIC_ABNORMAL = '#FFB74D';
+            const COLOR_PREV_ELECTRONIC_CASE = '#ee6666';
+            const COLOR_CURR_ELECTRONIC_CASE = '#E57373';
+            const COLOR_PREV_DRONE_ABNORMAL = '#9a60b4';
+            const COLOR_CURR_DRONE_ABNORMAL = '#BA68C8';
+            const COLOR_PREV_DRONE_CASE = '#73c0de';
+            const COLOR_CURR_DRONE_CASE = '#4DD0E1';
+
+            // 1. 现场巡航统计图表
+            fieldPatrolChart.setOption(Object.assign({}, baseOption, {
+                title: {
+                    text: '现场巡航统计',
+                    left: 'center'
+                },
+                legend: {
+                    data: [
+                        {name: '上期发现异常', itemStyle: {color: COLOR_PREV_ABNORMAL}},
+                        {name: '本期发现异常', itemStyle: {color: COLOR_CURR_ABNORMAL}},
+                        {name: '上期立案调查', itemStyle: {color: COLOR_PREV_CASE}},
+                        {name: '本期立案调查', itemStyle: {color: COLOR_CURR_CASE}}
+                    ],
+                    top: 30
+                },
+                series: [
+                    {
+                        name: '上期发现异常',
+                        type: 'bar',
+                        data: data.patrolBoatAbnormalDiscoveryLast,
+                        itemStyle: {color: COLOR_PREV_ABNORMAL},
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期发现异常',
+                        type: 'bar',
+                        data: data.patrolBoatAbnormalDiscoveryCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: COLOR_CURR_ABNORMAL
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    },
+                    {
+                        name: '上期立案调查',
+                        type: 'bar',
+                        data: data.patrolBoatInvestigationCasesLast,
+                        itemStyle: {color: COLOR_PREV_CASE},
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期立案调查',
+                        type: 'bar',
+                        data: data.patrolBoatInvestigationCasesCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: COLOR_CURR_CASE
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    }
+                ]
+            }));
+            
+            // 2. 电子巡航统计图表
+            electronicPatrolChart.setOption(Object.assign({}, baseOption, {
+                title: {
+                    text: '电子巡航统计',
+                    left: 'center'
+                },
+                legend: {
+                    data: [
+                        {name: '上期发现异常', itemStyle: {color: COLOR_PREV_ELECTRONIC_ABNORMAL}},
+                        {name: '本期发现异常', itemStyle: {color: COLOR_CURR_ELECTRONIC_ABNORMAL}},
+                        {name: '上期立案调查', itemStyle: {color: COLOR_PREV_ELECTRONIC_CASE}},
+                        {name: '本期立案调查', itemStyle: {color: COLOR_CURR_ELECTRONIC_CASE}}
+                    ],
+                    top: 30
+                },
+                series: [
+                    {
+                        name: '上期发现异常',
+                        type: 'bar',
+                        data: data.electronicPatrolAbnormalDiscoveryLast,
+                        itemStyle: {color: COLOR_PREV_ELECTRONIC_ABNORMAL},
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期发现异常',
+                        type: 'bar',
+                        data: data.electronicPatrolAbnormalDiscoveryCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: COLOR_CURR_ELECTRONIC_ABNORMAL
+                                },
+                        label: {
+                            show: true,
+                            position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    },
+                    {
+                        name: '上期立案调查',
+                        type: 'bar',
+                        data: data.electronicPatrolInvestigationCasesLast,
+                        itemStyle: {color: COLOR_PREV_ELECTRONIC_CASE},
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期立案调查',
+                        type: 'bar',
+                        data: data.electronicPatrolInvestigationCasesCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                        itemStyle: {
+                                    color: COLOR_CURR_ELECTRONIC_CASE
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    }
+                ]
+            }));
+            
+            // 3. 无人机巡航统计图表
+            dronePatrolChart.setOption(Object.assign({}, baseOption, {
+                title: {
+                    text: '无人机巡航统计',
+                    left: 'center'
+                },
+                legend: {
+                    data: [
+                        {name: '上期发现异常', itemStyle: {color: COLOR_PREV_DRONE_ABNORMAL}},
+                        {name: '本期发现异常', itemStyle: {color: COLOR_CURR_DRONE_ABNORMAL}},
+                        {name: '上期立案调查', itemStyle: {color: COLOR_PREV_DRONE_CASE}},
+                        {name: '本期立案调查', itemStyle: {color: COLOR_CURR_DRONE_CASE}}
+                    ],
+                    top: 30
+                },
+                series: [
+                    {
+                        name: '上期发现异常',
+                        type: 'bar',
+                        data: data.droneAbnormalDiscoveryLast,
+                        itemStyle: {color: COLOR_PREV_DRONE_ABNORMAL},
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期发现异常',
+                        type: 'bar',
+                        data: data.droneAbnormalDiscoveryCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                                itemStyle: {
+                                    color: COLOR_CURR_DRONE_ABNORMAL
+                                },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    },
+                    {
+                        name: '上期立案调查',
+                        type: 'bar',
+                        data: data.droneInvestigationCasesLast,
+                        itemStyle: {color: COLOR_PREV_DRONE_CASE},
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    {
+                        name: '本期立案调查',
+                        type: 'bar',
+                        data: data.droneInvestigationCasesCurrent.map(function(item) {
+                            return {
+                                value: item.value,
+                        itemStyle: {
+                                    color: COLOR_CURR_DRONE_CASE
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value + '\n' + formatRate(item.changeRate);
+                                    },
+                                    color: getRateLabelColor(item.changeRate)
+                                }
+                            };
+                        })
+                    }
+                ]
+            }));
+            
+            // 添加图表点击事件
+            fieldPatrolChart.off('click');
+            fieldPatrolChart.on('click', function(params) {
+                handleChartClick(params, '现场巡航', data.categories[params.dataIndex]);
+            });
+            
+            electronicPatrolChart.off('click');
+            electronicPatrolChart.on('click', function(params) {
+                handleChartClick(params, '电子巡航', data.categories[params.dataIndex]);
+            });
+            
+            dronePatrolChart.off('click');
+            dronePatrolChart.on('click', function(params) {
+                handleChartClick(params, '无人机巡航', data.categories[params.dataIndex]);
+            });
+            
+            // 高级图表点击事件
+            majorItemChart.off('click');
+            majorItemChart.on('click', function(params) {
+                if (params.seriesType === 'bar') {
+                    handleMajorItemChartClick(params);
+                }
+            });
+            
+            departmentChart.off('click');
+            departmentChart.on('click', function(params) {
+                if (params.seriesType === 'pie') {
+                    handleDepartmentChartClick(params);
+                }
+            });
+        }
+
+        // 图表点击处理函数
+        function handleChartClick(params, patrolType, department) {
+            // 获取查询条件
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            var seriesName = params.seriesName;
+            var inspectionResult = "";
+            
+            // 设置查询条件
+            if (seriesName.indexOf('发现异常') >= 0) {
+                inspectionResult = "异常";
+            } else if (seriesName.indexOf('立案调查') >= 0) {
+                inspectionResult = "立案调查";
+            }
+            
+            // 判断是本期还是上期
+            var isPeriod = seriesName.indexOf('本期') >= 0 ? "current" : "previous";
+            
+            // 构建查询参数
+            var queryParams = {
+                startDate: startDate,
+                endDate: endDate,
+                patrolType: patrolType,
+                department: department,
+                inspectionResult: inspectionResult,
+                isPeriod: isPeriod
+            };
+            
+            // 发送查询请求
+            fetchDetailData(queryParams);
+        }
+        
+        // 检查项目图表点击处理函数
+        function handleMajorItemChartClick(params) {
+            var majorItemName = params.name;
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            
+            // 将当前的筛选条件考虑在内
+            var inspectionUnit = $('#inspectionUnit').val();
+            var inspectionResult = $('#inspectionResult').val();
+            var cruiseTaskType = $('#cruiseTaskType').val();
+            
+            // 构建查询参数
+            var queryParams = {
+                startDate: startDate,
+                endDate: endDate,
+                majorItemName: majorItemName,
+                department: inspectionUnit !== '全部' ? inspectionUnit : null,
+                inspectionResult: inspectionResult !== '全部' ? inspectionResult : null,
+                patrolType: cruiseTaskType !== '全部' ? cruiseTaskType : null
+            };
+            
+            // 发送查询请求
+            fetchDetailData(queryParams);
+            
+            // 同时在高级筛选区域中选中相应的检查项目
+            if ($('#majorItemName option[value="' + majorItemName + '"]').length > 0) {
+                $('#majorItemName').val(majorItemName).trigger('change');
+                
+                // 如果筛选区域是折叠的，展开它
+                if (!$('#advanced-filter-body').is(':visible')) {
+                    $('#toggle-advanced-filter').click();
+                }
+                
+                // 高亮显示筛选条件
+                var $formGroup = $('#majorItemName').closest('.form-group');
+                $formGroup.addClass('has-success');
+                $formGroup.css('background-color', '#dff0d8');
+                setTimeout(function() {
+                    $formGroup.removeClass('has-success');
+                    $formGroup.css('background-color', '');
+                }, 3000);
+            }
+        }
+        
+        // 部门图表点击处理函数
+        function handleDepartmentChartClick(params) {
+            var department = params.name;
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            
+            // 将当前的筛选条件考虑在内
+            var inspectionResult = $('#inspectionResult').val();
+            var cruiseTaskType = $('#cruiseTaskType').val();
+            var majorItemName = $('#majorItemName').val();
+            
+            // 构建查询参数
+            var queryParams = {
+                startDate: startDate,
+                endDate: endDate,
+                department: department,
+                inspectionResult: inspectionResult !== '全部' ? inspectionResult : null,
+                patrolType: cruiseTaskType !== '全部' ? cruiseTaskType : null,
+                majorItemName: majorItemName !== '全部' ? majorItemName : null
+            };
+            
+            // 发送查询请求
+            fetchDetailData(queryParams);
+            
+            // 同时在高级筛选区域中选中相应的部门
+            if ($('#inspectionUnit option[value="' + department + '"]').length > 0) {
+                $('#inspectionUnit').val(department);
+                
+                // 如果筛选区域是折叠的，展开它
+                if (!$('#advanced-filter-body').is(':visible')) {
+                    $('#toggle-advanced-filter').click();
+                }
+                
+                // 高亮显示筛选条件
+                var $formGroup = $('#inspectionUnit').closest('.form-group');
+                $formGroup.addClass('has-success');
+                $formGroup.css('background-color', '#dff0d8');
+                setTimeout(function() {
+                    $formGroup.removeClass('has-success');
+                    $formGroup.css('background-color', '');
+                }, 3000);
+            }
+        }
+        
+        // 获取详细数据并显示弹框
+        function fetchDetailData(params, page) {
+            // 显示加载状态
+            Swal.fire({
+                title: '数据加载中...',
+                html: '正在获取详细数据，请稍候',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // 添加分页参数
+            var requestParams = Object.assign({}, params);
+            requestParams.page = page || 1;
+            requestParams.size = 20;
+            
+            // 发送请求获取详细数据
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getMonthlyDetailRecords',
+                type: 'POST',
+                dataType: 'json',
+                data: requestParams,
+                success: function(response) {
+                    // 关闭加载提示
+                    Swal.close();
+                    
+                    // 显示详细数据
+                    if (response && response.data && response.data.length > 0) {
+                        console.log(response);
+                        showDetailDataModal(response, params);
+                    } else {
+                        Swal.fire({
+                            title: '无数据',
+                            text: '未找到符合条件的详细数据',
+                            icon: 'info',
+                            confirmButtonText: '确定'
+                        });
+                    }
+                },
+                error: function(error) {
+                    console.error('Error fetching detail data:', error);
+                    Swal.fire({
+                        title: '错误',
+                        text: '获取详细数据失败，请查看控制台错误信息',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 显示详细数据弹框
+        function showDetailDataModal(data, params) {
+            // 构建表格HTML
+            var tableHtml = '<div style="max-height: 500px; overflow-y: auto;">';
+            tableHtml += '<table class="table table-bordered table-striped">';
+            tableHtml += '<thead><tr>';
+            tableHtml += '<th>检查单位</th>';
+            tableHtml += '<th>检查时间</th>';
+            tableHtml += '<th>检查地点</th>';
+            tableHtml += '<th>检查对象</th>';
+            tableHtml += '<th>检查项目</th>';
+            tableHtml += '<th>巡航方式</th>';
+            tableHtml += '<th>检查结果</th>';
+            tableHtml += '</tr></thead>';
+            tableHtml += '<tbody>';
+            
+            // 添加数据行
+            data.data.forEach(function(item) {
+                tableHtml += '<tr>';
+                tableHtml += '<td>' + (item.inspectionUnit || '') + '</td>';
+                tableHtml += '<td>' + (item.inspectionTime || '') + '</td>';
+                tableHtml += '<td>' + (item.inspectionLocation || '') + '</td>';
+                tableHtml += '<td>' + (item.inspectionTarget || '') + '</td>';
+                tableHtml += '<td>' + (item.majorItemName || '') + '</td>';
+                tableHtml += '<td>' + (item.cruiseTaskName || '') + '</td>';
+                tableHtml += '<td>' + (item.inspectionResult || '正常') + '</td>';
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table></div>';
+            
+            // 添加分页信息和控件
+            var paginationHtml = '<div class="row mt-3">';
+            paginationHtml += '<div class="col-md-6">';
+            paginationHtml += '<div class="text-left">';
+            paginationHtml += '<span class="text-muted">共 <strong>' + data.totalCount + '</strong> 条记录，';
+            paginationHtml += '当前第 <strong>' + data.currentPage + '</strong>/' + data.totalPages + ' 页</span>';
+            paginationHtml += '</div>';
+            paginationHtml += '</div>';
+            paginationHtml += '<div class="col-md-6">';
+            paginationHtml += '<div class="text-right">';
+            
+            // 上一页按钮
+            if (data.hasPrevious) {
+                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-primary mr-2" onclick="loadDetailPage(' + (data.currentPage - 1) + ')">上一页</button>';
+            } else {
+                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-secondary mr-2" disabled>上一页</button>';
+            }
+            
+            // 页码显示
+            var startPage = Math.max(1, data.currentPage - 2);
+            var endPage = Math.min(data.totalPages, data.currentPage + 2);
+            
+            for (var i = startPage; i <= endPage; i++) {
+                if (i === data.currentPage) {
+                    paginationHtml += '<button type="button" class="btn btn-sm btn-primary mr-1">' + i + '</button>';
+                } else {
+                    paginationHtml += '<button type="button" class="btn btn-sm btn-outline-primary mr-1" onclick="loadDetailPage(' + i + ')">' + i + '</button>';
+                }
+            }
+            
+            // 下一页按钮
+            if (data.hasNext) {
+                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-primary ml-2" onclick="loadDetailPage(' + (data.currentPage + 1) + ')">下一页</button>';
+            } else {
+                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-secondary ml-2" disabled>下一页</button>';
+            }
+            
+            paginationHtml += '</div>';
+            paginationHtml += '</div>';
+            paginationHtml += '</div>';
+            
+            // 存储当前查询参数，供分页使用
+            window.currentDetailParams = params;
+            
+            // 显示弹框
+            Swal.fire({
+                title: '详细数据',
+                html: tableHtml + paginationHtml,
+                width: '1000px',
+                confirmButtonText: '关闭',
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                },
+                hideClass: {
+                    popup: 'animate__animated animate__fadeOutUp'
+                }
+            });
+        }
+        
+        // 分页加载函数
+        function loadDetailPage(page) {
+            if (window.currentDetailParams) {
+                fetchDetailData(window.currentDetailParams, page);
+            }
+        }
+
+        // 获取环比率标签颜色
+        function getRateLabelColor(rate) {
+            if (rate > 0) return '#38b000'; // 正值为绿色
+            if (rate < 0) return '#d90429'; // 负值为红色
+            return '#607d8b'; // 零值为灰色
+        }
+
+        // 窗口大小变化时调整图表大小
+        $(window).resize(function() {
+            fieldPatrolChart.resize();
+            electronicPatrolChart.resize();
+            dronePatrolChart.resize();
+            majorItemChart.resize();
+            inspectionTrendChart.resize();
+            departmentChart.resize();
+        });
+        
+        // 高级筛选部分代码
+        
+        // 初始化Select2
+        $('#majorItemName').select2({
+            placeholder: "选择或搜索检查项目",
+            allowClear: true
+        });
+        
+        // 加载部门列表
+        function loadDepartments() {
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getMonthlyDepartments',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    // 清空现有选项，保留"全部"选项
+                    $('#inspectionUnit').empty().append('<option value="全部">全部</option>');
+                    
+                    // 添加新选项
+                    data.forEach(function(item) {
+                        $('#inspectionUnit').append('<option value="' + item + '">' + item + '</option>');
+                    });
+                },
+                error: function(error) {
+                    console.error('Error loading departments:', error);
+                }
+            });
+        }
+        
+        // 加载检查项目列表
+        function loadMajorItemNames() {
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getMonthlyMajorItemNames',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    // 清空现有选项
+                    $('#majorItemName').empty().append('<option value="全部">全部</option>');
+                    
+                    // 添加新选项
+                    data.forEach(function(item) {
+                        $('#majorItemName').append('<option value="' + item + '">' + item + '</option>');
+                    });
+                    
+                    // 刷新Select2
+                    $('#majorItemName').trigger('change');
+                },
+                error: function(error) {
+                    console.error('Error loading major item names:', error);
+                }
+            });
+        }
+        
+        // 切换高级筛选区域显示/隐藏
+        $('#toggle-advanced-filter').on('click', function() {
+            var filterBody = $('#advanced-filter-body');
+            if (filterBody.is(':visible')) {
+                filterBody.slideUp();
+                $(this).html('<i class="fas fa-chevron-down"></i>');
+            } else {
+                filterBody.slideDown();
+                $(this).html('<i class="fas fa-chevron-up"></i>');
+                // 首次展开时加载部门列表和检查项目列表
+                if ($('#inspectionUnit option').length <= 1) {
+                    loadDepartments();
+                }
+                if ($('#majorItemName option').length <= 1) {
+                    loadMajorItemNames();
+                }
+            }
+        });
+        
+        // 应用高级筛选
+        $('#applyAdvancedFilter').on('click', function() {
+            fetchAdvancedData();
+        });
+        
+        // 重置高级筛选
+        $('#resetAdvancedFilter').on('click', function() {
+            $('#inspectionUnit').val('全部');
+            $('#inspectionResult').val('全部');
+            $('#cruiseTaskType').val('全部');
+            $('#majorItemName').val('全部').trigger('change');
+            fetchAdvancedData();
+        });
+        
+        // 趋势图类型切换
+        $('#trend-type-selector button').on('click', function() {
+            $(this).addClass('active').siblings().removeClass('active');
+            renderTrendChart($(this).data('trend-type'));
+        });
+        
+        // 全局变量存储高级图表数据
+        var advancedChartData = {};
+        
+        // 获取高级图表数据
+        function fetchAdvancedData() {
+            // 显示加载状态
+            Swal.fire({
+                title: '数据加载中...',
+                html: '请稍候，正在获取详细数据',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // 构建请求参数
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                inspectionUnit: $('#inspectionUnit').val(),
+                inspectionResult: $('#inspectionResult').val(),
+                cruiseTaskType: $('#cruiseTaskType').val(),
+                majorItemName: $('#majorItemName').val()
+            };
+            
+            // 发送请求
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getMonthlyDetailedEnforcementData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    // 保存数据
+                    advancedChartData = data;
+                    
+                    // 更新标题和统计数据
+                    $('#advanced-data-title').text('高级统计数据 (' + data.startDate + ' 至 ' + data.endDate + ')');
+                    $('#total-inspection-count').text(data.totalCount || 0);
+                    
+                    // 渲染各图表
+                    renderMajorItemChart();
+                    renderTrendChart('daily'); // 默认显示日趋势
+                    renderDepartmentChart();
+                    
+                    // 关闭加载提示
+                    Swal.close();
+                },
+                error: function(error) {
+                    console.error('Error fetching advanced data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取高级统计数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染检查项目分布图
+        function renderMajorItemChart() {
+            if (!advancedChartData.majorItemNames || !advancedChartData.majorItemCounts) return;
+            
+            // 限制显示的数据项数量
+            let displayLimit = 15;
+            let itemNames = [...advancedChartData.majorItemNames];
+            let itemCounts = [...advancedChartData.majorItemCounts];
+            
+            // 创建数据对象数组以便于排序
+            let dataArr = itemNames.map((name, index) => ({
+                name: name,
+                value: itemCounts[index]
+            }));
+            
+            // 按照值从大到小排序
+            dataArr.sort((a, b) => b.value - a.value);
+            
+            // 限制显示的项目数
+            if (dataArr.length > displayLimit) {
+                dataArr = dataArr.slice(0, displayLimit);
+            }
+            
+            // 提取排序后的数据，并反转顺序用于横向展示
+            let sortedNames = dataArr.map(item => item.name).reverse();
+            let sortedCounts = dataArr.map(item => item.value).reverse();
+            
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '22%',  // 增大左边距，为长文本预留空间
+                    right: '5%',
+                    bottom: '5%',
+                    top: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    name: '检查次数',
+                    nameLocation: 'middle',
+                    nameGap: 30
+                },
+                yAxis: {
+                    type: 'category',
+                    data: sortedNames,
+                    axisLabel: {
+                        formatter: function(value) {
+                            // 超过15个字符时截断并添加省略号
+                            if (value && value.length > 15) {
+                                return value.substring(0, 15) + '...';
+                            }
+                            return value;
+                        },
+                        interval: 0,  // 强制显示所有标签
+                        textStyle: {
+                            fontSize: 12
+                        }
+                    },
+                    axisTick: {
+                        alignWithLabel: true
+                    }
+                },
+                series: [
+                    {
+                        name: '检查次数',
+                        type: 'bar',
+                        data: sortedCounts,
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                                {offset: 0, color: '#83bff6'},
+                                {offset: 0.5, color: '#188df0'},
+                                {offset: 1, color: '#0253a4'}
+                            ])
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{c}'
+                        }
+                    }
+                ],
+                tooltip: {
+                    formatter: function(params) {
+                        // 处理params可能不是数组的情况
+                        if (Array.isArray(params) && params.length > 0) {
+                            return params[0].name + '<br/>' + 
+                                   params[0].seriesName + ': ' + params[0].value;
+                        } else if (params && params.name) {
+                            // 单个数据点的情况
+                            return params.name + '<br/>' + 
+                                   params.seriesName + ': ' + params.value;
+                        }
+                        // 防止其他未知情况
+                        return '';
+                    }
+                }
+            };
+            
+            majorItemChart.setOption(option, true);
+        }
+        
+        // 渲染检查数量趋势图
+        function renderTrendChart(trendType) {
+            if (!advancedChartData[trendType + 'Trend']) return;
+            
+            var trendData = advancedChartData[trendType + 'Trend'];
+            var times = trendData.map(item => item.time);
+            var counts = trendData.map(item => item.count);
+            
+            var titleMap = {
+                'daily': '日检查趋势',
+                'weekly': '周检查趋势',
+                'monthly': '月检查趋势',
+                'quarterly': '季度检查趋势'
+            };
+            
+            var option = {
+                title: {
+                    text: titleMap[trendType] || '检查趋势',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: times,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: trendType === 'daily' ? 45 : 0
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '检查次数'
+                },
+                series: [
+                    {
+                        name: '检查次数',
+                        type: 'line',
+                        data: counts,
+                        smooth: true,
+                        lineStyle: {
+                            width: 3,
+                            color: '#1890ff'
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                {offset: 0, color: 'rgba(24, 144, 255, 0.5)'},
+                                {offset: 1, color: 'rgba(24, 144, 255, 0.1)'}
+                            ])
+                        },
+                        markPoint: {
+                            data: [
+                                {type: 'max', name: '最大值'},
+                                {type: 'min', name: '最小值'}
+                            ]
+                        }
+                    }
+                ]
+            };
+            
+            inspectionTrendChart.setOption(option, true);
+        }
+        
+        // 渲染部门检查统计图
+        function renderDepartmentChart() {
+            if (!advancedChartData.departmentStats) return;
+            
+            var deptStats = advancedChartData.departmentStats;
+            var deptNames = [];
+            var deptCounts = [];
+            
+            // 转换为数组并排序
+            var sortedDepts = [];
+            for (var dept in deptStats) {
+                sortedDepts.push({name: dept, count: deptStats[dept]});
+            }
+            sortedDepts.sort((a, b) => b.count - a.count);
+            
+            // 提取排序后的数据
+            for (var i = 0; i < sortedDepts.length; i++) {
+                deptNames.push(sortedDepts[i].name);
+                deptCounts.push(sortedDepts[i].count);
+            }
+            
+            var option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'vertical',
+                    right: 10,
+                    top: 'center',
+                    data: deptNames
+                },
+                series: [
+                    {
+                        name: '部门检查统计',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        label: {
+                            show: true,
+                            formatter: '{b}: {c} ({d}%)'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: true
+                        },
+                        data: deptNames.map((name, index) => {
+                            return {
+                                name: name,
+                                value: deptCounts[index]
+                            };
+                        })
+                    }
+                ]
+            };
+            
+            departmentChart.setOption(option, true);
+        }
+        
+        // 初始化时获取高级图表数据
+        fetchAdvancedData();
+    });
+</script>
+</body>
+
+</html>
