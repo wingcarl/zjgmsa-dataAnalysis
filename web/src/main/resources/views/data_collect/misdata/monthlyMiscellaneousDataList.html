@@ -1,0 +1,160 @@
+<% layout('/layouts/default.html', {title: '月度杂项数据表管理', libs: ['dataGrid']}){ %>
+<div class="main-content">
+	<div class="box box-main">
+		<div class="box-header">
+			<div class="box-title">
+				<i class="fa icon-notebook"></i> ${text('月度杂项数据表管理')}
+			</div>
+			<div class="box-tools pull-right">
+				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
+				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
+				<% if(hasPermi('misdata:monthlyMiscellaneousData:edit')){ %>
+						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
+					<a href="${ctx}/misdata/monthlyMiscellaneousData/form" class="btn btn-default btnTool" title="${text('新增月度杂项数据表')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<% } %>
+				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
+			</div>
+		</div>
+		<div class="box-body">
+			<#form:form id="searchForm" model="${monthlyMiscellaneousData}" action="${ctx}/misdata/monthlyMiscellaneousData/listData" method="post" class="form-inline hide"
+					data-page-no="${parameter.pageNo}" data-page-size="${parameter.pageSize}" data-order-by="${parameter.orderBy}">
+				<div class="form-group">
+					<label class="control-label">${text('单位名称')}：</label>
+					<div class="control-inline">
+						<#form:input path="organizationName" maxlength="255" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('层级')}：</label>
+					<div class="control-inline">
+						<#form:input path="level" maxlength="100" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">${text('数据时间 ')}：</label>
+					<div class="control-inline">
+						<#form:input path="reportDate_gte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd" data-done="reportDate_lte.click()"/>
+						&nbsp;-&nbsp;
+						<#form:input path="reportDate_lte" readonly="true" maxlength="20" class="form-control laydate width-date"
+							dataFormat="date" data-type="date" data-format="yyyy-MM-dd"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary btn-sm"><i class="glyphicon glyphicon-search"></i> ${text('查询')}</button>
+					<button type="reset" class="btn btn-default btn-sm isQuick"><i class="glyphicon glyphicon-repeat"></i> ${text('重置')}</button>
+				</div>
+			</#form:form>
+			<table id="dataGrid"></table>
+			<div id="dataGridPage"></div>
+		</div>
+	</div>
+</div>
+<% } %>
+<script>
+//# // 初始化DataGrid对象
+$('#dataGrid').dataGrid({
+	searchForm: $('#searchForm'),
+	columnModel: [
+		{header:'${text("单位名称")}', name:'organizationName', index:'a.organization_name', width:150, align:"left", frozen:true, formatter: function(val, obj, row, act){
+			return '<a href="${ctx}/misdata/monthlyMiscellaneousData/form?id='+row.id+'" class="btnList" data-title="${text("编辑月度杂项数据表")}">'+(val||row.id)+'</a>';
+		}},
+		{header:'${text("层级")}', name:'level', index:'a.level', width:150, align:"left"},
+		{header:'${text("数据时间 ")}', name:'reportDate', index:'a.report_date', width:150, align:"center"},
+		{header:'${text("海巡艇巡航时间 ")}', name:'patrolBoatCruiseHours', index:'a.patrol_boat_cruise_hours', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("海巡艇巡航次数")}', name:'patrolBoatCruiseCount', index:'a.patrol_boat_cruise_count', width:150, align:"center"},
+		{header:'${text("电子巡航次数")}', name:'electronicCruiseCount', index:'a.electronic_cruise_count', width:150, align:"center"},
+		{header:'${text("无人机单兵巡航次数")}', name:'uavSoldierCruiseCount', index:'a.uav_soldier_cruise_count', width:150, align:"center"},
+		{header:'${text("无人机机库巡航次数")}', name:'uavHangarCruiseCount', index:'a.uav_hangar_cruise_count', width:150, align:"center"},
+		{header:'${text("无人机处罚数量")}', name:'uavPenaltyCount', index:'a.uav_penalty_count', width:150, align:"center"},
+		{header:'${text("派发任务数量")}', name:'dispatchedTaskCount', index:'a.dispatched_task_count', width:150, align:"center"},
+		{header:'${text("巡航任务派发数量")}', name:'cruiseTaskDispatchedCount', index:'a.cruise_task_dispatched_count', width:150, align:"center"},
+		{header:'${text("锚泊申请率")}', name:'anchorRate', index:'a.anchor_rate', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("港航一体化全过程闭环率 ")}', name:'portShippingIntegrationClosureRate', index:'a.port_shipping_integration_closure_rate', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("港航一体化到港作业率 ")}', name:'portShippingIntegrationArrivalOpRate', index:'a.port_shipping_integration_arrival_op_rate', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("红码船处置率 ")}', name:'redCodeShipDisposalRate', index:'a.red_code_ship_disposal_rate', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("红码船登轮检查数量")}', name:'redCodeShipOnboardInspectionCount', index:'a.red_code_ship_onboard_inspection_count', width:150, align:"center"},
+		{header:'${text("红码船远程核查数量")}', name:'redCodeShipRemoteVerificationCount', index:'a.red_code_ship_remote_verification_count', width:150, align:"center"},
+		{header:'${text("红码船登轮检查比例 ")}', name:'redCodeShipOnboardInspectionRatio', index:'a.red_code_ship_onboard_inspection_ratio', width:150, align:"right", formatter: function(val, obj, row, act){
+			return js.formatNumber(val, 2, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+		}},
+		{header:'${text("更新时间")}', name:'updateDate', index:'a.update_date', width:150, align:"center"},
+		{header:'${text("操作")}', name:'actions', width:120, formatter: function(val, obj, row, act){
+			var actions = [];
+			//# if(hasPermi('misdata:monthlyMiscellaneousData:edit')){
+				actions.push('<a href="${ctx}/misdata/monthlyMiscellaneousData/form?id='+row.id+'" class="btnList" title="${text("编辑月度杂项数据表")}"><i class="fa fa-pencil"></i></a>&nbsp;');
+				actions.push('<a href="${ctx}/misdata/monthlyMiscellaneousData/delete?id='+row.id+'" class="btnList" title="${text("删除月度杂项数据表")}" data-confirm="${text("确认要删除该月度杂项数据表吗？")}"><i class="fa fa-trash-o"></i></a>&nbsp;');
+			//# }
+			return actions.join('');
+		}}
+	],
+	//# // 加载成功后执行事件
+	ajaxSuccess: function(data){
+		
+	}
+});
+</script><script>
+$('#btnExport').click(function(){
+	js.ajaxSubmitForm($('#searchForm'), {
+		url: '${ctx}/misdata/monthlyMiscellaneousData/exportData',
+		clearParams: 'pageNo,pageSize',
+		downloadFile: true
+	});
+});
+$('#btnImport').click(function(){
+	js.layer.open({
+		type: 1,
+		area: ['400px'],
+		title: '${text("导入月度杂项数据表")}',
+		resize: false,
+		scrollbar: true,
+		content: js.template('importTpl'),
+		btn: ['<i class="fa fa-check"></i> ${text("导入")}',
+			'<i class="fa fa-remove"></i> ${text("关闭")}'],
+		btn1: function(index, layero){
+			var form = {
+				inputForm: layero.find('#inputForm'),
+				file: layero.find('#file').val()
+			};
+		    if (form.file == '' || (!js.endWith(form.file, '.xls') && !js.endWith(form.file, '.xlsx'))){
+		    	js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
+		        return false;
+		    }
+			js.ajaxSubmitForm(form.inputForm, function(data){
+				js.showMessage(data.message);
+				if(data.result == Global.TRUE){
+					js.layer.closeAll();
+				}
+				page();
+			}, "json");
+			return true;
+		}
+	});
+});
+</script>
+<script id="importTpl" type="text/template">//<!--
+<form id="inputForm" action="${ctx}/misdata/monthlyMiscellaneousData/importData" method="post" enctype="multipart/form-data"
+	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
+	<div class="row">
+		<div class="col-xs-12 col-xs-offset-1">
+			<input type="file" id="file" name="file" class="form-file"/>
+			<div class="mt10 pt5" style="color:red">
+				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
+			</div>
+			<div class="mt10 pt5">
+				<a href="${ctx}/misdata/monthlyMiscellaneousData/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>
+			</div>
+		</div>
+	</div>
+</form>
+//--></script>

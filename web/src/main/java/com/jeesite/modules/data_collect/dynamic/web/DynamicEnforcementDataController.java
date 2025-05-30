@@ -1107,21 +1107,14 @@ public class DynamicEnforcementDataController extends BaseController {
 	 */
 	@RequestMapping(value = "getMonthlyDetailRecords")
 	@ResponseBody
-	public Map<String, Object> getMonthlyDetailRecords(
+	public List<Map<String, Object>> getMonthlyDetailRecords(
 			String startDate, 
 			String endDate, 
 			String patrolType, 
 			String department,
 			String inspectionResult,
 			String isPeriod,
-			String majorItemName,
-			Integer page,
-			Integer size) {
-		
-		// 分页参数处理
-		int pageNumber = page != null && page > 0 ? page : 1;
-		int pageSize = size != null && size > 0 ? size : 20;
-		int offset = (pageNumber - 1) * pageSize;
+			String majorItemName) {
 		
 		// 参数处理
 		Date start = startDate != null && !startDate.isEmpty() ? 
@@ -1136,101 +1129,796 @@ public class DynamicEnforcementDataController extends BaseController {
 			start = new Date(end.getTime() - periodDays * 24 * 60 * 60 * 1000 + 24 * 60 * 60 * 1000);
 		}
 		
-		// 构建基础SQL查询条件（用于计算总数）
-		StringBuilder whereClause = new StringBuilder();
-		whereClause.append("WHERE ad.dept IS NOT NULL AND ad.dept != '江苏海事局' ");
+		// 构建SQL查询
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT ded.inspection_unit as inspectionUnit, ");
+		sql.append("DATE_FORMAT(ded.inspection_time, '%Y-%m-%d %H:%i:%s') as inspectionTime, ");
+		sql.append("ded.inspection_location as inspectionLocation, ");
+		sql.append("ded.inspection_target as inspectionTarget, ");
+		sql.append("ded.major_item_name as majorItemName, ");
+		sql.append("ded.cruise_task_name as cruiseTaskName, ");
+		sql.append("COALESCE(ded.inspection_result, '正常') as inspectionResult, ");
+		sql.append("ad.dept ");
+		sql.append("FROM dynamic_enforcement_data ded ");
+		sql.append("LEFT JOIN agency_dept ad ON ded.inspection_unit = ad.agency ");
+		sql.append("WHERE ad.dept IS NOT NULL AND ad.dept != '江苏海事局' ");
 		
 		List<Object> params = new ArrayList<>();
 		
 		// 设置日期范围
 		if (start != null) {
-			whereClause.append("AND ded.inspection_time >= ? ");
+			sql.append("AND ded.inspection_time >= ? ");
 			params.add(start);
 		}
 		if (end != null) {
-			whereClause.append("AND ded.inspection_time <= ? ");
+			sql.append("AND ded.inspection_time <= ? ");
 			params.add(end);
 		}
 		
 		// 部门筛选
 		if (department != null && !department.isEmpty() && !"全部".equals(department)) {
-			whereClause.append("AND ad.dept = ? ");
+			sql.append("AND ad.dept = ? ");
 			params.add(department);
 		}
 		
 		// 巡航方式筛选
 		if (patrolType != null && !patrolType.isEmpty()) {
 			if ("现场巡查".equals(patrolType)) {
-				whereClause.append("AND (ded.cruise_task_name LIKE ? OR ded.cruise_task_name LIKE ?) ");
+				sql.append("AND (ded.cruise_task_name LIKE ? OR ded.cruise_task_name LIKE ?) ");
 				params.add("%海巡艇%");
 				params.add("%执法车%");
 			} else if ("电子巡航".equals(patrolType)) {
-				whereClause.append("AND ded.cruise_task_name LIKE ? ");
+				sql.append("AND ded.cruise_task_name LIKE ? ");
 				params.add("%电子%");
 			} else if ("无人机巡航".equals(patrolType)) {
-				whereClause.append("AND ded.cruise_task_name LIKE ? ");
+				sql.append("AND ded.cruise_task_name LIKE ? ");
 				params.add("%无人机%");
 			}
 		}
 		
 		// 检查结果筛选
 		if (inspectionResult != null && !inspectionResult.isEmpty()) {
-			whereClause.append("AND ded.inspection_result = ? ");
+			sql.append("AND ded.inspection_result = ? ");
 			params.add(inspectionResult);
 		}
 		
 		// 检查项目筛选
 		if (majorItemName != null && !majorItemName.isEmpty() && !"全部".equals(majorItemName)) {
-			whereClause.append("AND ded.major_item_name = ? ");
+			sql.append("AND ded.major_item_name = ? ");
 			params.add(majorItemName);
 		}
 		
-		// 1. 先查询总记录数
-		StringBuilder countSql = new StringBuilder();
-		countSql.append("SELECT COUNT(*) ");
-		countSql.append("FROM dynamic_enforcement_data ded ");
-		countSql.append("LEFT JOIN agency_dept ad ON ded.inspection_unit = ad.agency ");
-		countSql.append(whereClause.toString());
+		sql.append("ORDER BY ded.inspection_time DESC");
 		
-		Integer totalCount = jdbcTemplate.queryForObject(countSql.toString(), params.toArray(), Integer.class);
+		// 执行查询并返回结果
+		List<Map<String, Object>> resultList = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 		
-		// 2. 查询分页数据
-		StringBuilder dataSql = new StringBuilder();
-		dataSql.append("SELECT ded.inspection_unit as inspectionUnit, ");
-		dataSql.append("DATE_FORMAT(ded.inspection_time, '%Y-%m-%d %H:%i:%s') as inspectionTime, ");
-		dataSql.append("ded.inspection_location as inspectionLocation, ");
-		dataSql.append("ded.inspection_target as inspectionTarget, ");
-		dataSql.append("ded.major_item_name as majorItemName, ");
-		dataSql.append("ded.cruise_task_name as cruiseTaskName, ");
-		dataSql.append("COALESCE(ded.inspection_result, '正常') as inspectionResult, ");
-		dataSql.append("ad.dept ");
-		dataSql.append("FROM dynamic_enforcement_data ded ");
-		dataSql.append("LEFT JOIN agency_dept ad ON ded.inspection_unit = ad.agency ");
-		dataSql.append(whereClause.toString());
-		dataSql.append("ORDER BY ded.inspection_time DESC ");
-		dataSql.append("LIMIT ? OFFSET ?");
+		return resultList;
+	}
+
+	/**
+	 * 获取海巡艇巡航数据（从monthly_miscellaneous_data表）
+	 */
+	@RequestMapping(value = "getPatrolBoatData")
+	@ResponseBody
+	public Map<String, Object> getPatrolBoatData(String startDate, String endDate, String level) {
+		Map<String, Object> result = new HashMap<>();
 		
-		// 添加分页参数
-		List<Object> dataParams = new ArrayList<>(params);
-		dataParams.add(pageSize);
-		dataParams.add(offset);
+		// 参数处理，默认为月度报表逻辑
+		LocalDate today = LocalDate.now();
+		int currentDay = today.getDayOfMonth();
+		
+		LocalDate endDate_calc, startDate_calc;
+		if (currentDay <= 25) {
+			endDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(2).withDayOfMonth(26);
+		} else {
+			endDate_calc = today.withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(26);
+		}
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(startDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(endDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 设置默认层级
+		if (level == null || level.isEmpty()) {
+			level = "分支局";
+		}
+		
+		// 构建SQL查询
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT organization_name, level, ");
+		sql.append("SUM(COALESCE(patrol_boat_cruise_hours, 0)) as total_cruise_hours, ");
+		sql.append("SUM(COALESCE(patrol_boat_cruise_count, 0)) as total_cruise_count ");
+		sql.append("FROM monthly_miscellaneous_data ");
+		sql.append("WHERE report_date >= ? AND report_date <= ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("AND level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("AND level = '海事处' ");
+		}
+		
+		sql.append("AND organization_name IS NOT NULL ");
+		sql.append("GROUP BY organization_name, level ");
+		sql.append("HAVING (total_cruise_hours > 0 OR total_cruise_count > 0) ");
+		sql.append("ORDER BY total_cruise_hours DESC, total_cruise_count DESC");
 		
 		// 执行查询
-		List<Map<String, Object>> resultList = jdbcTemplate.queryForList(dataSql.toString(), dataParams.toArray());
+		List<Map<String, Object>> rawData = jdbcTemplate.queryForList(sql.toString(), params.toArray());
 		
-		// 计算总页数
-		int totalPages = (int) Math.ceil((double) totalCount / pageSize);
+		// 添加调试信息
+		System.out.println("=== 海巡艇数据查询调试信息 ===");
+		System.out.println("查询层级: " + level);
+		System.out.println("执行的SQL: " + sql.toString());
+		System.out.println("查询参数: " + params.toString());
+		System.out.println("查询结果数量: " + rawData.size());
 		
-		// 构建返回结果
-		Map<String, Object> resultMap = new HashMap<>();
-		resultMap.put("data", resultList);
-		resultMap.put("totalCount", totalCount);
-		resultMap.put("totalPages", totalPages);
-		resultMap.put("currentPage", pageNumber);
-		resultMap.put("pageSize", pageSize);
-		resultMap.put("hasNext", pageNumber < totalPages);
-		resultMap.put("hasPrevious", pageNumber > 1);
+		// 处理数据
+		List<String> organizations = new ArrayList<>();
+		List<Double> cruiseHours = new ArrayList<>();
+		List<Integer> cruiseCounts = new ArrayList<>();
 		
-		return resultMap;
+		for (Map<String, Object> row : rawData) {
+			String orgName = (String) row.get("organization_name");
+			String orgLevel = (String) row.get("level");
+			Double hours = ((Number) row.get("total_cruise_hours")).doubleValue();
+			Integer count = ((Number) row.get("total_cruise_count")).intValue();
+			
+			// 添加调试信息，检查每个组织名称和层级
+			System.out.println("组织名称: [" + orgName + "], 层级: [" + orgLevel + "], 巡航时间: " + hours + "h, 巡航艘次: " + count);
+			
+			organizations.add(orgName);
+			cruiseHours.add(hours);
+			cruiseCounts.add(count);
+		}
+		
+		System.out.println("=== 调试信息结束 ===");
+		
+		result.put("organizations", organizations);
+		result.put("cruiseHours", cruiseHours);
+		result.put("cruiseCounts", cruiseCounts);
+		result.put("totalOrganizations", organizations.size());
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		result.put("level", level);
+		
+		return result;
+	}
+
+	/**
+	 * 获取电子巡航数据（从monthly_miscellaneous_data表）
+	 */
+	@RequestMapping(value = "getElectronicCruiseData")
+	@ResponseBody
+	public Map<String, Object> getElectronicCruiseData(String startDate, String endDate, String level) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 参数处理，默认为月度报表逻辑
+		LocalDate today = LocalDate.now();
+		int currentDay = today.getDayOfMonth();
+		
+		LocalDate endDate_calc, startDate_calc;
+		if (currentDay <= 25) {
+			endDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(2).withDayOfMonth(26);
+		} else {
+			endDate_calc = today.withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(26);
+		}
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(startDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(endDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 设置默认层级
+		if (level == null || level.isEmpty()) {
+			level = "分支局";
+		}
+		
+		// 构建SQL查询
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT organization_name, level, ");
+		sql.append("SUM(COALESCE(electronic_cruise_count, 0)) as total_electronic_cruise_count ");
+		sql.append("FROM monthly_miscellaneous_data ");
+		sql.append("WHERE report_date >= ? AND report_date <= ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("AND level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("AND level = '海事处' ");
+		}
+		
+		sql.append("AND organization_name IS NOT NULL ");
+		sql.append("GROUP BY organization_name, level ");
+		sql.append("HAVING SUM(COALESCE(electronic_cruise_count, 0)) > 0 ");
+		sql.append("ORDER BY SUM(COALESCE(electronic_cruise_count, 0)) DESC");
+		
+		// 执行查询
+		List<Map<String, Object>> rawData = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+		
+		// 添加调试信息
+		System.out.println("=== 电子巡航数据查询调试信息 ===");
+		System.out.println("查询层级: " + level);
+		System.out.println("执行的SQL: " + sql.toString());
+		System.out.println("查询参数: " + params.toString());
+		System.out.println("查询结果数量: " + rawData.size());
+		
+		// 处理数据
+		List<String> organizations = new ArrayList<>();
+		List<Integer> cruiseCounts = new ArrayList<>();
+		
+		for (Map<String, Object> row : rawData) {
+			String orgName = (String) row.get("organization_name");
+			String orgLevel = (String) row.get("level");
+			Integer count = ((Number) row.get("total_electronic_cruise_count")).intValue();
+			
+			// 添加调试信息，检查每个组织名称和层级
+			System.out.println("组织名称: [" + orgName + "], 层级: [" + orgLevel + "], 电子巡航次数: " + count);
+			
+			organizations.add(orgName);
+			cruiseCounts.add(count);
+		}
+		
+		System.out.println("=== 调试信息结束 ===");
+		
+		result.put("organizations", organizations);
+		result.put("cruiseCounts", cruiseCounts);
+		result.put("totalOrganizations", organizations.size());
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		result.put("level", level);
+		
+		return result;
+	}
+
+	/**
+	 * 获取无人机数据（从monthly_miscellaneous_data表）
+	 */
+	@RequestMapping(value = "getUavData")
+	@ResponseBody
+	public Map<String, Object> getUavData(String startDate, String endDate, String level) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 参数处理，默认为月度报表逻辑
+		LocalDate today = LocalDate.now();
+		int currentDay = today.getDayOfMonth();
+		
+		LocalDate endDate_calc, startDate_calc;
+		if (currentDay <= 25) {
+			endDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(2).withDayOfMonth(26);
+		} else {
+			endDate_calc = today.withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(26);
+		}
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(startDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(endDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 设置默认层级
+		if (level == null || level.isEmpty()) {
+			level = "分支局";
+		}
+		
+		// 构建SQL查询
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT organization_name, level, ");
+		sql.append("SUM(COALESCE(uav_soldier_cruise_count, 0)) as total_soldier_cruise_count, ");
+		sql.append("SUM(COALESCE(uav_hangar_cruise_count, 0)) as total_hangar_cruise_count, ");
+		sql.append("SUM(COALESCE(uav_penalty_count, 0)) as total_penalty_count ");
+		sql.append("FROM monthly_miscellaneous_data ");
+		sql.append("WHERE report_date >= ? AND report_date <= ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("AND level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("AND level = '海事处' ");
+		}
+		
+		sql.append("AND organization_name IS NOT NULL ");
+		sql.append("GROUP BY organization_name, level ");
+		sql.append("HAVING (SUM(COALESCE(uav_soldier_cruise_count, 0)) > 0 OR SUM(COALESCE(uav_hangar_cruise_count, 0)) > 0 OR SUM(COALESCE(uav_penalty_count, 0)) > 0) ");
+		sql.append("ORDER BY (SUM(COALESCE(uav_soldier_cruise_count, 0)) + SUM(COALESCE(uav_hangar_cruise_count, 0)) + SUM(COALESCE(uav_penalty_count, 0))) DESC");
+		
+		// 执行查询
+		List<Map<String, Object>> rawData = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+		
+		// 添加调试信息
+		System.out.println("=== 无人机数据查询调试信息 ===");
+		System.out.println("查询层级: " + level);
+		System.out.println("执行的SQL: " + sql.toString());
+		System.out.println("查询参数: " + params.toString());
+		System.out.println("查询结果数量: " + rawData.size());
+		
+		// 处理数据
+		List<String> organizations = new ArrayList<>();
+		List<Integer> soldierCruiseCounts = new ArrayList<>();
+		List<Integer> hangarCruiseCounts = new ArrayList<>();
+		List<Integer> penaltyCounts = new ArrayList<>();
+		
+		for (Map<String, Object> row : rawData) {
+			String orgName = (String) row.get("organization_name");
+			String orgLevel = (String) row.get("level");
+			Integer soldierCount = ((Number) row.get("total_soldier_cruise_count")).intValue();
+			Integer hangarCount = ((Number) row.get("total_hangar_cruise_count")).intValue();
+			Integer penaltyCount = ((Number) row.get("total_penalty_count")).intValue();
+			
+			// 添加调试信息，检查每个组织名称和层级
+			System.out.println("组织名称: [" + orgName + "], 层级: [" + orgLevel + 
+				"], 单兵飞行: " + soldierCount + ", 无人机库飞行: " + hangarCount + ", 处罚数量: " + penaltyCount);
+			
+			organizations.add(orgName);
+			soldierCruiseCounts.add(soldierCount);
+			hangarCruiseCounts.add(hangarCount);
+			penaltyCounts.add(penaltyCount);
+		}
+		
+		System.out.println("=== 调试信息结束 ===");
+		
+		result.put("organizations", organizations);
+		result.put("soldierCruiseCounts", soldierCruiseCounts);
+		result.put("hangarCruiseCounts", hangarCruiseCounts);
+		result.put("penaltyCounts", penaltyCounts);
+		result.put("totalOrganizations", organizations.size());
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		result.put("level", level);
+		
+		return result;
+	}
+
+	/**
+	 * 获取任务派发数据（从monthly_miscellaneous_data表）
+	 */
+	@RequestMapping(value = "getTaskDispatchData")
+	@ResponseBody
+	public Map<String, Object> getTaskDispatchData(String startDate, String endDate, String level) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 参数处理，默认为月度报表逻辑
+		LocalDate today = LocalDate.now();
+		int currentDay = today.getDayOfMonth();
+		
+		LocalDate endDate_calc, startDate_calc;
+		if (currentDay <= 25) {
+			endDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(2).withDayOfMonth(26);
+		} else {
+			endDate_calc = today.withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(26);
+		}
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(startDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(endDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 设置默认层级
+		if (level == null || level.isEmpty()) {
+			level = "分支局";
+		}
+		
+		// 构建SQL查询
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT organization_name, level, ");
+		sql.append("SUM(COALESCE(dispatched_task_count, 0)) as total_dispatched_task_count, ");
+		sql.append("SUM(COALESCE(cruise_task_dispatched_count, 0)) as total_cruise_task_dispatched_count ");
+		sql.append("FROM monthly_miscellaneous_data ");
+		sql.append("WHERE report_date >= ? AND report_date <= ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("AND level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("AND level = '海事处' ");
+		}
+		
+		sql.append("AND organization_name IS NOT NULL ");
+		sql.append("GROUP BY organization_name, level ");
+		sql.append("HAVING (SUM(COALESCE(dispatched_task_count, 0)) > 0 OR SUM(COALESCE(cruise_task_dispatched_count, 0)) > 0) ");
+		sql.append("ORDER BY (SUM(COALESCE(dispatched_task_count, 0)) + SUM(COALESCE(cruise_task_dispatched_count, 0))) DESC");
+		
+		// 执行查询
+		List<Map<String, Object>> rawData = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+		
+		// 处理数据
+		List<String> organizations = new ArrayList<>();
+		List<Integer> dispatchedTaskCounts = new ArrayList<>();
+		List<Integer> cruiseTaskDispatchedCounts = new ArrayList<>();
+		
+		for (Map<String, Object> row : rawData) {
+			String orgName = (String) row.get("organization_name");
+			Integer dispatchedCount = ((Number) row.get("total_dispatched_task_count")).intValue();
+			Integer cruiseDispatchedCount = ((Number) row.get("total_cruise_task_dispatched_count")).intValue();
+			
+			organizations.add(orgName);
+			dispatchedTaskCounts.add(dispatchedCount);
+			cruiseTaskDispatchedCounts.add(cruiseDispatchedCount);
+		}
+		
+		result.put("organizations", organizations);
+		result.put("dispatchedTaskCounts", dispatchedTaskCounts);
+		result.put("cruiseTaskDispatchedCounts", cruiseTaskDispatchedCounts);
+		result.put("totalOrganizations", organizations.size());
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		result.put("level", level);
+		
+		return result;
+	}
+
+	/**
+	 * 获取锚泊申请率数据（从monthly_miscellaneous_data表）
+	 */
+	@RequestMapping(value = "getAnchorRateData")
+	@ResponseBody
+	public Map<String, Object> getAnchorRateData(String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 参数处理，默认为月度报表逻辑
+		LocalDate today = LocalDate.now();
+		int currentDay = today.getDayOfMonth();
+		
+		LocalDate endDate_calc, startDate_calc;
+		if (currentDay <= 25) {
+			endDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(2).withDayOfMonth(26);
+		} else {
+			endDate_calc = today.withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(26);
+		}
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(startDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(endDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 构建SQL查询 - 取每个组织在时间范围内最新的锚泊申请率数据
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT m1.organization_name, m1.anchor_rate ");
+		sql.append("FROM monthly_miscellaneous_data m1 ");
+		sql.append("INNER JOIN ( ");
+		sql.append("    SELECT organization_name, MAX(report_date) as max_date ");
+		sql.append("    FROM monthly_miscellaneous_data ");
+		sql.append("    WHERE report_date >= ? AND report_date <= ? ");
+		sql.append("    AND organization_name IS NOT NULL ");
+		sql.append("    AND COALESCE(anchor_rate, 0) > 0 ");
+		sql.append("    GROUP BY organization_name ");
+		sql.append(") m2 ON m1.organization_name = m2.organization_name AND m1.report_date = m2.max_date ");
+		sql.append("WHERE m1.report_date >= ? AND m1.report_date <= ? ");
+		sql.append("AND COALESCE(m1.anchor_rate, 0) > 0 ");
+		sql.append("ORDER BY m1.anchor_rate DESC");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(start);
+		params.add(end);
+		params.add(start);
+		params.add(end);
+		
+		// 执行查询
+		List<Map<String, Object>> rawData = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+		
+		// 处理数据
+		List<String> organizations = new ArrayList<>();
+		List<Double> anchorRates = new ArrayList<>();
+		
+		for (Map<String, Object> row : rawData) {
+			String orgName = (String) row.get("organization_name");
+			Double rate = ((Number) row.get("anchor_rate")).doubleValue();
+			
+			organizations.add(orgName);
+			// 转换为百分比
+			anchorRates.add(Math.round(rate * 100.0 * 100.0) / 100.0);
+		}
+		
+		result.put("organizations", organizations);
+		result.put("anchorRates", anchorRates);
+		result.put("totalOrganizations", organizations.size());
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		
+		return result;
+	}
+
+	/**
+	 * 获取港航一体化数据（从monthly_miscellaneous_data表）
+	 */
+	@RequestMapping(value = "getPortShippingData")
+	@ResponseBody
+	public Map<String, Object> getPortShippingData(String startDate, String endDate, String level) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 参数处理，默认为月度报表逻辑
+		LocalDate today = LocalDate.now();
+		int currentDay = today.getDayOfMonth();
+		
+		LocalDate endDate_calc, startDate_calc;
+		if (currentDay <= 25) {
+			endDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(2).withDayOfMonth(26);
+		} else {
+			endDate_calc = today.withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(26);
+		}
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(startDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(endDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 设置默认层级
+		if (level == null || level.isEmpty()) {
+			level = "分支局";
+		}
+		
+		// 构建SQL查询 - 取每个组织在时间范围内最新的港航一体化数据
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT m1.organization_name, m1.level, ");
+		sql.append("m1.port_shipping_integration_closure_rate, ");
+		sql.append("m1.port_shipping_integration_arrival_op_rate ");
+		sql.append("FROM monthly_miscellaneous_data m1 ");
+		sql.append("INNER JOIN ( ");
+		sql.append("    SELECT organization_name, MAX(report_date) as max_date ");
+		sql.append("    FROM monthly_miscellaneous_data ");
+		sql.append("    WHERE report_date >= ? AND report_date <= ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("    AND level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("    AND level = '海事处' ");
+		}
+		
+		sql.append("    AND organization_name IS NOT NULL ");
+		sql.append("    AND (COALESCE(port_shipping_integration_closure_rate, 0) > 0 OR COALESCE(port_shipping_integration_arrival_op_rate, 0) > 0) ");
+		sql.append("    GROUP BY organization_name ");
+		sql.append(") m2 ON m1.organization_name = m2.organization_name AND m1.report_date = m2.max_date ");
+		sql.append("WHERE m1.report_date >= ? AND m1.report_date <= ? ");
+		
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("AND m1.level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("AND m1.level = '海事处' ");
+		}
+		
+		sql.append("AND m1.organization_name IS NOT NULL ");
+		sql.append("AND (COALESCE(m1.port_shipping_integration_closure_rate, 0) > 0 OR COALESCE(m1.port_shipping_integration_arrival_op_rate, 0) > 0) ");
+		sql.append("ORDER BY (COALESCE(m1.port_shipping_integration_closure_rate, 0) + COALESCE(m1.port_shipping_integration_arrival_op_rate, 0)) DESC");
+		
+		// 执行查询
+		List<Map<String, Object>> rawData = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+		
+		// 处理数据
+		List<String> organizations = new ArrayList<>();
+		List<Double> closureRates = new ArrayList<>();
+		List<Double> arrivalOpRates = new ArrayList<>();
+		
+		for (Map<String, Object> row : rawData) {
+			String orgName = (String) row.get("organization_name");
+			Double closureRate = ((Number) row.get("port_shipping_integration_closure_rate")).doubleValue();
+			Double arrivalOpRate = ((Number) row.get("port_shipping_integration_arrival_op_rate")).doubleValue();
+			
+			organizations.add(orgName);
+			// 转换为百分比
+			closureRates.add(Math.round(closureRate * 100.0 * 100.0) / 100.0);
+			arrivalOpRates.add(Math.round(arrivalOpRate * 100.0 * 100.0) / 100.0);
+		}
+		
+		result.put("organizations", organizations);
+		result.put("closureRates", closureRates);
+		result.put("arrivalOpRates", arrivalOpRates);
+		result.put("totalOrganizations", organizations.size());
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		result.put("level", level);
+		
+		return result;
+	}
+	
+	/**
+	 * 获取红码船数据（从monthly_miscellaneous_data表）
+	 */
+	@RequestMapping(value = "getRedCodeShipData")
+	@ResponseBody
+	public Map<String, Object> getRedCodeShipData(String startDate, String endDate, String level) {
+		Map<String, Object> result = new HashMap<>();
+		
+		// 参数处理，默认为月度报表逻辑
+		LocalDate today = LocalDate.now();
+		int currentDay = today.getDayOfMonth();
+		
+		LocalDate endDate_calc, startDate_calc;
+		if (currentDay <= 25) {
+			endDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(2).withDayOfMonth(26);
+		} else {
+			endDate_calc = today.withDayOfMonth(25);
+			startDate_calc = today.withDayOfMonth(1).minusMonths(1).withDayOfMonth(26);
+		}
+		
+		Date start = startDate != null && !startDate.isEmpty() ? 
+				DateUtils.parseDate(startDate) : 
+				DateUtils.parseDate(startDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		Date end = endDate != null && !endDate.isEmpty() ? 
+				DateUtils.parseDate(endDate) : 
+				DateUtils.parseDate(endDate_calc.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		// 设置默认层级
+		if (level == null || level.isEmpty()) {
+			level = "分支局";
+		}
+		
+		// 构建SQL查询 - 混合查询：率类数据取最新记录，数量类数据累加
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT ");
+		sql.append("    latest.organization_name, ");
+		sql.append("    latest.level, ");
+		sql.append("    latest.red_code_ship_disposal_rate, ");
+		sql.append("    latest.red_code_ship_onboard_inspection_ratio, ");
+		sql.append("    counts.total_onboard_inspection_count, ");
+		sql.append("    counts.total_remote_verification_count ");
+		sql.append("FROM ( ");
+		sql.append("    SELECT m1.organization_name, m1.level, ");
+		sql.append("           m1.red_code_ship_disposal_rate, ");
+		sql.append("           m1.red_code_ship_onboard_inspection_ratio ");
+		sql.append("    FROM monthly_miscellaneous_data m1 ");
+		sql.append("    INNER JOIN ( ");
+		sql.append("        SELECT organization_name, MAX(report_date) as max_date ");
+		sql.append("        FROM monthly_miscellaneous_data ");
+		sql.append("        WHERE report_date >= ? AND report_date <= ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("        AND level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("        AND level = '海事处' ");
+		}
+		
+		sql.append("        AND organization_name IS NOT NULL ");
+		sql.append("        AND (COALESCE(red_code_ship_disposal_rate, 0) > 0 OR COALESCE(red_code_ship_onboard_inspection_ratio, 0) > 0) ");
+		sql.append("        GROUP BY organization_name ");
+		sql.append("    ) m2 ON m1.organization_name = m2.organization_name AND m1.report_date = m2.max_date ");
+		sql.append("    WHERE m1.report_date >= ? AND m1.report_date <= ? ");
+		
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("    AND m1.level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("    AND m1.level = '海事处' ");
+		}
+		
+		sql.append("    AND m1.organization_name IS NOT NULL ");
+		sql.append("    AND (COALESCE(m1.red_code_ship_disposal_rate, 0) > 0 OR COALESCE(m1.red_code_ship_onboard_inspection_ratio, 0) > 0) ");
+		sql.append(") latest ");
+		sql.append("LEFT JOIN ( ");
+		sql.append("    SELECT organization_name, ");
+		sql.append("           SUM(COALESCE(red_code_ship_onboard_inspection_count, 0)) as total_onboard_inspection_count, ");
+		sql.append("           SUM(COALESCE(red_code_ship_remote_verification_count, 0)) as total_remote_verification_count ");
+		sql.append("    FROM monthly_miscellaneous_data ");
+		sql.append("    WHERE report_date >= ? AND report_date <= ? ");
+		
+		params.add(start);
+		params.add(end);
+		
+		// 按层级筛选 - 使用level字段
+		if ("分支局".equals(level)) {
+			sql.append("    AND level = '分支局' ");
+		} else if ("海事处".equals(level)) {
+			sql.append("    AND level = '海事处' ");
+		}
+		
+		sql.append("    AND organization_name IS NOT NULL ");
+		sql.append("    GROUP BY organization_name ");
+		sql.append(") counts ON latest.organization_name = counts.organization_name ");
+		sql.append("ORDER BY (COALESCE(counts.total_onboard_inspection_count, 0) + COALESCE(counts.total_remote_verification_count, 0)) DESC");
+		
+		// 执行查询
+		List<Map<String, Object>> rawData = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+		
+		// 添加调试信息
+		System.out.println("=== 红码船数据查询调试信息 ===");
+		System.out.println("查询层级: " + level);
+		System.out.println("执行的SQL: " + sql.toString());
+		System.out.println("查询参数: " + params.toString());
+		System.out.println("查询结果数量: " + rawData.size());
+		
+		// 处理数据
+		List<String> organizations = new ArrayList<>();
+		List<Double> disposalRates = new ArrayList<>();
+		List<Integer> onboardInspectionCounts = new ArrayList<>();
+		List<Integer> remoteVerificationCounts = new ArrayList<>();
+		List<Double> onboardInspectionRatios = new ArrayList<>();
+		
+		for (Map<String, Object> row : rawData) {
+			String orgName = (String) row.get("organization_name");
+			String orgLevel = (String) row.get("level");
+			Double disposalRate = row.get("red_code_ship_disposal_rate") != null ? 
+					((Number) row.get("red_code_ship_disposal_rate")).doubleValue() : 0.0;
+			Integer onboardCount = row.get("total_onboard_inspection_count") != null ? 
+					((Number) row.get("total_onboard_inspection_count")).intValue() : 0;
+			Integer remoteCount = row.get("total_remote_verification_count") != null ? 
+					((Number) row.get("total_remote_verification_count")).intValue() : 0;
+			Double onboardRatio = row.get("red_code_ship_onboard_inspection_ratio") != null ? 
+					((Number) row.get("red_code_ship_onboard_inspection_ratio")).doubleValue() : 0.0;
+			
+			// 添加调试信息，检查每个组织名称和层级
+			System.out.println("组织名称: [" + orgName + "], 层级: [" + orgLevel + 
+				"], 处置率: " + disposalRate + ", 登轮检查数: " + onboardCount + 
+				", 远程核查数: " + remoteCount + ", 登轮检查率: " + onboardRatio);
+			
+			organizations.add(orgName);
+			// 转换为百分比
+			disposalRates.add(Math.round(disposalRate * 100.0 * 100.0) / 100.0);
+			onboardInspectionCounts.add(onboardCount);
+			remoteVerificationCounts.add(remoteCount);
+			// 转换为百分比
+			onboardInspectionRatios.add(Math.round(onboardRatio * 100.0 * 100.0) / 100.0);
+		}
+		
+		System.out.println("=== 调试信息结束 ===");
+		
+		result.put("organizations", organizations);
+		result.put("disposalRates", disposalRates);
+		result.put("onboardInspectionCounts", onboardInspectionCounts);
+		result.put("remoteVerificationCounts", remoteVerificationCounts);
+		result.put("onboardInspectionRatios", onboardInspectionRatios);
+		result.put("totalOrganizations", organizations.size());
+		result.put("startDate", DateUtils.formatDate(start, "yyyy-MM-dd"));
+		result.put("endDate", DateUtils.formatDate(end, "yyyy-MM-dd"));
+		result.put("level", level);
+		
+		return result;
 	}
 }

@@ -459,64 +459,6 @@
         .has-success {
             border: 1px solid #3c763d;
         }
-        
-        /* 分页控件样式 */
-        .swal2-html-container .pagination-info {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-        
-        .swal2-html-container .btn-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            border-radius: 0.25rem;
-            margin: 0 2px;
-        }
-        
-        .swal2-html-container .btn-outline-primary:hover {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-        
-        .swal2-html-container .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .swal2-html-container .btn-outline-secondary {
-            opacity: 0.6;
-        }
-        
-        /* 详情弹窗表格样式优化 */
-        .swal2-html-container .table {
-            margin-bottom: 0;
-            font-size: 0.9rem;
-        }
-        
-        .swal2-html-container .table th {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-            text-align: center;
-            vertical-align: middle;
-            padding: 12px 8px;
-            border: none;
-        }
-        
-        .swal2-html-container .table td {
-            padding: 10px 8px;
-            vertical-align: middle;
-            border-color: rgba(4, 102, 200, 0.2);
-            word-break: break-all;
-            word-wrap: break-word;
-        }
-        
-        .swal2-html-container .table tbody tr:hover {
-            background-color: rgba(4, 102, 200, 0.05);
-        }
     </style>
     <!-- jQuery 和 ECharts -->
     <!-- jQuery 和 ECharts -->
@@ -790,6 +732,221 @@
             </div>
         </div>
     </div>
+
+    <!-- 新增海巡艇巡航数据图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-ship icon-box"></i>海巡艇巡航数据对比</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="patrolBoatLevel">统计层级：</label>
+                                <select id="patrolBoatLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshPatrolBoatData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="patrol-boat-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增电子巡航数据图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-satellite icon-box"></i>电子巡航数据统计</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="electronicCruiseLevel">统计层级：</label>
+                                <select id="electronicCruiseLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshElectronicCruiseData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="electronic-cruise-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增无人机数据图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-drone icon-box"></i>无人机数据统计</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="uavDataLevel">统计层级：</label>
+                                <select id="uavDataLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshUavData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="uav-data-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增任务派发数据图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-tasks icon-box"></i>任务派发数据统计</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="taskDispatchLevel">统计层级：</label>
+                                <select id="taskDispatchLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshTaskDispatchData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="task-dispatch-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增锚泊申请率图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-anchor icon-box"></i>锚泊申请率统计</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <button id="refreshAnchorRateData" class="btn btn-primary">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="anchor-rate-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增港航一体化数据图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-ship icon-box"></i>港航一体化数据统计</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="portShippingLevel">统计层级：</label>
+                                <select id="portShippingLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshPortShippingData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="port-shipping-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增红码船数据图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-exclamation-triangle icon-box"></i>红码船数据统计</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="redCodeShipLevel">统计层级：</label>
+                                <select id="redCodeShipLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshRedCodeShipData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="red-code-ship-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
@@ -811,6 +968,21 @@
         var majorItemChart = echarts.init(document.getElementById('major-item-chart'));
         var inspectionTrendChart = echarts.init(document.getElementById('inspection-trend-chart'));
         var departmentChart = echarts.init(document.getElementById('department-chart'));
+        
+        // 初始化海巡艇巡航图表
+        var patrolBoatChart = echarts.init(document.getElementById('patrol-boat-chart'));
+        
+        // 初始化电子巡航和无人机数据图表
+        var electronicCruiseChart = echarts.init(document.getElementById('electronic-cruise-chart'));
+        var uavDataChart = echarts.init(document.getElementById('uav-data-chart'));
+        
+        // 初始化任务派发、锚泊申请率、港航一体化图表
+        var taskDispatchChart = echarts.init(document.getElementById('task-dispatch-chart'));
+        var anchorRateChart = echarts.init(document.getElementById('anchor-rate-chart'));
+        var portShippingChart = echarts.init(document.getElementById('port-shipping-chart'));
+        
+        // 初始化红码船数据图表
+        var redCodeShipChart = echarts.init(document.getElementById('red-code-ship-chart'));
 
         // 获取日期选择器和拉取数据按钮
         var startDateInput = $('#startDate');
@@ -829,6 +1001,21 @@
 
         // 初始化时加载部门列表
         loadDepartments();
+        
+        // 初始化海巡艇数据
+        fetchPatrolBoatData();
+        
+        // 初始化电子巡航数据和无人机数据
+        fetchElectronicCruiseData();
+        fetchUavData();
+        
+        // 初始化任务派发、锚泊申请率、港航一体化数据
+        fetchTaskDispatchData();
+        fetchAnchorRateData();
+        fetchPortShippingData();
+        
+        // 初始化红码船数据
+        fetchRedCodeShipData();
 
         // 日期改变事件
         startDateInput.on('change', function() {
@@ -879,6 +1066,21 @@
                 
                 // 同时更新高级图表
                 fetchAdvancedData();
+                
+                // 同时更新海巡艇数据
+                fetchPatrolBoatData();
+                
+                // 同时更新电子巡航数据和无人机数据
+                fetchElectronicCruiseData();
+                fetchUavData();
+                
+                // 同时更新任务派发、锚泊申请率、港航一体化数据
+                fetchTaskDispatchData();
+                fetchAnchorRateData();
+                fetchPortShippingData();
+                
+                // 同时更新红码船数据
+                fetchRedCodeShipData();
             });
         });
 
@@ -1786,7 +1988,7 @@
         }
         
         // 获取详细数据并显示弹框
-        function fetchDetailData(params, page) {
+        function fetchDetailData(params) {
             // 显示加载状态
             Swal.fire({
                 title: '数据加载中...',
@@ -1797,25 +1999,20 @@
                 }
             });
             
-            // 添加分页参数
-            var requestParams = Object.assign({}, params);
-            requestParams.page = page || 1;
-            requestParams.size = 20;
-            
             // 发送请求获取详细数据
             $.ajax({
                 url: '${ctx}/dynamic/dynamicEnforcementData/getMonthlyDetailRecords',
                 type: 'POST',
                 dataType: 'json',
-                data: requestParams,
+                data: params,
                 success: function(response) {
                     // 关闭加载提示
                     Swal.close();
                     
                     // 显示详细数据
-                    if (response && response.data && response.data.length > 0) {
+                    if (response && response.length > 0) {
                         console.log(response);
-                        showDetailDataModal(response, params);
+                        showDetailDataModal(response);
                     } else {
                         Swal.fire({
                             title: '无数据',
@@ -1838,7 +2035,7 @@
         }
         
         // 显示详细数据弹框
-        function showDetailDataModal(data, params) {
+        function showDetailDataModal(data) {
             // 构建表格HTML
             var tableHtml = '<div style="max-height: 500px; overflow-y: auto;">';
             tableHtml += '<table class="table table-bordered table-striped">';
@@ -1854,7 +2051,7 @@
             tableHtml += '<tbody>';
             
             // 添加数据行
-            data.data.forEach(function(item) {
+            data.forEach(function(item) {
                 tableHtml += '<tr>';
                 tableHtml += '<td>' + (item.inspectionUnit || '') + '</td>';
                 tableHtml += '<td>' + (item.inspectionTime || '') + '</td>';
@@ -1868,70 +2065,13 @@
             
             tableHtml += '</tbody></table></div>';
             
-            // 添加分页信息和控件
-            var paginationHtml = '<div class="row mt-3">';
-            paginationHtml += '<div class="col-md-6">';
-            paginationHtml += '<div class="text-left">';
-            paginationHtml += '<span class="text-muted">共 <strong>' + data.totalCount + '</strong> 条记录，';
-            paginationHtml += '当前第 <strong>' + data.currentPage + '</strong>/' + data.totalPages + ' 页</span>';
-            paginationHtml += '</div>';
-            paginationHtml += '</div>';
-            paginationHtml += '<div class="col-md-6">';
-            paginationHtml += '<div class="text-right">';
-            
-            // 上一页按钮
-            if (data.hasPrevious) {
-                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-primary mr-2" onclick="loadDetailPage(' + (data.currentPage - 1) + ')">上一页</button>';
-            } else {
-                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-secondary mr-2" disabled>上一页</button>';
-            }
-            
-            // 页码显示
-            var startPage = Math.max(1, data.currentPage - 2);
-            var endPage = Math.min(data.totalPages, data.currentPage + 2);
-            
-            for (var i = startPage; i <= endPage; i++) {
-                if (i === data.currentPage) {
-                    paginationHtml += '<button type="button" class="btn btn-sm btn-primary mr-1">' + i + '</button>';
-                } else {
-                    paginationHtml += '<button type="button" class="btn btn-sm btn-outline-primary mr-1" onclick="loadDetailPage(' + i + ')">' + i + '</button>';
-                }
-            }
-            
-            // 下一页按钮
-            if (data.hasNext) {
-                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-primary ml-2" onclick="loadDetailPage(' + (data.currentPage + 1) + ')">下一页</button>';
-            } else {
-                paginationHtml += '<button type="button" class="btn btn-sm btn-outline-secondary ml-2" disabled>下一页</button>';
-            }
-            
-            paginationHtml += '</div>';
-            paginationHtml += '</div>';
-            paginationHtml += '</div>';
-            
-            // 存储当前查询参数，供分页使用
-            window.currentDetailParams = params;
-            
             // 显示弹框
             Swal.fire({
                 title: '详细数据',
-                html: tableHtml + paginationHtml,
-                width: '1000px',
-                confirmButtonText: '关闭',
-                showClass: {
-                    popup: 'animate__animated animate__fadeInDown'
-                },
-                hideClass: {
-                    popup: 'animate__animated animate__fadeOutUp'
-                }
+                html: tableHtml,
+                width: '900px',
+                confirmButtonText: '关闭'
             });
-        }
-        
-        // 分页加载函数
-        function loadDetailPage(page) {
-            if (window.currentDetailParams) {
-                fetchDetailData(window.currentDetailParams, page);
-            }
         }
 
         // 获取环比率标签颜色
@@ -1949,6 +2089,13 @@
             majorItemChart.resize();
             inspectionTrendChart.resize();
             departmentChart.resize();
+            patrolBoatChart.resize();
+            electronicCruiseChart.resize();
+            uavDataChart.resize();
+            taskDispatchChart.resize();
+            anchorRateChart.resize();
+            portShippingChart.resize();
+            redCodeShipChart.resize();
         });
         
         // 高级筛选部分代码
@@ -2345,6 +2492,1082 @@
         
         // 初始化时获取高级图表数据
         fetchAdvancedData();
+        
+        // ========== 海巡艇巡航数据相关函数 ==========
+        
+        // 获取海巡艇巡航数据
+        function fetchPatrolBoatData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#patrolBoatLevel').val()
+            };
+            
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getPatrolBoatData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderPatrolBoatChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching patrol boat data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取海巡艇数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染海巡艇巡航图表
+        function renderPatrolBoatChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                patrolBoatChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+            
+            var organizations = data.organizations;
+            var cruiseHours = data.cruiseHours;
+            var cruiseCounts = data.cruiseCounts;
+            
+            var option = {
+                title: {
+                    text: '海巡艇巡航数据对比',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            var unit = item.seriesName.indexOf('巡航时间') >= 0 ? '小时' : '艘次';
+                            result += item.marker + item.seriesName + ': ' + item.value + unit + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['巡航时间', '巡航艘次'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: organizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '巡航时间(小时)',
+                        position: 'left',
+                        axisLabel: {
+                            formatter: '{value}h'
+                        }
+                    },
+                    {
+                        type: 'value',
+                        name: '巡航艘次',
+                        position: 'right',
+                        axisLabel: {
+                            formatter: '{value}艘次'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: '巡航时间',
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        data: cruiseHours,
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}h'
+                        }
+                    },
+                    {
+                        name: '巡航艘次',
+                        type: 'bar',
+                        yAxisIndex: 1,
+                        data: cruiseCounts,
+                        itemStyle: {
+                            color: '#91cc75'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}艘次'
+                        }
+                    }
+                ]
+            };
+            
+            patrolBoatChart.setOption(option, true);
+        }
+        
+        // 海巡艇数据刷新按钮事件
+        $('#refreshPatrolBoatData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+            
+            fetchPatrolBoatData();
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+        
+        // 海巡艇层级选择改变事件
+        $('#patrolBoatLevel').on('change', function() {
+            fetchPatrolBoatData();
+        });
+        
+        // ========== 电子巡航数据相关函数 ==========
+        
+        // 获取电子巡航数据
+        function fetchElectronicCruiseData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#electronicCruiseLevel').val()
+            };
+            
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getElectronicCruiseData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderElectronicCruiseChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching electronic cruise data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取电子巡航数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染电子巡航数据图表
+        function renderElectronicCruiseChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                electronicCruiseChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+            
+            var organizations = data.organizations;
+            var cruiseCounts = data.cruiseCounts;
+            
+            var option = {
+                title: {
+                    text: '电子巡航数据统计',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        result += params[0].marker + '电子巡航次数: ' + params[0].value + '次<br/>';
+                        return result;
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: organizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '电子巡航次数',
+                    axisLabel: {
+                        formatter: '{value}次'
+                    }
+                },
+                series: [
+                    {
+                        name: '电子巡航次数',
+                        type: 'bar',
+                        data: cruiseCounts,
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                {offset: 0, color: '#83bff6'},
+                                {offset: 0.5, color: '#188df0'},
+                                {offset: 1, color: '#0253a4'}
+                            ])
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}次'
+                        }
+                    }
+                ]
+            };
+            
+            electronicCruiseChart.setOption(option, true);
+        }
+        
+        // 电子巡航数据刷新按钮事件
+        $('#refreshElectronicCruiseData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+            
+            fetchElectronicCruiseData();
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+        
+        // 电子巡航层级选择改变事件
+        $('#electronicCruiseLevel').on('change', function() {
+            fetchElectronicCruiseData();
+        });
+        
+        // ========== 无人机数据相关函数 ==========
+        
+        // 获取无人机数据
+        function fetchUavData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#uavDataLevel').val()
+            };
+            
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getUavData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderUavDataChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching UAV data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取无人机数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染无人机数据图表
+        function renderUavDataChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                uavDataChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+            
+            var organizations = data.organizations;
+            var soldierCruiseCounts = data.soldierCruiseCounts;
+            var hangarCruiseCounts = data.hangarCruiseCounts;
+            var penaltyCounts = data.penaltyCounts;
+            
+            var option = {
+                title: {
+                    text: '无人机数据统计',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            var unit = '次';
+                            if (item.seriesName === '无人机处罚数量') {
+                                unit = '起';
+                            }
+                            result += item.marker + item.seriesName + ': ' + item.value + unit + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['单兵飞行航次', '无人机库飞行航次', '无人机处罚数量'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: organizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '数量'
+                },
+                series: [
+                    {
+                        name: '单兵飞行航次',
+                        type: 'bar',
+                        data: soldierCruiseCounts,
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}次'
+                        }
+                    },
+                    {
+                        name: '无人机库飞行航次',
+                        type: 'bar',
+                        data: hangarCruiseCounts,
+                        itemStyle: {
+                            color: '#91cc75'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}次'
+                        }
+                    },
+                    {
+                        name: '无人机处罚数量',
+                        type: 'bar',
+                        data: penaltyCounts,
+                        itemStyle: {
+                            color: '#fac858'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}起'
+                        }
+                    }
+                ]
+            };
+            
+            uavDataChart.setOption(option, true);
+        }
+        
+        // 无人机数据刷新按钮事件
+        $('#refreshUavData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+            
+            fetchUavData();
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+        
+        // 无人机数据层级选择改变事件
+        $('#uavDataLevel').on('change', function() {
+            fetchUavData();
+        });
+        
+        // ========== 任务派发数据相关函数 ==========
+        
+        // 获取任务派发数据
+        function fetchTaskDispatchData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#taskDispatchLevel').val()
+            };
+            
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getTaskDispatchData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderTaskDispatchChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching task dispatch data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取任务派发数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染任务派发数据图表
+        function renderTaskDispatchChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                taskDispatchChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+            
+            var organizations = data.organizations;
+            var dispatchedTaskCounts = data.dispatchedTaskCounts;
+            var cruiseTaskDispatchedCounts = data.cruiseTaskDispatchedCounts;
+            
+            var option = {
+                title: {
+                    text: '任务派发数据统计',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + item.seriesName + ': ' + item.value + '次<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['派发任务次数', '巡航任务派发次数'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: organizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '派发次数',
+                    axisLabel: {
+                        formatter: '{value}次'
+                    }
+                },
+                series: [
+                    {
+                        name: '派发任务次数',
+                        type: 'bar',
+                        data: dispatchedTaskCounts,
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}次'
+                        }
+                    },
+                    {
+                        name: '巡航任务派发次数',
+                        type: 'bar',
+                        data: cruiseTaskDispatchedCounts,
+                        itemStyle: {
+                            color: '#91cc75'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}次'
+                        }
+                    }
+                ]
+            };
+            
+            taskDispatchChart.setOption(option, true);
+        }
+        
+        // 任务派发数据刷新按钮事件
+        $('#refreshTaskDispatchData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+            
+            fetchTaskDispatchData();
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+        
+        // 任务派发层级选择改变事件
+        $('#taskDispatchLevel').on('change', function() {
+            fetchTaskDispatchData();
+        });
+        
+        // ========== 锚泊申请率相关函数 ==========
+        
+        // 获取锚泊申请率数据
+        function fetchAnchorRateData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val()
+            };
+            
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getAnchorRateData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderAnchorRateChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching anchor rate data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取锚泊申请率数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染锚泊申请率图表
+        function renderAnchorRateChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                anchorRateChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+            
+            var organizations = data.organizations;
+            var anchorRates = data.anchorRates;
+            
+            var option = {
+                title: {
+                    text: '锚泊申请率统计',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        result += params[0].marker + params[0].seriesName + ': ' + params[0].value + '%<br/>';
+                        return result;
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '10%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: organizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '申请率(%)',
+                    max: 100,
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: [
+                    {
+                        name: '锚泊申请率',
+                        type: 'bar',
+                        data: anchorRates,
+                        itemStyle: {
+                            color: '#fac858'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%'
+                        }
+                    }
+                ]
+            };
+            
+            anchorRateChart.setOption(option, true);
+        }
+        
+        // 锚泊申请率刷新按钮事件
+        $('#refreshAnchorRateData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+            
+            fetchAnchorRateData();
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+        
+        // ========== 港航一体化数据相关函数 ==========
+        
+        // 获取港航一体化数据
+        function fetchPortShippingData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#portShippingLevel').val()
+            };
+            
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getPortShippingData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderPortShippingChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching port shipping data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取港航一体化数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染港航一体化数据图表
+        function renderPortShippingChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                portShippingChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+            
+            var organizations = data.organizations;
+            var closureRates = data.closureRates;
+            var arrivalOpRates = data.arrivalOpRates;
+            
+            var option = {
+                title: {
+                    text: '港航一体化数据统计',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            result += item.marker + item.seriesName + ': ' + item.value + '%<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['闭环率', '到港作业率'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: organizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '比率(%)',
+                    max: 100,
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: [
+                    {
+                        name: '闭环率',
+                        type: 'bar',
+                        data: closureRates,
+                        itemStyle: {
+                            color: '#ee6666'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%'
+                        }
+                    },
+                    {
+                        name: '到港作业率',
+                        type: 'bar',
+                        data: arrivalOpRates,
+                        itemStyle: {
+                            color: '#73c0de'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%'
+                        }
+                    }
+                ]
+            };
+            
+            portShippingChart.setOption(option, true);
+        }
+        
+        // 港航一体化数据刷新按钮事件
+        $('#refreshPortShippingData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+            
+            fetchPortShippingData();
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+        
+        // 港航一体化层级选择改变事件
+        $('#portShippingLevel').on('change', function() {
+            fetchPortShippingData();
+        });
+        
+        // ========== 红码船数据相关函数 ==========
+        
+        // 获取红码船数据
+        function fetchRedCodeShipData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#redCodeShipLevel').val()
+            };
+            
+            $.ajax({
+                url: '${ctx}/dynamic/dynamicEnforcementData/getRedCodeShipData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderRedCodeShipChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching red code ship data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取红码船数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+        
+        // 渲染红码船数据图表
+        function renderRedCodeShipChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                redCodeShipChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+            
+            var organizations = data.organizations;
+            var disposalRates = data.disposalRates;
+            var onboardInspectionCounts = data.onboardInspectionCounts;
+            var remoteVerificationCounts = data.remoteVerificationCounts;
+            var onboardInspectionRatios = data.onboardInspectionRatios;
+            
+            var option = {
+                title: {
+                    text: '红码船数据统计',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            var unit = '';
+                            if (item.seriesName.indexOf('率') >= 0) {
+                                unit = '%';
+                            } else if (item.seriesName.indexOf('数') >= 0) {
+                                unit = '次';
+                            }
+                            result += item.marker + item.seriesName + ': ' + item.value + unit + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['红码船处置率', '红码船登轮检查率', '红码船登轮检查数', '红码船远程核查数'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: organizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '数量(次)',
+                        position: 'left',
+                        axisLabel: {
+                            formatter: '{value}次'
+                        }
+                    },
+                    {
+                        type: 'value',
+                        name: '比率(%)',
+                        position: 'right',
+                        max: 100,
+                        axisLabel: {
+                            formatter: '{value}%'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: '红码船登轮检查数',
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        data: onboardInspectionCounts,
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}次'
+                        }
+                    },
+                    {
+                        name: '红码船远程核查数',
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        data: remoteVerificationCounts,
+                        itemStyle: {
+                            color: '#91cc75'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}次'
+                        }
+                    },
+                    {
+                        name: '红码船处置率',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: disposalRates,
+                        lineStyle: {
+                            color: '#ee6666',
+                            width: 3
+                        },
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%',
+                            color: '#ee6666'
+                        }
+                    },
+                    {
+                        name: '红码船登轮检查率',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: onboardInspectionRatios,
+                        lineStyle: {
+                            color: '#fac858',
+                            width: 3
+                        },
+                        symbol: 'diamond',
+                        symbolSize: 8,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%',
+                            color: '#fac858'
+                        }
+                    }
+                ]
+            };
+            
+            redCodeShipChart.setOption(option, true);
+        }
+        
+        // 红码船数据刷新按钮事件
+        $('#refreshRedCodeShipData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+            
+            fetchRedCodeShipData();
+            
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+        
+        // 红码船层级选择改变事件
+        $('#redCodeShipLevel').on('change', function() {
+            fetchRedCodeShipData();
+        });
     });
 </script>
 </body>
