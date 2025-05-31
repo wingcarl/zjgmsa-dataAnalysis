@@ -1921,4 +1921,167 @@ public class DynamicEnforcementDataController extends BaseController {
 		
 		return result;
 	}
+	
+	/**
+	 * 获取图表描述
+	 */
+	@RequestMapping(value = "getChartDescription")
+	@ResponseBody
+	public Map<String, Object> getChartDescription(String chartId) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			String sql = "SELECT chart_name, description FROM chart_description WHERE chart_id = ? AND del_flag = '0'";
+			List<Map<String, Object>> data = jdbcTemplate.queryForList(sql, chartId);
+			
+			if (data != null && !data.isEmpty()) {
+				Map<String, Object> chartInfo = data.get(0);
+				result.put("success", true);
+				result.put("chartName", chartInfo.get("chart_name"));
+				result.put("description", chartInfo.get("description") != null ? chartInfo.get("description") : "");
+			} else {
+				// 如果没有找到记录，自动创建一条新记录
+				String chartName = getChartNameByChartId(chartId);
+				String defaultDescription = getDefaultDescriptionByChartId(chartId);
+				
+				// 插入新记录
+				String insertSql = "INSERT INTO chart_description (id, chart_id, chart_name, description, create_date, update_date, del_flag) VALUES (UUID(), ?, ?, ?, NOW(), NOW(), '0')";
+				int inserted = jdbcTemplate.update(insertSql, chartId, chartName, defaultDescription);
+				
+				if (inserted > 0) {
+					result.put("success", true);
+					result.put("chartName", chartName);
+					result.put("description", defaultDescription);
+					result.put("message", "图表记录已自动创建");
+				} else {
+					result.put("success", false);
+					result.put("message", "自动创建图表记录失败");
+				}
+			}
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", "获取图表描述失败：" + e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 保存图表描述
+	 */
+	@RequestMapping(value = "saveChartDescription")
+	@ResponseBody
+	public Map<String, Object> saveChartDescription(String chartId, String description) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 先检查记录是否存在
+			String checkSql = "SELECT COUNT(*) FROM chart_description WHERE chart_id = ? AND del_flag = '0'";
+			int count = jdbcTemplate.queryForObject(checkSql, Integer.class, chartId);
+			
+			if (count > 0) {
+				// 更新现有记录
+				String updateSql = "UPDATE chart_description SET description = ?, update_date = NOW() WHERE chart_id = ? AND del_flag = '0'";
+				int updated = jdbcTemplate.update(updateSql, description, chartId);
+				
+				if (updated > 0) {
+					result.put("success", true);
+					result.put("message", "图表描述更新成功");
+				} else {
+					result.put("success", false);
+					result.put("message", "图表描述更新失败");
+				}
+			} else {
+				// 如果记录不存在，自动创建新记录
+				String chartName = getChartNameByChartId(chartId);
+				String insertSql = "INSERT INTO chart_description (id, chart_id, chart_name, description, create_date, update_date, del_flag) VALUES (UUID(), ?, ?, ?, NOW(), NOW(), '0')";
+				int inserted = jdbcTemplate.update(insertSql, chartId, chartName, description);
+				
+				if (inserted > 0) {
+					result.put("success", true);
+					result.put("message", "图表记录已自动创建并保存描述");
+				} else {
+					result.put("success", false);
+					result.put("message", "自动创建图表记录失败");
+				}
+			}
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", "保存图表描述失败：" + e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 根据图表ID获取图表名称
+	 */
+	private String getChartNameByChartId(String chartId) {
+		switch (chartId) {
+			case "field-patrol-chart":
+				return "现场巡航统计";
+			case "electronic-patrol-chart":
+				return "电子巡航统计";
+			case "drone-patrol-chart":
+				return "无人机巡航统计";
+			case "major-item-chart":
+				return "检查项目分布";
+			case "inspection-trend-chart":
+				return "检查数量趋势";
+			case "department-chart":
+				return "各部门检查统计";
+			case "patrol-boat-chart":
+				return "海巡艇巡航数据对比";
+			case "electronic-cruise-chart":
+				return "电子巡航数据统计";
+			case "uav-data-chart":
+				return "无人机数据统计";
+			case "task-dispatch-chart":
+				return "任务派发数据统计";
+			case "anchor-rate-chart":
+				return "锚泊申请率统计";
+			case "port-shipping-chart":
+				return "港航一体化数据统计";
+			case "red-code-ship-chart":
+				return "红码船数据统计";
+			default:
+				return "未知图表";
+		}
+	}
+	
+	/**
+	 * 根据图表ID获取默认描述
+	 */
+	private String getDefaultDescriptionByChartId(String chartId) {
+		switch (chartId) {
+			case "field-patrol-chart":
+				return "现场巡航数据统计，包括发现异常数量和立案调查数量的对比分析。";
+			case "electronic-patrol-chart":
+				return "电子巡航数据统计，显示各部门电子巡航发现异常和立案调查的情况。";
+			case "drone-patrol-chart":
+				return "无人机巡航数据统计，展示无人机巡航发现异常和立案调查的数据分析。";
+			case "major-item-chart":
+				return "检查项目分布图，按检查项目统计各类型检查的数量分布情况。";
+			case "inspection-trend-chart":
+				return "检查数量趋势图，显示按日、周、月、季度的检查数量变化趋势。";
+			case "department-chart":
+				return "各部门检查统计饼图，展示各部门的检查数量占比分布。";
+			case "patrol-boat-chart":
+				return "海巡艇巡航数据对比图，包括巡航时间和巡航艘次的统计对比。";
+			case "electronic-cruise-chart":
+				return "电子巡航数据统计图，显示各组织单位的电子巡航次数统计。";
+			case "uav-data-chart":
+				return "无人机数据统计图，包括单兵飞行航次、无人机库飞行航次和处罚数量。";
+			case "task-dispatch-chart":
+				return "任务派发数据统计图，显示派发任务次数和巡航任务派发次数。";
+			case "anchor-rate-chart":
+				return "锚泊申请率统计图，展示各组织的锚泊申请率数据。";
+			case "port-shipping-chart":
+				return "港航一体化数据统计图，包括闭环率和到港作业率的统计分析。";
+			case "red-code-ship-chart":
+				return "红码船数据统计图，显示红码船处置率、登轮检查率和相关数量统计。";
+			default:
+				return "图表数据统计分析。";
+		}
+	}
 }

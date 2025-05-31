@@ -58,6 +58,8 @@
             background-color: var(--card-bg);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 15px;
+            position: relative;
+            overflow: visible;
         }
 
         .data-card {
@@ -459,6 +461,158 @@
         .has-success {
             border: 1px solid #3c763d;
         }
+        
+        /* 图表全屏按钮样式 */
+        .chart-fullscreen-btn {
+            position: absolute !important;
+            top: 15px !important;
+            right: 15px !important;
+            z-index: 9999 !important;
+            background-color: rgba(4, 102, 200, 0.9) !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 8px !important;
+            padding: 10px 15px !important;
+            color: white !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        .chart-fullscreen-btn:hover {
+            background-color: var(--accent-color) !important;
+            color: white !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        /* 全屏模态框样式 */
+        .fullscreen-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .fullscreen-modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 20px;
+            padding: 0;
+            height: calc(100vh - 40px);
+            border-radius: 8px;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .fullscreen-chart-area {
+            flex: 1;
+            min-width: 60%;
+            position: relative;
+            background-color: #fff;
+        }
+        
+        .fullscreen-chart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .fullscreen-description-area {
+            width: 400px;
+            min-width: 300px;
+            background-color: #f8f9fa;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .description-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .description-header h4 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .description-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .description-textarea {
+            flex: 1;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 18px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .description-textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(4, 102, 200, 0.3);
+        }
+        
+        .description-actions {
+            margin-top: 15px;
+            text-align: right;
+        }
+        
+        .close-fullscreen {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .close-fullscreen:hover {
+            color: #000;
+        }
+        
+        .save-description-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .save-description-btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+        
+        .save-description-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
     <!-- jQuery 和 ECharts -->
     <!-- jQuery 和 ECharts -->
@@ -597,8 +751,12 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-ship icon-box"></i>现场巡航统计</h5>
         <div class="row">
-            <div class="col-md-12">
-                <div id="field-patrol-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('field-patrol-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="field-patrol-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -606,8 +764,12 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-desktop icon-box"></i>电子巡航统计</h5>
         <div class="row">
-            <div class="col-md-12">
-                <div id="electronic-patrol-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('electronic-patrol-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="electronic-patrol-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -615,8 +777,12 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-drone icon-box"></i>无人机巡航统计</h5>
         <div class="row">
-            <div class="col-md-12">
-                <div id="drone-patrol-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('drone-patrol-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="drone-patrol-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -699,8 +865,12 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>检查项目分布</h5>
         <div class="row">
-            <div class="col-md-12">
-                <div id="major-item-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('major-item-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="major-item-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -718,8 +888,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="inspection-trend-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('inspection-trend-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="inspection-trend-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -727,8 +901,12 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-building icon-box"></i>各部门检查统计</h5>
         <div class="row">
-            <div class="col-md-12">
-                <div id="department-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('department-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="department-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -759,8 +937,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="patrol-boat-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('patrol-boat-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="patrol-boat-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -791,8 +973,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="electronic-cruise-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('electronic-cruise-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="electronic-cruise-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -823,8 +1009,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="uav-data-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('uav-data-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="uav-data-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -855,8 +1045,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="task-dispatch-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('task-dispatch-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="task-dispatch-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -878,8 +1072,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="anchor-rate-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('anchor-rate-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="anchor-rate-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -910,8 +1108,12 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="port-shipping-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('port-shipping-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="port-shipping-chart" class="chart-container">
+                </div>
             </div>
         </div>
     </div>
@@ -942,8 +1144,35 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <div id="red-code-ship-chart" class="chart-container"></div>
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('red-code-ship-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="red-code-ship-chart" class="chart-container">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 全屏模态框 -->
+<div id="fullscreen-modal" class="fullscreen-modal">
+    <div class="fullscreen-modal-content">
+        <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
+        <div class="fullscreen-chart-area">
+            <div id="fullscreen-chart" class="fullscreen-chart"></div>
+        </div>
+        <div class="fullscreen-description-area">
+            <div class="description-header">
+                <h4 id="fullscreen-chart-title">图表描述</h4>
+            </div>
+            <div class="description-content">
+                <textarea id="chart-description-textarea" class="description-textarea" placeholder="请输入图表描述信息..."></textarea>
+                <div class="description-actions">
+                    <button id="save-description-btn" class="save-description-btn" onclick="saveChartDescription()">
+                        <i class="fas fa-save"></i> 保存描述
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -3568,6 +3797,198 @@
         $('#redCodeShipLevel').on('change', function() {
             fetchRedCodeShipData();
         });
+    });
+    
+    // ========== 全屏功能相关函数 ==========
+    
+    // 存储当前全屏显示的图表信息
+    var currentFullscreenChart = null;
+    var fullscreenChartInstance = null;
+    
+    // 打开全屏显示
+    function openFullscreen(chartId) {
+        currentFullscreenChart = chartId;
+        
+        // 获取原图表实例的配置
+        var originalChart = getChartInstance(chartId);
+        if (!originalChart) {
+            console.error('找不到图表实例：' + chartId);
+            return;
+        }
+        
+        // 显示模态框
+        $('#fullscreen-modal').show();
+        
+        // 创建全屏图表实例
+        setTimeout(function() {
+            if (fullscreenChartInstance) {
+                fullscreenChartInstance.dispose();
+            }
+            fullscreenChartInstance = echarts.init(document.getElementById('fullscreen-chart'));
+            
+            // 复制原图表的配置
+            var option = originalChart.getOption();
+            fullscreenChartInstance.setOption(option, true);
+            
+            // 加载图表描述
+            loadChartDescription(chartId);
+        }, 100);
+        
+        // 禁用背景滚动
+        $('body').css('overflow', 'hidden');
+    }
+    
+    // 关闭全屏显示
+    function closeFullscreen() {
+        $('#fullscreen-modal').hide();
+        
+        if (fullscreenChartInstance) {
+            fullscreenChartInstance.dispose();
+            fullscreenChartInstance = null;
+        }
+        
+        currentFullscreenChart = null;
+        
+        // 恢复背景滚动
+        $('body').css('overflow', 'auto');
+    }
+    
+    // 获取图表实例
+    function getChartInstance(chartId) {
+        switch(chartId) {
+            case 'field-patrol-chart':
+                return echarts.getInstanceByDom(document.getElementById('field-patrol-chart'));
+            case 'electronic-patrol-chart':
+                return echarts.getInstanceByDom(document.getElementById('electronic-patrol-chart'));
+            case 'drone-patrol-chart':
+                return echarts.getInstanceByDom(document.getElementById('drone-patrol-chart'));
+            case 'major-item-chart':
+                return echarts.getInstanceByDom(document.getElementById('major-item-chart'));
+            case 'inspection-trend-chart':
+                return echarts.getInstanceByDom(document.getElementById('inspection-trend-chart'));
+            case 'department-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-chart'));
+            case 'patrol-boat-chart':
+                return echarts.getInstanceByDom(document.getElementById('patrol-boat-chart'));
+            case 'electronic-cruise-chart':
+                return echarts.getInstanceByDom(document.getElementById('electronic-cruise-chart'));
+            case 'uav-data-chart':
+                return echarts.getInstanceByDom(document.getElementById('uav-data-chart'));
+            case 'task-dispatch-chart':
+                return echarts.getInstanceByDom(document.getElementById('task-dispatch-chart'));
+            case 'anchor-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('anchor-rate-chart'));
+            case 'port-shipping-chart':
+                return echarts.getInstanceByDom(document.getElementById('port-shipping-chart'));
+            case 'red-code-ship-chart':
+                return echarts.getInstanceByDom(document.getElementById('red-code-ship-chart'));
+            default:
+                return null;
+        }
+    }
+    
+    // 加载图表描述
+    function loadChartDescription(chartId) {
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/getChartDescription',
+            type: 'GET',
+            data: { chartId: chartId },
+            success: function(response) {
+                if (response.success) {
+                    $('#fullscreen-chart-title').text(response.chartName || '图表描述');
+                    $('#chart-description-textarea').val(response.description || '');
+                } else {
+                    console.error('获取图表描述失败：' + response.message);
+                    $('#fullscreen-chart-title').text('图表描述');
+                    $('#chart-description-textarea').val('');
+                }
+            },
+            error: function(error) {
+                console.error('获取图表描述出错：', error);
+                $('#fullscreen-chart-title').text('图表描述');
+                $('#chart-description-textarea').val('');
+            }
+        });
+    }
+    
+    // 保存图表描述
+    function saveChartDescription() {
+        if (!currentFullscreenChart) {
+            Swal.fire({
+                title: '错误',
+                text: '无法确定当前图表',
+                icon: 'error',
+                confirmButtonText: '确定'
+            });
+            return;
+        }
+        
+        var description = $('#chart-description-textarea').val();
+        var saveBtn = $('#save-description-btn');
+        
+        // 禁用按钮，显示加载状态
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
+        
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/saveChartDescription',
+            type: 'POST',
+            data: {
+                chartId: currentFullscreenChart,
+                description: description
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: '成功',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: '确定',
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        title: '保存失败',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            },
+            error: function(error) {
+                console.error('保存图表描述出错：', error);
+                Swal.fire({
+                    title: '保存失败',
+                    text: '网络请求失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            },
+            complete: function() {
+                // 恢复按钮状态
+                saveBtn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存描述');
+            }
+        });
+    }
+    
+    // 监听ESC键关闭全屏
+    $(document).on('keydown', function(event) {
+        if (event.key === 'Escape' && $('#fullscreen-modal').is(':visible')) {
+            closeFullscreen();
+        }
+    });
+    
+    // 点击模态框背景关闭全屏
+    $('#fullscreen-modal').on('click', function(event) {
+        if (event.target === this) {
+            closeFullscreen();
+        }
+    });
+    
+    // 窗口大小变化时调整全屏图表大小
+    $(window).on('resize', function() {
+        if (fullscreenChartInstance) {
+            fullscreenChartInstance.resize();
+        }
     });
 </script>
 </body>

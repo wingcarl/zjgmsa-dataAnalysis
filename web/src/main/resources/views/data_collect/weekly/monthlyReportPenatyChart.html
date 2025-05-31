@@ -58,6 +58,159 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 15px;
             position: relative;
+            overflow: visible;
+        }
+
+        /* 图表全屏按钮样式 */
+        .chart-fullscreen-btn {
+            position: absolute !important;
+            top: 15px !important;
+            right: 15px !important;
+            z-index: 9999 !important;
+            background-color: rgba(4, 102, 200, 0.9) !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 8px !important;
+            padding: 10px 15px !important;
+            color: white !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        .chart-fullscreen-btn:hover {
+            background-color: var(--accent-color) !important;
+            color: white !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        /* 全屏模态框样式 */
+        .fullscreen-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .fullscreen-modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 20px;
+            padding: 0;
+            height: calc(100vh - 40px);
+            border-radius: 8px;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .fullscreen-chart-area {
+            flex: 1;
+            min-width: 60%;
+            position: relative;
+            background-color: #fff;
+        }
+        
+        .fullscreen-chart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .fullscreen-description-area {
+            width: 400px;
+            min-width: 300px;
+            background-color: #f8f9fa;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .description-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .description-header h4 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .description-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .description-textarea {
+            flex: 1;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 18px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .description-textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(4, 102, 200, 0.3);
+        }
+        
+        .description-actions {
+            margin-top: 15px;
+            text-align: right;
+        }
+        
+        .close-fullscreen {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .close-fullscreen:hover {
+            color: #000;
+        }
+        
+        .save-description-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .save-description-btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+        
+        .save-description-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .data-card {
@@ -800,11 +953,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各部门处罚决定数量</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('punish-agency-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="punish-agency-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('punish-agency-chart', '各部门处罚决定数量')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -814,11 +967,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各部门处罚金额</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('penalty-amount-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="penalty-amount-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('penalty-amount-chart', '各部门处罚金额')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -828,11 +981,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-line icon-box"></i>各部门平均处罚金额</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('average-penalty-amount-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="average-penalty-amount-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('average-penalty-amount-chart', '各部门平均处罚金额')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -842,11 +995,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-column icon-box"></i>各部门重点违法行为占比</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('key-violation-ratio-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="key-violation-ratio-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('key-violation-ratio-chart', '各部门重点违法行为占比')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -856,11 +1009,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>处罚案由对比</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('case-reason-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="case-reason-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('case-reason-chart', '处罚案由对比')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -870,11 +1023,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>处罚类别对比</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('management-category-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="management-category-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('management-category-chart', '处罚类别对比')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -884,11 +1037,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>违法情节统计</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('violation-circumstances-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="violation-circumstances-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('violation-circumstances-chart', '违法情节统计')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -898,11 +1051,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>当事人类型统计</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('party-type-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="party-type-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('party-type-chart', '当事人类型统计')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -912,11 +1065,11 @@
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>船籍港处罚数量统计</h5>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('port-registry-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
                 <div id="port-registry-chart" class="chart-container">
-                    <button class="chart-expand-btn" onclick="expandChart('port-registry-chart', '船籍港处罚数量统计')" title="放大图表">
-                        <i class="fas fa-expand-alt"></i>
-                    </button>
                 </div>
             </div>
         </div>
@@ -970,6 +1123,29 @@
             </div>
             <div class="chart-modal-body">
                 <div id="chartModalChart" class="chart-modal-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全屏模态框 -->
+    <div id="fullscreen-modal" class="fullscreen-modal">
+        <div class="fullscreen-modal-content">
+            <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
+            <div class="fullscreen-chart-area">
+                <div id="fullscreen-chart" class="fullscreen-chart"></div>
+            </div>
+            <div class="fullscreen-description-area">
+                <div class="description-header">
+                    <h4 id="fullscreen-chart-title">图表描述</h4>
+                </div>
+                <div class="description-content">
+                    <textarea id="chart-description-textarea" class="description-textarea" placeholder="请输入图表描述信息..."></textarea>
+                    <div class="description-actions">
+                        <button id="save-description-btn" class="save-description-btn" onclick="saveChartDescription()">
+                            <i class="fas fa-save"></i> 保存描述
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -3083,6 +3259,190 @@
     window.addEventListener('resize', function() {
         if (modalChart) {
             modalChart.resize();
+        }
+    });
+
+    // ========== 全屏功能相关函数 ==========
+    
+    // 存储当前全屏显示的图表信息
+    var currentFullscreenChart = null;
+    var fullscreenChartInstance = null;
+    
+    // 打开全屏显示
+    function openFullscreen(chartId) {
+        currentFullscreenChart = chartId;
+        
+        // 获取原图表实例的配置
+        var originalChart = getChartInstance(chartId);
+        if (!originalChart) {
+            console.error('找不到图表实例：' + chartId);
+            return;
+        }
+        
+        // 显示模态框
+        $('#fullscreen-modal').show();
+        
+        // 创建全屏图表实例
+        setTimeout(function() {
+            if (fullscreenChartInstance) {
+                fullscreenChartInstance.dispose();
+            }
+            fullscreenChartInstance = echarts.init(document.getElementById('fullscreen-chart'));
+            
+            // 复制原图表的配置
+            var option = originalChart.getOption();
+            fullscreenChartInstance.setOption(option, true);
+            
+            // 加载图表描述
+            loadChartDescription(chartId);
+        }, 100);
+        
+        // 禁用背景滚动
+        $('body').css('overflow', 'hidden');
+    }
+    
+    // 关闭全屏显示
+    function closeFullscreen() {
+        $('#fullscreen-modal').hide();
+        
+        if (fullscreenChartInstance) {
+            fullscreenChartInstance.dispose();
+            fullscreenChartInstance = null;
+        }
+        
+        currentFullscreenChart = null;
+        
+        // 恢复背景滚动
+        $('body').css('overflow', 'auto');
+    }
+    
+    // 获取图表实例
+    function getChartInstance(chartId) {
+        switch(chartId) {
+            case 'punish-agency-chart':
+                return echarts.getInstanceByDom(document.getElementById('punish-agency-chart'));
+            case 'penalty-amount-chart':
+                return echarts.getInstanceByDom(document.getElementById('penalty-amount-chart'));
+            case 'average-penalty-amount-chart':
+                return echarts.getInstanceByDom(document.getElementById('average-penalty-amount-chart'));
+            case 'key-violation-ratio-chart':
+                return echarts.getInstanceByDom(document.getElementById('key-violation-ratio-chart'));
+            case 'case-reason-chart':
+                return echarts.getInstanceByDom(document.getElementById('case-reason-chart'));
+            case 'management-category-chart':
+                return echarts.getInstanceByDom(document.getElementById('management-category-chart'));
+            case 'violation-circumstances-chart':
+                return echarts.getInstanceByDom(document.getElementById('violation-circumstances-chart'));
+            case 'party-type-chart':
+                return echarts.getInstanceByDom(document.getElementById('party-type-chart'));
+            case 'port-registry-chart':
+                return echarts.getInstanceByDom(document.getElementById('port-registry-chart'));
+            default:
+                return null;
+        }
+    }
+    
+    // 加载图表描述
+    function loadChartDescription(chartId) {
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/getChartDescription',
+            type: 'GET',
+            data: { chartId: chartId },
+            success: function(response) {
+                if (response.success) {
+                    $('#fullscreen-chart-title').text(response.chartName || '图表描述');
+                    $('#chart-description-textarea').val(response.description || '');
+                } else {
+                    console.error('获取图表描述失败：' + response.message);
+                    $('#fullscreen-chart-title').text('图表描述');
+                    $('#chart-description-textarea').val('');
+                }
+            },
+            error: function(error) {
+                console.error('获取图表描述出错：', error);
+                $('#fullscreen-chart-title').text('图表描述');
+                $('#chart-description-textarea').val('');
+            }
+        });
+    }
+    
+    // 保存图表描述
+    function saveChartDescription() {
+        if (!currentFullscreenChart) {
+            Swal.fire({
+                title: '错误',
+                text: '无法确定当前图表',
+                icon: 'error',
+                confirmButtonText: '确定'
+            });
+            return;
+        }
+        
+        var description = $('#chart-description-textarea').val();
+        var saveBtn = $('#save-description-btn');
+        
+        // 禁用按钮，显示加载状态
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
+        
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/saveChartDescription',
+            type: 'POST',
+            data: {
+                chartId: currentFullscreenChart,
+                description: description
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: '成功',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: '确定',
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        title: '保存失败',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            },
+            error: function(error) {
+                console.error('保存图表描述出错：', error);
+                Swal.fire({
+                    title: '保存失败',
+                    text: '网络请求失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            },
+            complete: function() {
+                // 恢复按钮状态
+                saveBtn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存描述');
+            }
+        });
+    }
+    
+    // 监听ESC键关闭全屏
+    $(document).on('keydown', function(event) {
+        if (event.key === 'Escape' && $('#fullscreen-modal').is(':visible')) {
+            closeFullscreen();
+        }
+    });
+    
+    // 点击模态框背景关闭全屏
+    $('#fullscreen-modal').on('click', function(event) {
+        if (event.target === this) {
+            closeFullscreen();
+        }
+    });
+    
+    // 窗口大小变化时调整全屏图表大小
+    $(window).on('resize', function() {
+        if (fullscreenChartInstance) {
+            fullscreenChartInstance.resize();
         }
     });
 </script>
