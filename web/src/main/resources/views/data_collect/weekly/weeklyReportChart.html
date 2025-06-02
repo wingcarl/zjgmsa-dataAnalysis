@@ -411,6 +411,199 @@
                 margin: 10px 0;
             }
         }
+
+        /* 增加Select2选择框宽度 */
+        .select2-container {
+            width: 100% !important;
+        }
+        
+        /* 增加下拉选项的最大宽度 */
+        .select2-dropdown {
+            min-width: 400px !important;
+        }
+        
+        /* 确保选项文本完整显示 */
+        .select2-results__option {
+            white-space: normal;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+        
+        /* 增加选中项目的显示宽度 */
+        .select2-selection__rendered {
+            max-width: 100%;
+            white-space: normal !important;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+        
+        /* 为高亮效果添加的样式 */
+        .form-group {
+            transition: background-color 0.5s ease;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        .has-success {
+            border: 1px solid #3c763d;
+        }
+        
+        /* 图表全屏按钮样式 */
+        .chart-fullscreen-btn {
+            position: absolute !important;
+            top: 15px !important;
+            right: 15px !important;
+            z-index: 9999 !important;
+            background-color: rgba(4, 102, 200, 0.9) !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 8px !important;
+            padding: 10px 15px !important;
+            color: white !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: bold !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        .chart-fullscreen-btn:hover {
+            background-color: var(--accent-color) !important;
+            color: white !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        /* 全屏模态框样式 */
+        .fullscreen-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .fullscreen-modal-content {
+            position: relative;
+            background-color: #fff;
+            margin: 20px;
+            padding: 0;
+            height: calc(100vh - 40px);
+            border-radius: 8px;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .fullscreen-chart-area {
+            flex: 1;
+            min-width: 60%;
+            position: relative;
+            background-color: #fff;
+        }
+        
+        .fullscreen-chart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .fullscreen-description-area {
+            width: 400px;
+            min-width: 300px;
+            background-color: #f8f9fa;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .description-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .description-header h4 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .description-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .description-textarea {
+            flex: 1;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 18px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .description-textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(4, 102, 200, 0.3);
+        }
+        
+        .description-actions {
+            margin-top: 15px;
+            text-align: right;
+        }
+        
+        .close-fullscreen {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .close-fullscreen:hover {
+            color: #000;
+        }
+        
+        .save-description-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .save-description-btn:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+        
+        .save-description-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .chart-container {
+            position: relative;
+            overflow: visible;
+        }
     </style>
     <!-- jQuery 和 ECharts -->
     <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
@@ -455,6 +648,9 @@
                             <button type="button" id="fetchDataButton" class="btn btn-primary ml-3">
             <i class="fas fa-sync-alt"></i> 拉取数据
         </button>
+                            <button type="button" id="testPeriodButton" class="btn btn-info ml-2" title="测试时间段计算">
+                                <i class="fas fa-calendar-check"></i> 查看时间段
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -732,7 +928,10 @@
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>各部门海船安检情况</h5>
             </div>
-                <div class="card-body">
+                <div class="card-body" style="position: relative;">
+                    <button class="chart-fullscreen-btn" onclick="openFullscreen('weekly-department-sea-ship-chart')">
+                        <i class="fas fa-expand"></i> 全屏
+                    </button>
                     <div id="department-sea-ship-chart" class="chart-container"></div>
             </div>
             </div>
@@ -742,7 +941,10 @@
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>各部门内河船安检情况</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="position: relative;">
+                    <button class="chart-fullscreen-btn" onclick="openFullscreen('weekly-department-river-ship-chart')">
+                        <i class="fas fa-expand"></i> 全屏
+                    </button>
                     <div id="department-river-ship-chart" class="chart-container"></div>
                 </div>
             </div>
@@ -755,7 +957,10 @@
                 <div class="card-header bg-warning text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>各部门船舶现场监督情况</h5>
             </div>
-                <div class="card-body">
+                <div class="card-body" style="position: relative;">
+                    <button class="chart-fullscreen-btn" onclick="openFullscreen('weekly-department-onsite-chart')">
+                        <i class="fas fa-expand"></i> 全屏
+                    </button>
                     <div id="department-onsite-chart" class="chart-container"></div>
             </div>
             </div>
@@ -769,7 +974,10 @@
                 <div class="card-header bg-danger text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>各部门海船安检单船缺陷数量</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="position: relative;">
+                    <button class="chart-fullscreen-btn" onclick="openFullscreen('weekly-department-sea-ship-defect-rate-chart')">
+                        <i class="fas fa-expand"></i> 全屏
+                    </button>
                     <div id="department-sea-ship-defect-rate-chart" class="chart-container"></div>
                 </div>
             </div>
@@ -779,8 +987,34 @@
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>各部门内河船安检单船缺陷数量</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="position: relative;">
+                    <button class="chart-fullscreen-btn" onclick="openFullscreen('weekly-department-river-ship-defect-rate-chart')">
+                        <i class="fas fa-expand"></i> 全屏
+                    </button>
                     <div id="department-river-ship-defect-rate-chart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 全屏模态框 -->
+<div id="fullscreen-modal" class="fullscreen-modal">
+    <div class="fullscreen-modal-content">
+        <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
+        <div class="fullscreen-chart-area">
+            <div id="fullscreen-chart" class="fullscreen-chart"></div>
+        </div>
+        <div class="fullscreen-description-area">
+            <div class="description-header">
+                <h4 id="fullscreen-chart-title">图表描述</h4>
+            </div>
+            <div class="description-content">
+                <textarea id="chart-description-textarea" class="description-textarea" placeholder="请输入图表描述信息..."></textarea>
+                <div class="description-actions">
+                    <button id="save-description-btn" class="save-description-btn" onclick="saveChartDescription()">
+                        <i class="fas fa-save"></i> 保存描述
+                    </button>
                 </div>
             </div>
         </div>
@@ -869,6 +1103,48 @@
                 $(this).prop('disabled', false);
             });
         });
+        
+        // 测试时间段按钮点击事件
+        $('#testPeriodButton').on('click', function() {
+            var params = getQueryParams();
+            var currentPeriodText = "本期：" + params.startDate + " 至 " + params.endDate;
+            var prevPeriodText = "上期：" + params.prevStartDate + " 至 " + params.prevEndDate;
+            
+            // 计算天数
+            var currentDays = calculateDaysBetween(params.startDate, params.endDate);
+            var prevDays = calculateDaysBetween(params.prevStartDate, params.prevEndDate);
+            
+            // 判断时间跨度是否一致
+            var isConsistent = currentDays === prevDays;
+            var statusColor = isConsistent ? '#28a745' : '#dc3545';
+            var statusText = isConsistent ? '✓ 时间跨度一致' : '✗ 时间跨度不一致';
+            
+            Swal.fire({
+                title: '时间段计算结果',
+                html: '<div style="text-align: left; font-size: 16px;">' +
+                      '<p><strong>' + currentPeriodText + '</strong></p>' +
+                      '<p style="color: #666;">时间跨度：' + currentDays + ' 天</p>' +
+                      '<hr/>' +
+                      '<p><strong>' + prevPeriodText + '</strong></p>' +
+                      '<p style="color: #666;">时间跨度：' + prevDays + ' 天</p>' +
+                      '<hr/>' +
+                      '<p style="color: ' + statusColor + ';">' +
+                      statusText +
+                      '</p>' +
+                      '</div>',
+                icon: 'info',
+                confirmButtonText: '确定'
+            });
+        });
+        
+        // 计算两个日期之间的天数
+        function calculateDaysBetween(startDate, endDate) {
+            if (!startDate || !endDate) return 0;
+            var start = new Date(startDate);
+            var end = new Date(endDate);
+            var timeDiff = end.getTime() - start.getTime();
+            return Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+        }
 
         // 筛选条件变化事件
         $('.filter-select').on('change', function() {
@@ -889,13 +1165,56 @@
         
         // 获取查询参数
         function getQueryParams() {
+            var currentStart = startDateInput.val();
+            var currentEnd = endDateInput.val();
+            
+            // 计算上期时间段
+            var previousPeriod = calculatePreviousPeriod(currentStart, currentEnd);
+            
             return {
-                startDate: startDateInput.val(),
-                endDate: endDateInput.val(),
+                startDate: currentStart,
+                endDate: currentEnd,
+                prevStartDate: previousPeriod.start,
+                prevEndDate: previousPeriod.end,
                 inspectionAgency: inspectionAgencySelect.val(),
                 shipType: shipTypeSelect.val(),
                 inspectionType: inspectionTypeSelect.val()
             };
+        }
+        
+        // 计算上期时间段
+        function calculatePreviousPeriod(currentStart, currentEnd) {
+            if (!currentStart || !currentEnd) {
+                return { start: '', end: '' };
+            }
+            
+            var startDate = new Date(currentStart);
+            var endDate = new Date(currentEnd);
+            
+            // 计算当前时间段的天数
+            var timeDiff = endDate.getTime() - startDate.getTime();
+            var daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1; // 包含结束日期
+            
+            // 计算上期结束日期（当前开始日期的前一天）
+            var prevEndDate = new Date(startDate);
+            prevEndDate.setDate(prevEndDate.getDate() - 1);
+            
+            // 计算上期开始日期（上期结束日期往前推相同天数）
+            var prevStartDate = new Date(prevEndDate);
+            prevStartDate.setDate(prevStartDate.getDate() - daysDiff + 1);
+            
+            return {
+                start: formatDateForInput(prevStartDate),
+                end: formatDateForInput(prevEndDate)
+            };
+        }
+        
+        // 格式化日期为YYYY-MM-DD格式
+        function formatDateForInput(date) {
+            var year = date.getFullYear();
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
         }
 
         // 获取并渲染图表数据
@@ -904,8 +1223,12 @@
                 // 获取当前选择的日期范围和筛选条件
                 var params = getQueryParams();
                 
-                // 更新标题
-                var titleText = "张家港海事局船舶监督数据看板 ("+params.startDate+" 至 "+ params.endDate+")";
+                // 更新标题，显示当前期和上期时间段
+                var currentPeriodText = "本期：" + params.startDate + " 至 " + params.endDate;
+                var prevPeriodText = "上期：" + params.prevStartDate + " 至 " + params.prevEndDate;
+                var titleText = "张家港海事局船舶监督数据看板<br/>" +
+                              "<small style='font-size: 16px; color: rgba(255,255,255,0.9);'>" + 
+                              currentPeriodText + " | " + prevPeriodText + "</small>";
                 $('.main-title').html('<i class="fas fa-ship icon-box"></i>' + titleText);
 
                 // 发送 AJAX 请求获取数据
@@ -915,7 +1238,8 @@
                     dataType: 'json',
                     data: params,
                     success: function(data) {
-                        console.log(data);
+                        console.log('请求参数:', params);
+                        console.log('返回数据:', data);
                         
                         if (data.status === "success") {
                             // 渲染各部分数据
@@ -2201,6 +2525,182 @@
             departmentSeaShipDefectRateChart.resize();
             departmentRiverShipDefectRateChart.resize();
         });
+    });
+    
+    // ========== 全屏功能相关函数 ==========
+    
+    // 存储当前全屏显示的图表信息
+    var currentFullscreenChart = null;
+    var fullscreenChartInstance = null;
+    
+    // 打开全屏显示
+    function openFullscreen(chartId) {
+        currentFullscreenChart = chartId;
+        
+        // 获取原图表实例的配置
+        var originalChart = getChartInstance(chartId);
+        if (!originalChart) {
+            console.error('找不到图表实例：' + chartId);
+            return;
+        }
+        
+        // 显示模态框
+        $('#fullscreen-modal').show();
+        
+        // 创建全屏图表实例
+        setTimeout(function() {
+            if (fullscreenChartInstance) {
+                fullscreenChartInstance.dispose();
+            }
+            fullscreenChartInstance = echarts.init(document.getElementById('fullscreen-chart'));
+            
+            // 复制原图表的配置
+            var option = originalChart.getOption();
+            fullscreenChartInstance.setOption(option, true);
+            
+            // 加载图表描述
+            loadChartDescription(chartId);
+        }, 100);
+        
+        // 禁用背景滚动
+        $('body').css('overflow', 'hidden');
+    }
+    
+    // 关闭全屏显示
+    function closeFullscreen() {
+        $('#fullscreen-modal').hide();
+        
+        if (fullscreenChartInstance) {
+            fullscreenChartInstance.dispose();
+            fullscreenChartInstance = null;
+        }
+        
+        currentFullscreenChart = null;
+        
+        // 恢复背景滚动
+        $('body').css('overflow', 'auto');
+    }
+    
+    // 获取图表实例
+    function getChartInstance(chartId) {
+        switch(chartId) {
+            case 'weekly-department-sea-ship-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-sea-ship-chart'));
+            case 'weekly-department-river-ship-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-river-ship-chart'));
+            case 'weekly-department-onsite-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-onsite-chart'));
+            case 'weekly-department-sea-ship-defect-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-sea-ship-defect-rate-chart'));
+            case 'weekly-department-river-ship-defect-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-river-ship-defect-rate-chart'));
+            default:
+                return null;
+        }
+    }
+    
+    // 加载图表描述
+    function loadChartDescription(chartId) {
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/getChartDescription',
+            type: 'GET',
+            data: { chartId: chartId },
+            success: function(response) {
+                if (response.success) {
+                    $('#fullscreen-chart-title').text(response.chartName || '图表描述');
+                    $('#chart-description-textarea').val(response.description || '');
+                } else {
+                    console.error('获取图表描述失败：' + response.message);
+                    $('#fullscreen-chart-title').text('图表描述');
+                    $('#chart-description-textarea').val('');
+                }
+            },
+            error: function(error) {
+                console.error('获取图表描述出错：', error);
+                $('#fullscreen-chart-title').text('图表描述');
+                $('#chart-description-textarea').val('');
+            }
+        });
+    }
+    
+    // 保存图表描述
+    function saveChartDescription() {
+        if (!currentFullscreenChart) {
+            Swal.fire({
+                title: '错误',
+                text: '无法确定当前图表',
+                icon: 'error',
+                confirmButtonText: '确定'
+            });
+            return;
+        }
+        
+        var description = $('#chart-description-textarea').val();
+        var saveBtn = $('#save-description-btn');
+        
+        // 禁用按钮，显示加载状态
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
+        
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/saveChartDescription',
+            type: 'POST',
+            data: {
+                chartId: currentFullscreenChart,
+                description: description
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: '成功',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: '确定',
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        title: '保存失败',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            },
+            error: function(error) {
+                console.error('保存图表描述出错：', error);
+                Swal.fire({
+                    title: '保存失败',
+                    text: '网络请求失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            },
+            complete: function() {
+                // 恢复按钮状态
+                saveBtn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存描述');
+            }
+        });
+    }
+    
+    // 监听ESC键关闭全屏
+    $(document).on('keydown', function(event) {
+        if (event.key === 'Escape' && $('#fullscreen-modal').is(':visible')) {
+            closeFullscreen();
+        }
+    });
+    
+    // 点击模态框背景关闭全屏
+    $('#fullscreen-modal').on('click', function(event) {
+        if (event.target === this) {
+            closeFullscreen();
+        }
+    });
+    
+    // 窗口大小变化时调整全屏图表大小
+    $(window).on('resize', function() {
+        if (fullscreenChartInstance) {
+            fullscreenChartInstance.resize();
+        }
     });
 </script>
 </body>

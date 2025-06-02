@@ -328,7 +328,7 @@ public class DynamicEnforcementDataController extends BaseController {
 		resultMap.put("dronePatrolCase", 0L);          // 无人机巡航立案调查
 		return resultMap;
 	}
-
+	
 	/**
 	 * 日期类型转换工具方法
 	 */

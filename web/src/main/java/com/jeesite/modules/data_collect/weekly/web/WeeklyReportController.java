@@ -788,7 +788,8 @@ public class WeeklyReportController extends BaseController {
 	 */
 	@GetMapping("getOriginalDataStatistics")
 	@ResponseBody
-	public Map<String, Object> getOriginalDataStatistics(String startDate, String endDate) {
+	public Map<String, Object> getOriginalDataStatistics(String startDate, String endDate, 
+			String prevStartDate, String prevEndDate) {
 		Map<String, Object> result = new HashMap<>();
 		
 		try {
@@ -797,24 +798,34 @@ public class WeeklyReportController extends BaseController {
 			Map<String, Object> pscData = getPscInspectionStatistics(startDate, endDate);
 			Map<String, Object> onSiteData = getOnSiteInspectionStatisticsForZhangjiagang(startDate, endDate);
 			
-			// 计算上一周期的日期范围
-			Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
-			Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
+			// 使用前端传递的上期时间段，如果没有传递则使用默认的7天推移
+			String prevStartDateStr = prevStartDate;
+			String prevEndDateStr = prevEndDate;
 			
-			if (startDateObj != null && endDateObj != null) {
-				// 计算上一周期的日期范围（向前推7天）
-				Calendar cal = Calendar.getInstance();
-				cal.setTime(startDateObj);
-				cal.add(Calendar.DAY_OF_MONTH, -7);
-				Date prevStartDate = cal.getTime();
+			if (prevStartDateStr == null || prevEndDateStr == null) {
+				// 如果前端没有传递上期时间段，则使用原来的逻辑
+				Date startDateObj = startDate != null ? DateUtils.parseDate(startDate) : null;
+				Date endDateObj = endDate != null ? DateUtils.parseDate(endDate) : null;
 				
-				cal.setTime(endDateObj);
-				cal.add(Calendar.DAY_OF_MONTH, -7);
-				Date prevEndDate = cal.getTime();
-				
-				String prevStartDateStr = DateUtils.formatDate(prevStartDate);
-				String prevEndDateStr = DateUtils.formatDate(prevEndDate);
-				
+				if (startDateObj != null && endDateObj != null) {
+					// 计算时间段长度
+					long timeDiff = endDateObj.getTime() - startDateObj.getTime();
+					
+					// 计算上期结束日期（当前开始日期的前一天）
+					Calendar cal = Calendar.getInstance();
+					cal.setTime(startDateObj);
+					cal.add(Calendar.DAY_OF_MONTH, -1);
+					Date prevEndDate_calc = cal.getTime();
+					
+					// 计算上期开始日期（上期结束日期往前推相同天数）
+					Date prevStartDate_calc = new Date(prevEndDate_calc.getTime() - timeDiff);
+					
+					prevStartDateStr = DateUtils.formatDate(prevStartDate_calc);
+					prevEndDateStr = DateUtils.formatDate(prevEndDate_calc);
+				}
+			}
+			
+			if (prevStartDateStr != null && prevEndDateStr != null) {
 				// 获取上一周期的数据
 				Map<String, Object> prevShipData = getShipInspectionStatisticsForZhangjiagang(prevStartDateStr, prevEndDateStr);
 				Map<String, Object> prevPscData = getPscInspectionStatistics(prevStartDateStr, prevEndDateStr);
@@ -828,6 +839,10 @@ public class WeeklyReportController extends BaseController {
 				result.put("prevShipData", prevShipData);
 				result.put("prevPscData", prevPscData);
 				result.put("prevOnSiteData", prevOnSiteData);
+				
+				// 记录实际使用的上期时间段
+				result.put("actualPrevStartDate", prevStartDateStr);
+				result.put("actualPrevEndDate", prevEndDateStr);
 				
 				// 计算总体环比变化率
 				calculateChangeRates(result, shipData, pscData, onSiteData, prevShipData, prevPscData, prevOnSiteData);

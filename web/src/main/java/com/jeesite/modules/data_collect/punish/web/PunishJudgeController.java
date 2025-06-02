@@ -162,8 +162,8 @@ public class PunishJudgeController extends BaseController {
 
 	@GetMapping("weeklyChartDataWithDate")
 	@ResponseBody
-	public Map<String, Object> getChartDataWithDate(String startDate, String endDate, String penaltyAgency, 
-												  String seaRiverShip, String caseReason, 
+	public Map<String, Object> getChartDataWithDate(String startDate, String endDate, String prevStartDate, String prevEndDate,
+												  String penaltyAgency, String seaRiverShip, String caseReason, 
 												  String managementCategory, String violationCircumstances, 
 												  String minAmount, String maxAmount, String shipType,
 												  String allowedAgencies, String department) {
@@ -233,9 +233,18 @@ public class PunishJudgeController extends BaseController {
 					.collect(Collectors.toList());
 		}
 		
-		// 计算上周同期的时间范围
+		// 使用前端传递的上期时间段，如果没有传递则使用默认的7天推移
+		String prevStartDateStr = prevStartDate;
+		String prevEndDateStr = prevEndDate;
+		
+		// 计算上期时间范围的查询条件
 		PunishJudge lastPunishJudge = new PunishJudge();
-		if (StringUtils.isNotBlank(startDate) && StringUtils.isNotBlank(endDate)) {
+		if (StringUtils.isNotBlank(prevStartDateStr) && StringUtils.isNotBlank(prevEndDateStr)) {
+			// 使用前端传递的上期时间段
+			lastPunishJudge.setPenaltyDecisionTime_gte(DateUtils.parseDate(prevStartDateStr));
+			lastPunishJudge.setPenaltyDecisionTime_lte(DateUtils.parseDate(prevEndDateStr));
+		} else if (StringUtils.isNotBlank(startDate) && StringUtils.isNotBlank(endDate)) {
+			// 如果前端没有传递上期时间段，使用原来的逻辑（7天推移）
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
 			LocalDate startLocalDate = LocalDate.parse(startDate, formatter);
 			LocalDate endLocalDate = LocalDate.parse(endDate, formatter);
@@ -245,40 +254,43 @@ public class PunishJudgeController extends BaseController {
 			lastPunishJudge.setPenaltyDecisionTime_gte(DateUtils.asDate(lastStartLocalDate));
 			lastPunishJudge.setPenaltyDecisionTime_lte(DateUtils.asDate(lastEndLocalDate));
 			
-			// 复制其他筛选条件
-			if (StringUtils.isNotBlank(penaltyAgency)) {
-				lastPunishJudge.setPenaltyAgency(penaltyAgency);
-			}
-			if (StringUtils.isNotBlank(seaRiverShip)) {
-				lastPunishJudge.setSeaRiverShip(seaRiverShip);
-			}
-			if (StringUtils.isNotBlank(caseReason)) {
-				lastPunishJudge.setCaseReason(caseReason);
-			}
-			if (StringUtils.isNotBlank(managementCategory)) {
-				lastPunishJudge.setManagementCategory(managementCategory);
-			}
-			if (StringUtils.isNotBlank(violationCircumstances)) {
-				lastPunishJudge.setViolationCircumstances(violationCircumstances);
-			}
-			if (StringUtils.isNotBlank(shipType)) {
-				lastPunishJudge.setShipType(shipType);
-			}
-			if (StringUtils.isNotBlank(department)) {
-				lastPunishJudge.setDepartment(department);
-			}
-			if (StringUtils.isNotBlank(minAmount)) {
-				lastPunishJudge.setPenaltyAmount_gte(Double.parseDouble(minAmount));
-			}
-			if (StringUtils.isNotBlank(maxAmount)) {
-				lastPunishJudge.setPenaltyAmount_lte(Double.parseDouble(maxAmount));
-			}
+			prevStartDateStr = lastStartLocalDate.format(formatter);
+			prevEndDateStr = lastEndLocalDate.format(formatter);
 		}
 		
-		// 查询上周同期的数据
+		// 复制其他筛选条件到上期查询
+		if (StringUtils.isNotBlank(penaltyAgency)) {
+			lastPunishJudge.setPenaltyAgency(penaltyAgency);
+		}
+		if (StringUtils.isNotBlank(seaRiverShip)) {
+			lastPunishJudge.setSeaRiverShip(seaRiverShip);
+		}
+		if (StringUtils.isNotBlank(caseReason)) {
+			lastPunishJudge.setCaseReason(caseReason);
+		}
+		if (StringUtils.isNotBlank(managementCategory)) {
+			lastPunishJudge.setManagementCategory(managementCategory);
+		}
+		if (StringUtils.isNotBlank(violationCircumstances)) {
+			lastPunishJudge.setViolationCircumstances(violationCircumstances);
+		}
+		if (StringUtils.isNotBlank(shipType)) {
+			lastPunishJudge.setShipType(shipType);
+		}
+		if (StringUtils.isNotBlank(department)) {
+			lastPunishJudge.setDepartment(department);
+		}
+		if (StringUtils.isNotBlank(minAmount)) {
+			lastPunishJudge.setPenaltyAmount_gte(Double.parseDouble(minAmount));
+		}
+		if (StringUtils.isNotBlank(maxAmount)) {
+			lastPunishJudge.setPenaltyAmount_lte(Double.parseDouble(maxAmount));
+		}
+		
+		// 查询上期数据
 		List<PunishJudge> lastPunishList = punishJudgeService.findList(lastPunishJudge);
 		
-		// 如果指定了允许的机构列表，对上周数据也进行过滤
+		// 如果指定了允许的机构列表，对上期数据也进行过滤
 		if (StringUtils.isNotBlank(allowedAgencies)) {
 			List<String> allowedAgencyList = Arrays.asList(allowedAgencies.split(","));
 			lastPunishList = lastPunishList.stream()
@@ -286,6 +298,10 @@ public class PunishJudgeController extends BaseController {
 									allowedAgencyList.contains(punish.getPenaltyAgency()))
 					.collect(Collectors.toList());
 		}
+		
+		// 记录实际使用的上期时间段
+		chartData.put("actualPrevStartDate", prevStartDateStr);
+		chartData.put("actualPrevEndDate", prevEndDateStr);
 		
 		// 获取所有机构列表
 		List<String> categories = getAllPenaltyAgencies(currentPunishList, lastPunishList, allowedAgencies);
@@ -1055,7 +1071,7 @@ public class PunishJudgeController extends BaseController {
                                      String managementCategory, String violationCircumstances, 
                                      String minAmount, String maxAmount, String shipType,
                                      String allowedAgencies, String department) {
-		return getChartDataWithDate(startDate, endDate, penaltyAgency, seaRiverShip, caseReason,
+		return getChartDataWithDate(startDate, endDate, null, null, penaltyAgency, seaRiverShip, caseReason,
                                managementCategory, violationCircumstances, minAmount, maxAmount, shipType, allowedAgencies, department);
 	}
 

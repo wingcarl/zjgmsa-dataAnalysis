@@ -900,7 +900,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-sea-ship-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-sea-ship-chart" class="chart-container"></div>
+                    <div id="department-sea-ship-chart" class="chart-container"></div>
                     </div>
             </div>
             </div>
@@ -918,7 +918,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-river-ship-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-river-ship-chart" class="chart-container"></div>
+                    <div id="department-river-ship-chart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
@@ -937,7 +937,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-psc-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-psc-chart" class="chart-container"></div>
+                    <div id="department-psc-chart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
@@ -955,7 +955,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-onsite-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-onsite-chart" class="chart-container"></div>
+                    <div id="department-onsite-chart" class="chart-container"></div>
                     </div>
             </div>
             </div>
@@ -974,7 +974,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-sea-ship-defect-rate-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-sea-ship-defect-rate-chart" class="chart-container"></div>
+                    <div id="department-sea-ship-defect-rate-chart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
@@ -989,7 +989,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-river-ship-defect-rate-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-river-ship-defect-rate-chart" class="chart-container"></div>
+                    <div id="department-river-ship-defect-rate-chart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
@@ -1008,7 +1008,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-psc-defect-rate-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-psc-defect-rate-chart" class="chart-container"></div>
+                    <div id="department-psc-defect-rate-chart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
@@ -1023,7 +1023,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('department-onsite-abnormal-rate-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="department-onsite-abnormal-rate-chart" class="chart-container"></div>
+                    <div id="department-onsite-abnormal-rate-chart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
@@ -1059,7 +1059,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('sea-ship-defect-type-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="sea-ship-defect-type-chart" class="chart-container"></div>
+                    <div id="sea-ship-defect-type-chart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
@@ -1091,7 +1091,7 @@
                         <button class="chart-fullscreen-btn" onclick="openFullscreen('river-ship-defect-type-chart')">
                             <i class="fas fa-expand"></i> 全屏
                         </button>
-                        <div id="river-ship-defect-type-chart" class="chart-container"></div>
+                    <div id="river-ship-defect-type-chart" class="chart-container"></div>
                     </div>
             </div>
             </div>
@@ -1144,7 +1144,7 @@
                     <button id="save-description-btn" class="save-description-btn" onclick="saveChartDescription()">
                         <i class="fas fa-save"></i> 保存描述
                     </button>
-                </div>
+            </div>
             </div>
         </div>
     </div>
@@ -1156,6 +1156,173 @@
 <!-- SweetAlert2 for alerts -->
 <script src="${ctxStatic}/nickjs/sweetalert2.min.js"></script>
 <script>
+    // ========== 全屏功能相关函数（全局函数） ==========
+    
+    // 存储当前全屏显示的图表信息
+    var currentFullscreenChart = null;
+    var fullscreenChartInstance = null;
+    
+    // 打开全屏显示
+    function openFullscreen(chartId) {
+        currentFullscreenChart = chartId;
+        
+        // 获取原图表实例的配置
+        var originalChart = getChartInstance(chartId);
+        if (!originalChart) {
+            console.error('找不到图表实例：' + chartId);
+            return;
+        }
+        
+        // 显示模态框
+        $('#fullscreen-modal').show();
+        
+        // 创建全屏图表实例
+        setTimeout(function() {
+            if (fullscreenChartInstance) {
+                fullscreenChartInstance.dispose();
+            }
+            fullscreenChartInstance = echarts.init(document.getElementById('fullscreen-chart'));
+            
+            // 复制原图表的配置
+            var option = originalChart.getOption();
+            fullscreenChartInstance.setOption(option, true);
+            
+            // 加载图表描述
+            loadChartDescription(chartId);
+        }, 100);
+        
+        // 禁用背景滚动
+        $('body').css('overflow', 'hidden');
+    }
+    
+    // 关闭全屏显示
+    function closeFullscreen() {
+        $('#fullscreen-modal').hide();
+        
+        if (fullscreenChartInstance) {
+            fullscreenChartInstance.dispose();
+            fullscreenChartInstance = null;
+        }
+        
+        currentFullscreenChart = null;
+        
+        // 恢复背景滚动
+        $('body').css('overflow', 'auto');
+    }
+    
+    // 获取图表实例
+    function getChartInstance(chartId) {
+        switch(chartId) {
+            case 'department-sea-ship-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-sea-ship-chart'));
+            case 'department-river-ship-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-river-ship-chart'));
+            case 'department-psc-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-psc-chart'));
+            case 'department-onsite-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-onsite-chart'));
+            case 'department-sea-ship-defect-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-sea-ship-defect-rate-chart'));
+            case 'department-river-ship-defect-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-river-ship-defect-rate-chart'));
+            case 'department-psc-defect-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-psc-defect-rate-chart'));
+            case 'department-onsite-abnormal-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('department-onsite-abnormal-rate-chart'));
+            case 'sea-ship-defect-type-chart':
+                return echarts.getInstanceByDom(document.getElementById('sea-ship-defect-type-chart'));
+            case 'river-ship-defect-type-chart':
+                return echarts.getInstanceByDom(document.getElementById('river-ship-defect-type-chart'));
+            case 'onsite-content-abnormal-rate-chart':
+                return echarts.getInstanceByDom(document.getElementById('onsite-content-abnormal-rate-chart'));
+            default:
+                return null;
+        }
+    }
+    
+    // 加载图表描述
+    function loadChartDescription(chartId) {
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/getChartDescription',
+            type: 'GET',
+            data: { chartId: chartId },
+            success: function(response) {
+                if (response.success) {
+                    $('#fullscreen-chart-title').text(response.chartName || '图表描述');
+                    $('#chart-description-textarea').val(response.description || '');
+                } else {
+                    console.error('获取图表描述失败：' + response.message);
+                    $('#fullscreen-chart-title').text('图表描述');
+                    $('#chart-description-textarea').val('');
+                }
+            },
+            error: function(error) {
+                console.error('获取图表描述出错：', error);
+                $('#fullscreen-chart-title').text('图表描述');
+                $('#chart-description-textarea').val('');
+            }
+        });
+    }
+    
+    // 保存图表描述
+    function saveChartDescription() {
+        if (!currentFullscreenChart) {
+            Swal.fire({
+                title: '错误',
+                text: '无法确定当前图表',
+                icon: 'error',
+                confirmButtonText: '确定'
+            });
+            return;
+        }
+        
+        var description = $('#chart-description-textarea').val();
+        var saveBtn = $('#save-description-btn');
+        
+        // 禁用按钮，显示加载状态
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
+        
+        $.ajax({
+            url: '${ctx}/dynamic/dynamicEnforcementData/saveChartDescription',
+            type: 'POST',
+            data: {
+                chartId: currentFullscreenChart,
+                description: description
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: '成功',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: '确定',
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        title: '保存失败',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            },
+            error: function(error) {
+                console.error('保存图表描述出错：', error);
+                Swal.fire({
+                    title: '保存失败',
+                    text: '网络请求失败，请稍后重试',
+                    icon: 'error',
+                    confirmButtonText: '确定'
+                });
+            },
+            complete: function() {
+                // 恢复按钮状态
+                saveBtn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存描述');
+            }
+        });
+    }
+
     $(document).ready(function() {
         // 初始化 ECharts 实例 - 移除不需要的图表初始化
         var departmentSeaShipChart = echarts.init(document.getElementById('department-sea-ship-chart'));
@@ -3600,180 +3767,6 @@
             onSiteContentAbnormalRateChart.setOption(chartOption);
         }
         
-        // ========== 全屏功能相关函数（全局函数） ==========
-        
-        // 存储当前全屏显示的图表信息
-        var currentFullscreenChart = null;
-        var fullscreenChartInstance = null;
-        
-        // 打开全屏显示
-        function openFullscreen(chartId) {
-            currentFullscreenChart = chartId;
-            
-            // 获取原图表实例的配置
-            var originalChart = getChartInstance(chartId);
-            if (!originalChart) {
-                console.error('找不到图表实例：' + chartId);
-                return;
-            }
-            
-            // 显示模态框
-            $('#fullscreen-modal').show();
-            
-            // 创建全屏图表实例
-            setTimeout(function() {
-                if (fullscreenChartInstance) {
-                    fullscreenChartInstance.dispose();
-                }
-                fullscreenChartInstance = echarts.init(document.getElementById('fullscreen-chart'));
-                
-                // 复制原图表的配置
-                var option = originalChart.getOption();
-                fullscreenChartInstance.setOption(option, true);
-                
-                // 加载图表描述
-                loadChartDescription(chartId);
-            }, 100);
-            
-            // 禁用背景滚动
-            $('body').css('overflow', 'hidden');
-        }
-        
-        // 关闭全屏显示
-        function closeFullscreen() {
-            $('#fullscreen-modal').hide();
-            
-            if (fullscreenChartInstance) {
-                fullscreenChartInstance.dispose();
-                fullscreenChartInstance = null;
-            }
-            
-            currentFullscreenChart = null;
-            
-            // 恢复背景滚动
-            $('body').css('overflow', 'auto');
-        }
-        
-        // 获取图表实例
-        function getChartInstance(chartId) {
-            switch(chartId) {
-                case 'department-sea-ship-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-sea-ship-chart'));
-                case 'department-river-ship-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-river-ship-chart'));
-                case 'department-psc-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-psc-chart'));
-                case 'department-onsite-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-onsite-chart'));
-                case 'department-sea-ship-defect-rate-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-sea-ship-defect-rate-chart'));
-                case 'department-river-ship-defect-rate-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-river-ship-defect-rate-chart'));
-                case 'department-psc-defect-rate-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-psc-defect-rate-chart'));
-                case 'department-onsite-abnormal-rate-chart':
-                    return echarts.getInstanceByDom(document.getElementById('department-onsite-abnormal-rate-chart'));
-                case 'sea-ship-defect-type-chart':
-                    return echarts.getInstanceByDom(document.getElementById('sea-ship-defect-type-chart'));
-                case 'river-ship-defect-type-chart':
-                    return echarts.getInstanceByDom(document.getElementById('river-ship-defect-type-chart'));
-                case 'onsite-content-abnormal-rate-chart':
-                    return echarts.getInstanceByDom(document.getElementById('onsite-content-abnormal-rate-chart'));
-                default:
-                    return null;
-            }
-        }
-        
-        // 加载图表描述
-        function loadChartDescription(chartId) {
-            $.ajax({
-                url: '${ctx}/dynamic/dynamicEnforcementData/getChartDescription',
-                type: 'GET',
-                data: { chartId: chartId },
-                success: function(response) {
-                    if (response.success) {
-                        $('#fullscreen-chart-title').text(response.chartName || '图表描述');
-                        $('#chart-description-textarea').val(response.description || '');
-                    } else {
-                        console.error('获取图表描述失败：' + response.message);
-                        $('#fullscreen-chart-title').text('图表描述');
-                        $('#chart-description-textarea').val('');
-                    }
-                },
-                error: function(error) {
-                    console.error('获取图表描述出错：', error);
-                    $('#fullscreen-chart-title').text('图表描述');
-                    $('#chart-description-textarea').val('');
-                }
-            });
-        }
-        
-        // 保存图表描述
-        function saveChartDescription() {
-            if (!currentFullscreenChart) {
-                Swal.fire({
-                    title: '错误',
-                    text: '无法确定当前图表',
-                    icon: 'error',
-                    confirmButtonText: '确定'
-                });
-                return;
-            }
-            
-            var description = $('#chart-description-textarea').val();
-            var saveBtn = $('#save-description-btn');
-            
-            // 禁用按钮，显示加载状态
-            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 保存中...');
-            
-            $.ajax({
-                url: '${ctx}/dynamic/dynamicEnforcementData/saveChartDescription',
-                type: 'POST',
-                data: {
-                    chartId: currentFullscreenChart,
-                    description: description
-                },
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            title: '成功',
-                            text: response.message,
-                            icon: 'success',
-                            confirmButtonText: '确定',
-                            timer: 2000
-                        });
-                    } else {
-                        Swal.fire({
-                            title: '保存失败',
-                            text: response.message,
-                            icon: 'error',
-                            confirmButtonText: '确定'
-                        });
-                    }
-                },
-                error: function(error) {
-                    console.error('保存图表描述出错：', error);
-                    Swal.fire({
-                        title: '保存失败',
-                        text: '网络请求失败，请稍后重试',
-                        icon: 'error',
-                        confirmButtonText: '确定'
-                    });
-                },
-                complete: function() {
-                    // 恢复按钮状态
-                    saveBtn.prop('disabled', false).html('<i class="fas fa-save"></i> 保存描述');
-                }
-            });
-        }
-        
-        // 窗口大小变化时调整全屏图表大小
-        $(window).on('resize', function() {
-            if (fullscreenChartInstance) {
-                fullscreenChartInstance.resize();
-            }
-        });
-
         // 全屏功能事件绑定
         // 监听ESC键关闭全屏
         $(document).on('keydown', function(event) {
@@ -3786,6 +3779,13 @@
         $('#fullscreen-modal').on('click', function(event) {
             if (event.target === this) {
                 closeFullscreen();
+            }
+        });
+        
+        // 窗口大小变化时调整全屏图表大小
+        $(window).on('resize', function() {
+            if (fullscreenChartInstance) {
+                fullscreenChartInstance.resize();
             }
         });
     });
