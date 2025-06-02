@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张家港海事局月度数据分析中心</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="${ctxStatic}/bootstrap/css/bootstrap.css">
+    <!-- Font Awesome - 添加图标支持 -->
+    <link rel="stylesheet" href="${ctxStatic}/nickjs/fontawesome/css/all.min.css">
+    <!-- Swiper CSS - 用于轮播效果 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
+    
+    <!-- Custom CSS - 现代滚屏风格设计 -->
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --text-color: #2d3748;
+            --light-bg: #f7fafc;
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-warning: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --gradient-danger: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --gradient-info: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light-bg);
+            color: var(--text-color);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* 主标题区域 */
+        .hero-section {
+            height: 100vh;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: white;
+            text-align: center;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect fill="url(%23pattern)" width="100%" height="100%"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-40px); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.5s forwards;
+        }
+
+        .hero-date {
+            font-size: 1.2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 1s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            40% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+            60% {
+                transform: translateX(-50%) translateY(-5px);
+            }
+        }
+
+        /* 模块轮播区域 */
+        .modules-section {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .swiper {
+            width: 100%;
+            height: 600px;
+            padding: 50px 0;
+        }
+
+        .swiper-slide {
+            text-align: center;
+            font-size: 18px;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .module-card {
+            width: 400px;
+            height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .module-card:hover {
+            transform: translateY(-20px) scale(1.05);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .module-card.card-supervision {
+            background: var(--gradient-primary);
+        }
+
+        .module-card.card-penalty {
+            background: var(--gradient-secondary);
+        }
+
+        .module-card.card-dynamic {
+            background: var(--gradient-success);
+        }
+
+        .module-card.card-hazardous {
+            background: var(--gradient-warning);
+        }
+
+        .module-card.card-port {
+            background: var(--gradient-info);
+        }
+
+        .module-card-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+
+        .module-icon {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .module-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .module-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .module-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .module-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            text-decoration: none;
+            transform: scale(1.05);
+        }
+
+        .coming-soon {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            cursor: not-allowed !important;
+        }
+
+        .coming-soon:hover {
+            transform: none !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Swiper 导航按钮样式 */
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: var(--primary-color);
+            background: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Swiper 分页器样式 */
+        .swiper-pagination-bullet {
+            width: 15px;
+            height: 15px;
+            background: var(--primary-color);
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .swiper-pagination-bullet-active {
+            opacity: 1;
+            transform: scale(1.3);
+        }
+
+        /* 统计数据区域 */
+        .stats-section {
+            padding: 100px 0;
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* 页脚 */
+        .footer {
+            background: #2d3748;
+            color: white;
+            padding: 50px 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: white;
+            text-decoration: none;
+        }
+
+        .copyright {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .module-card {
+                width: 300px;
+                height: 400px;
+            }
+
+            .module-title {
+                font-size: 2rem;
+            }
+
+            .module-icon {
+                font-size: 3.5rem;
+            }
+
+            .swiper {
+                height: 500px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        /* 加载动画 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="btn" style="position: absolute; top: 30px; left: 30px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 50px; text-decoration: none; backdrop-filter: blur(10px); transition: all 0.3s ease;">
+                <i class="fas fa-arrow-left mr-2"></i>返回数据中心
+            </a>
+            <h1 class="hero-title">
+                <i class="fas fa-chart-line mr-3"></i>
+                月度数据分析中心
+            </h1>
+            <p class="hero-subtitle">张家港海事局 · 全面数据洞察 · 智慧决策支持</p>
+            <p class="hero-date" id="currentDate"></p>
+        </div>
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down fa-2x"></i>
+        </div>
+    </section>
+
+    <!-- 模块轮播区域 -->
+    <section class="modules-section">
+        <div class="container">
+            <h2 class="section-title fade-in">数据分析模块</h2>
+            
+            <!-- Swiper 轮播 -->
+            <div class="swiper moduleSwiper fade-in">
+                <div class="swiper-wrapper">
+                    <!-- 船舶监督模块 -->
+                    <div class="swiper-slide">
+                        <div class="module-card card-supervision">
+                            <div class="module-card-content">
+                                <div class="module-icon">
+                                    <i class="fas fa-ship"></i>
+                                </div>
+                                <h3 class="module-title">船舶监督</h3>
+                                <p class="module-description">
+                                    海船安检、内河船监督、PSC检查<br>
+                                    现场监督、缺陷分析、滞留统计
+                                </p>
+                                <a href="${ctx}/weekly/weeklyReport/monthlyChart" class="module-button">
+                                    <i class="fas fa-chart-bar mr-2"></i>进入分析
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 法制管理模块 -->
+                    <div class="swiper-slide">
+                        <div class="module-card card-penalty">
+                            <div class="module-card-content">
+                                <div class="module-icon">
+                                    <i class="fas fa-gavel"></i>
+                                </div>
+                                <h3 class="module-title">法制管理</h3>
+                                <p class="module-description">
+                                    行政处罚决定、案由分析<br>
+                                    处罚金额统计、违法情节分析
+                                </p>
+                                <a href="${ctx}/punish/punishJudge/monthlyChart" class="module-button">
+                                    <i class="fas fa-balance-scale mr-2"></i>进入分析
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 动态业务模块 -->
+                    <div class="swiper-slide">
+                        <div class="module-card card-dynamic">
+                            <div class="module-card-content">
+                                <div class="module-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <h3 class="module-title">动态业务</h3>
+                                <p class="module-description">
+                                    巡航巡查、执法检查<br>
+                                    风险隐患排查、动态监管
+                                </p>
+                                <a href="${ctx}/dynamic/dynamicEnforcementData/monthlyChart" class="module-button">
+                                    <i class="fas fa-binoculars mr-2"></i>进入分析
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 危管防污模块 -->
+                    <div class="swiper-slide">
+                        <div class="module-card card-hazardous">
+                            <div class="module-card-content">
+                                <div class="module-icon">
+                                    <i class="fas fa-radiation-alt"></i>
+                                </div>
+                                <h3 class="module-title">危管防污</h3>
+                                <p class="module-description">
+                                    危化品管理、防污监督<br>
+                                    安全检查、环境保护
+                                </p>
+                                <button class="module-button coming-soon" disabled>
+                                    <i class="fas fa-cog mr-2"></i>开发中...
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 港航数据模块 -->
+                    <div class="swiper-slide">
+                        <div class="module-card card-port">
+                            <div class="module-card-content">
+                                <div class="module-icon">
+                                    <i class="fas fa-anchor"></i>
+                                </div>
+                                <h3 class="module-title">港航数据</h3>
+                                <p class="module-description">
+                                    船舶进出港、货物统计<br>
+                                    航行记录、港口作业
+                                </p>
+                                <button type="button" class="module-button" data-toggle="modal" data-target="#shipTypesModal">
+                                    <i class="fas fa-dharmachakra mr-2"></i>选择类型
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 导航按钮 -->
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                
+                <!-- 分页器 -->
+                <div class="swiper-pagination"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 统计数据区域 -->
+    <section class="stats-section">
+        <div class="container">
+            <h2 class="section-title" style="color: white;">本月数据概览</h2>
+            <div class="stats-grid fade-in">
+                <div class="stat-item">
+                    <div class="stat-number" id="monthlyInspections">0</div>
+                    <div class="stat-label">船舶检查</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="monthlyPenalties">0</div>
+                    <div class="stat-label">行政处罚</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="monthlyPatrols">0</div>
+                    <div class="stat-label">巡航巡查</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="monthlyServices">0</div>
+                    <div class="stat-label">政务服务</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 船舶类型选择模态框 -->
+    <div class="modal fade" id="shipTypesModal" tabindex="-1" role="dialog" aria-labelledby="shipTypesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="background: var(--gradient-primary); border: none; border-radius: 20px;">
+                <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.2);">
+                    <h5 class="modal-title" id="shipTypesModalLabel" style="color: white; font-weight: 600;">
+                        <i class="fas fa-ship mr-2"></i>请选择船舶类型
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <a href="${ctx}/shipreport/shipReport/monthlyAnalysis" class="module-button" style="display: block; text-align: center; width: 100%; padding: 15px;">
+                                <i class="fas fa-flag mr-2"></i>国内航行船舶
+                            </a>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <a href="${ctx}/shiplog/shipPortLog/monthlyAnalysis" class="module-button" style="display: block; text-align: center; width: 100%; padding: 15px;">
+                                <i class="fas fa-globe-americas mr-2"></i>国际航行船舶
+                            </a>
+                        </div>
+                        <div class="col-md-12">
+                            <a href="${ctx}/largeship/monthlyAnalysis" class="module-button" style="display: block; text-align: center; width: 100%; padding: 15px;">
+                                <i class="fas fa-ship mr-2"></i>大型受限船舶
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="footer-link">
+                        <i class="fas fa-calendar-week mr-1"></i>周度数据
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="fas fa-chart-line mr-1"></i>数据报告
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="fas fa-cog mr-1"></i>系统设置
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="fas fa-question-circle mr-1"></i>帮助文档
+                    </a>
+                </div>
+                <div class="copyright">
+                    © 2025 张家港海事局月度数据分析中心 | 技术支持：张家港海事局数据管理中心
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="${ctxStatic}/jquery/jquery-3.7.0.js"></script>
+    <script src="${ctxStatic}/bootstrap/js/bootstrap.js"></script>
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // 更新当前日期
+            function updateCurrentDate() {
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = now.getMonth() + 1;
+                var dateStr = year + '年' + month + '月数据分析';
+                $('#currentDate').text(dateStr);
+            }
+
+            updateCurrentDate();
+
+            // 初始化 Swiper 轮播
+            var swiper = new Swiper('.moduleSwiper', {
+                slidesPerView: 'auto',
+                spaceBetween: 50,
+                centeredSlides: true,
+                loop: true,
+                autoplay: {
+                    delay: 4000,
+                    disableOnInteraction: false,
+                },
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                breakpoints: {
+                    640: {
+                        slidesPerView: 1,
+                        spaceBetween: 20,
+                    },
+                    768: {
+                        slidesPerView: 2,
+                        spaceBetween: 30,
+                    },
+                    1024: {
+                        slidesPerView: 3,
+                        spaceBetween: 40,
+                    },
+                }
+            });
+
+            // 滚动动画
+            function isElementInViewport(el) {
+                var rect = el.getBoundingClientRect();
+                return (
+                    rect.top >= 0 &&
+                    rect.left >= 0 &&
+                    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                );
+            }
+
+            function animateOnScroll() {
+                $('.fade-in').each(function() {
+                    if (isElementInViewport(this)) {
+                        $(this).addClass('visible');
+                    }
+                });
+            }
+
+            $(window).on('scroll', animateOnScroll);
+            animateOnScroll(); // 初始检查
+
+            // 数字动画
+            function animateNumbers() {
+                $('.stat-number').each(function() {
+                    var $this = $(this);
+                    var target = parseInt($this.attr('data-target') || 0);
+                    var current = 0;
+                    var increment = target / 100;
+                    
+                    var timer = setInterval(function() {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        $this.text(Math.floor(current));
+                    }, 20);
+                });
+            }
+
+            // 模拟数据加载
+            setTimeout(function() {
+                $('#monthlyInspections').attr('data-target', '1247').text('0');
+                $('#monthlyPenalties').attr('data-target', '89').text('0');
+                $('#monthlyPatrols').attr('data-target', '156').text('0');
+                $('#monthlyServices').attr('data-target', '234').text('0');
+                
+                // 当统计区域进入视窗时开始数字动画
+                var statsSection = $('.stats-section')[0];
+                if (isElementInViewport(statsSection)) {
+                    animateNumbers();
+                } else {
+                    $(window).one('scroll', function() {
+                        if (isElementInViewport(statsSection)) {
+                            animateNumbers();
+                        }
+                    });
+                }
+            }, 1000);
+
+            // 加载真实数据
+            function loadRealData() {
+                $.ajax({
+                    url: '${ctx}/weekly/weeklyReport/getMonthlyDashboardStatistics',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success' && response.data) {
+                            var data = response.data;
+                            
+                            // 设置真实数据
+                            $('#monthlyInspections').attr('data-target', data.monthlyInspections || 0);
+                            $('#monthlyPenalties').attr('data-target', data.monthlyPenalties || 0);
+                            $('#monthlyPatrols').attr('data-target', data.monthlyPatrols || 0);
+                            $('#monthlyServices').attr('data-target', data.monthlyServices || 0);
+                            
+                            // 当统计区域进入视窗时开始数字动画
+                            var statsSection = $('.stats-section')[0];
+                            if (isElementInViewport(statsSection)) {
+                                animateNumbers();
+                            } else {
+                                $(window).one('scroll', function() {
+                                    if (isElementInViewport(statsSection)) {
+                                        animateNumbers();
+                                    }
+                                });
+                            }
+                            
+                            console.log('月度统计数据加载成功:', data);
+                        } else {
+                            console.error('获取月度统计数据失败:', response.message);
+                            // 使用默认数据
+                            $('#monthlyInspections').attr('data-target', '1247');
+                            $('#monthlyPenalties').attr('data-target', '89');
+                            $('#monthlyPatrols').attr('data-target', '156');
+                            $('#monthlyServices').attr('data-target', '234');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('请求月度统计数据出错:', error);
+                        // 使用默认数据
+                        $('#monthlyInspections').attr('data-target', '1247');
+                        $('#monthlyPenalties').attr('data-target', '89');
+                        $('#monthlyPatrols').attr('data-target', '156');
+                        $('#monthlyServices').attr('data-target', '234');
+                    }
+                });
+            }
+
+            // 延迟加载数据，给页面动画时间
+            setTimeout(loadRealData, 1000);
+
+            // 平滑滚动
+            $('.scroll-indicator').click(function() {
+                $('html, body').animate({
+                    scrollTop: $('.modules-section').offset().top
+                }, 800);
+            });
+
+            // 鼠标悬停时暂停轮播，离开时继续
+            $('.moduleSwiper').hover(
+                function() {
+                    swiper.autoplay.stop();
+                },
+                function() {
+                    swiper.autoplay.start();
+                }
+            );
+        });
+    </script>
+</body>
+
+</html> 

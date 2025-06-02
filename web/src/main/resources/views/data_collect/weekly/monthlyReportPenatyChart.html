@@ -777,7 +777,7 @@
 <div class="main-header">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center">
-            <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="btn btn-light btn-back-home">
+            <a href="${ctx}/weekly/weeklyReport/monthlyDataDashboard" class="btn btn-light btn-back-home">
                 <i class="fas fa-home mr-2"></i>返回主页
             </a>
             <h1 class="main-title">张家港海事局行政处罚数据看板</h1>
@@ -1205,7 +1205,15 @@
         var minAmountInput = $('#minAmount');
         var maxAmountInput = $('#maxAmount');
 
-        // 计算默认日期范围
+        // 格式化日期函数
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        // 计算默认日期范围（月度报表逻辑：25号为分界点）
         function calculateDefaultDateRange() {
             var today = new Date();
             var currentDay = today.getDate();
@@ -1216,8 +1224,8 @@
             var startDate = new Date();
             
             if (currentDay <= 25) {
-                // 如果当前日期为本月25日之前，则为上上月的26至本月的25日
-                endDate = new Date(currentYear, currentMonth, 25);
+                // 如果当前日期为本月25日之前，则为上上月的26至上月的25日
+                endDate = new Date(currentYear, currentMonth - 1, 25);
                 startDate = new Date(currentYear, currentMonth - 2, 26);
             } else {
                 // 如果当前日期为本月25日之后，则为上月的26至本月的25日
@@ -1226,8 +1234,8 @@
             }
             
             return {
-                start: startDate.toISOString().slice(0, 10),
-                end: endDate.toISOString().slice(0, 10)
+                start: formatDate(startDate),
+                end: formatDate(endDate)
             };
         }
 

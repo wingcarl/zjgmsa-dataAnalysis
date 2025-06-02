@@ -275,6 +275,108 @@ public class WeeklyReportController extends BaseController {
 		return "data_collect/weekly/monthlyReportChart";
 	}
 
+	/**
+	 * 跳转到月度数据分析首页
+	 * @return
+	 */
+	@RequiresPermissions("weekly:weeklyReport:view")
+	@RequestMapping(value = "monthlyDataDashboard")
+	public String monthlyDataDashboard() {
+		return "data_collect/monthly/monthlyDataDashboard";
+	}
+	
+	/**
+	 * 跳转到数据分析入口页面（测试用）
+	 * @return
+	 */
+	@RequiresPermissions("weekly:weeklyReport:view")
+	@RequestMapping(value = "dataAnalysisEntry")
+	public String dataAnalysisEntry() {
+		return "data_collect/test/monthlyAccess";
+	}
+	
+	/**
+	 * 获取月度数据分析首页的统计数据
+	 * @return
+	 */
+	@RequiresPermissions("weekly:weeklyReport:view")
+	@RequestMapping(value = "getMonthlyDashboardStatistics")
+	@ResponseBody
+	public Map<String, Object> getMonthlyDashboardStatistics() {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 获取当前日期
+			LocalDate now = LocalDate.now();
+			
+			// 计算本月开始和结束日期
+			LocalDate monthStart = now.withDayOfMonth(1);
+			LocalDate monthEnd = now.withDayOfMonth(now.lengthOfMonth());
+			
+			// 格式化日期为字符串
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			String startDate = monthStart.format(formatter);
+			String endDate = monthEnd.format(formatter);
+			
+			// 获取本月数据
+			Map<String, Object> monthlyData = getMonthlyDataStatistics(startDate, endDate, null);
+			
+			// 组装返回数据
+			Map<String, Object> data = new HashMap<>();
+			
+			if (monthlyData.containsKey("status") && "success".equals(monthlyData.get("status"))) {
+				// 船舶检查总数（海船 + 内河船）
+				Long seaShipCount = (Long) monthlyData.getOrDefault("seaShipCount", 0L);
+				Long riverShipCount = (Long) monthlyData.getOrDefault("riverShipCount", 0L);
+				data.put("monthlyInspections", seaShipCount + riverShipCount);
+				
+				// 行政处罚数据（需要从处罚系统获取，这里先设置为0）
+				data.put("monthlyPenalties", 0);
+				
+				// 巡航巡查数据（需要从动态执法系统获取，这里先设置为0）
+				data.put("monthlyPatrols", 0);
+				
+				// 政务服务数据（这里先设置为0）
+				data.put("monthlyServices", 0);
+				
+				// 现场监督数据
+				data.put("onSiteCount", monthlyData.getOrDefault("onSiteCount", 0L));
+				
+				// PSC检查数据
+				data.put("pscCount", monthlyData.getOrDefault("pscCount", 0L));
+				
+				// 缺陷总数
+				Long seaShipDefectCount = (Long) monthlyData.getOrDefault("seaShipDefectCount", 0L);
+				Long riverShipDefectCount = (Long) monthlyData.getOrDefault("riverShipDefectCount", 0L);
+				Long pscDefectCount = (Long) monthlyData.getOrDefault("pscDefectCount", 0L);
+				data.put("totalDefects", seaShipDefectCount + riverShipDefectCount + pscDefectCount);
+				
+				// 滞留总数
+				Long seaShipDetainedCount = (Long) monthlyData.getOrDefault("seaShipDetainedCount", 0L);
+				Long riverShipDetainedCount = (Long) monthlyData.getOrDefault("riverShipDetainedCount", 0L);
+				Long pscDetentionCount = (Long) monthlyData.getOrDefault("pscDetentionCount", 0L);
+				data.put("totalDetentions", seaShipDetainedCount + riverShipDetainedCount + pscDetentionCount);
+				
+				// 添加数据更新时间
+				data.put("lastUpdateTime", now.format(formatter) + " " + 
+					java.time.LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+				
+				// 添加月份信息
+				data.put("currentMonth", now.getYear() + "年" + now.getMonthValue() + "月");
+			}
+			
+			result.put("status", "success");
+			result.put("data", data);
+			result.put("message", "获取月度统计数据成功");
+			
+		} catch (Exception e) {
+			logger.error("获取月度数据分析首页统计数据失败", e);
+			result.put("status", "error");
+			result.put("message", "获取统计数据失败: " + e.getMessage());
+		}
+		
+		return result;
+	}
 
 	/**
 	 * 获取Echarts图表数据
