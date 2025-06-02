@@ -1427,28 +1427,42 @@
                 var prevPscCount = 0;
                 var prevPscDefectCount = 0;
                 var prevPscDetentionCount = 0;
+                var currentPscCount = 0;
+                var currentPscDefectCount = 0;
+                var currentPscDetentionCount = 0;
+                var pscCountRate = 0;
+                var pscDefectRate = 0;
+                var pscDetentionRate = 0;
                 
-                // 如果是张家港海事局才有PSC数据
-                if (agency.agency.includes("张家港海事局") && data.prevPscData) {
-                    prevPscCount = data.prevPscData.pscCount || 0;
-                    prevPscDefectCount = data.prevPscData.pscDefectCount || 0;
-                    prevPscDetentionCount = data.prevPscData.pscDetentionCount || 0;
+                // 只有张家港海事局才有PSC数据
+                if (agency.agency.includes("张家港海事局")) {
+                    if (data.prevPscData) {
+                        prevPscCount = data.prevPscData.pscCount || 0;
+                        prevPscDefectCount = data.prevPscData.pscDefectCount || 0;
+                        prevPscDetentionCount = data.prevPscData.pscDetentionCount || 0;
+                    }
+                    currentPscCount = agency.pscCount || 0;
+                    currentPscDefectCount = agency.pscDefectCount || 0;
+                    currentPscDetentionCount = agency.pscDetentionCount || 0;
+                    pscCountRate = agency.pscCountRate || 0;
+                    pscDefectRate = agency.pscDefectRate || 0;
+                    pscDetentionRate = agency.pscDetentionRate || 0;
                 }
                 
                 // PSC检查数据（检查数量）
                 row.append('<td>' + prevPscCount + '</td>');
-                row.append('<td>' + (agency.pscCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscCountRate || 0));
+                row.append('<td>' + currentPscCount + '</td>');
+                row.append(createRateCell(pscCountRate));
                 
                 // PSC检查数据（缺陷数量）
                 row.append('<td>' + prevPscDefectCount + '</td>');
-                row.append('<td>' + (agency.pscDefectCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscDefectRate || 0));
+                row.append('<td>' + currentPscDefectCount + '</td>');
+                row.append(createRateCell(pscDefectRate));
                 
                 // PSC检查数据（滞留数量）
                 row.append('<td>' + prevPscDetentionCount + '</td>');
-                row.append('<td>' + (agency.pscDetentionCount || 0) + '</td>');
-                row.append(createRateCell(agency.pscDetentionRate || 0));
+                row.append('<td>' + currentPscDetentionCount + '</td>');
+                row.append(createRateCell(pscDetentionRate));
                 
                 // 获取现场监督上周数据
                 var prevOnSiteCount = 0;

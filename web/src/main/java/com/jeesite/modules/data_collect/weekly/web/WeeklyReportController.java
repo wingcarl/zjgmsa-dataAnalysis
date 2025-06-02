@@ -934,7 +934,7 @@ public class WeeklyReportController extends BaseController {
 				Map<String, Object> prevOnSiteData = getOnSiteInspectionStatisticsForZhangjiagang(prevStartDateStr, prevEndDateStr);
 				
 				// 计算环比变化率并构建部门数据列表
-				List<Map<String, Object>> agencyDataList = buildDepartmentDataListForZhangjiagang(shipData, onSiteData, prevShipData, prevOnSiteData);
+				List<Map<String, Object>> agencyDataList = buildDepartmentDataListForZhangjiagang(shipData, onSiteData, prevShipData, prevOnSiteData, pscData, prevPscData);
 				result.put("agencyDataList", agencyDataList);
 				
 				// 添加上期数据到结果中
@@ -947,7 +947,7 @@ public class WeeklyReportController extends BaseController {
 				result.put("actualPrevEndDate", prevEndDateStr);
 				
 				// 计算总体环比变化率
-				calculateChangeRates(result, shipData, pscData, onSiteData, prevShipData, prevPscData, prevOnSiteData);
+				calculateChangeRates(result, shipData, prevShipData, pscData, prevPscData, onSiteData, prevOnSiteData);
 			}
 			
 			// 合并所有数据到结果中
@@ -1219,7 +1219,22 @@ public class WeeklyReportController extends BaseController {
 			}
 			
 			// 执行查询
-			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findList(onSiteQuery);
+			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findDistinctList(onSiteQuery);
+			
+			// 定义张家港海事局的四家机构
+			List<String> targetAgencies = Arrays.asList(
+				"保税区海事处(筹)", 
+				"港区海事处", 
+				"锦丰海事处", 
+				"张家港海事局"
+			);
+			
+			// 筛选只包含目标机构的数据
+			onSiteList = onSiteList.stream()
+				.filter(onSite -> targetAgencies.stream()
+					.anyMatch(agency -> onSite.getInspectionAgency() != null && 
+						onSite.getInspectionAgency().contains(agency)))
+				.collect(Collectors.toList());
 			
 			// 去重统计
 			Map<String, List<ShipOnSiteInspection>> onSiteMap = onSiteList.stream()
@@ -1367,6 +1382,11 @@ public class WeeklyReportController extends BaseController {
 			result.putAll(shipData);
 			result.putAll(pscData);
 			result.putAll(onSiteData);
+			
+			// 添加上期数据到结果中，以便前端正确显示上期合计
+			result.put("prevShipData", prevShipData);
+			result.put("prevPscData", prevPscData);
+			result.put("prevOnSiteData", prevOnSiteData);
 			
 			// 构建按部门分组的数据列表
 			List<Map<String, Object>> deptDataList = buildMonthlyDepartmentDataList(shipData, onSiteData, pscData, prevShipData, prevOnSiteData, prevPscData);
@@ -1525,7 +1545,22 @@ public class WeeklyReportController extends BaseController {
 			}
 			
 			// 执行查询
-			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findList(onSiteQuery);
+			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findDistinctList(onSiteQuery);
+			
+			// 定义张家港海事局的四家机构
+			List<String> targetAgencies = Arrays.asList(
+				"保税区海事处(筹)", 
+				"港区海事处", 
+				"锦丰海事处", 
+				"张家港海事局"
+			);
+			
+			// 筛选只包含目标机构的数据
+			onSiteList = onSiteList.stream()
+				.filter(onSite -> targetAgencies.stream()
+					.anyMatch(agency -> onSite.getInspectionAgency() != null && 
+						onSite.getInspectionAgency().contains(agency)))
+				.collect(Collectors.toList());
 			
 			// 如果指定了部门，则通过agency_dept表进行筛选
 			if (com.jeesite.common.lang.StringUtils.isNotBlank(department)) {
@@ -1710,7 +1745,7 @@ public class WeeklyReportController extends BaseController {
 				result.put("abnormalCountRate", abnormalCountRate);
 				
 				// 按部门计算环比变化率
-		calculateDepartmentChangeRates(result, shipData, prevShipData, onSiteData, prevOnSiteData, pscData);
+		calculateDepartmentChangeRates(result, shipData, prevShipData, onSiteData, prevOnSiteData, pscData, prevPscData);
 	}
 	
 	/**
@@ -1719,7 +1754,7 @@ public class WeeklyReportController extends BaseController {
 	private void calculateDepartmentChangeRates(Map<String, Object> result,
 			Map<String, Object> shipData, Map<String, Object> prevShipData,
 			Map<String, Object> onSiteData, Map<String, Object> prevOnSiteData,
-			Map<String, Object> pscData) {
+			Map<String, Object> pscData, Map<String, Object> prevPscData) {
 		
 				Map<String, Long> agencySeaShipCounts = (Map<String, Long>) shipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
 				Map<String, Long> prevAgencySeaShipCounts = (Map<String, Long>) prevShipData.getOrDefault("agencySeaShipCounts", new HashMap<>());
@@ -2081,7 +2116,7 @@ public class WeeklyReportController extends BaseController {
 			}
 			
 			// 执行查询
-			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findDistinctList(onSiteQuery);
+			List<ShipOnSiteInspection> onSiteList = shipOnSiteInspectionService.findList(onSiteQuery);
 			
 			// 定义张家港海事局的四家机构
 			List<String> targetAgencies = Arrays.asList(
@@ -2110,14 +2145,33 @@ public class WeeklyReportController extends BaseController {
 				agencyAbnormalCounts.put(agency, 0L);
 			}
 			
-			// 使用去重逻辑：按船名+日期+机构分组
+			// 先统计所有原始记录中的异常数量（去重前统计）
+			for (ShipOnSiteInspection onSite : onSiteList) {
+				String agency = onSite.getInspectionAgency();
+				
+				// 找到匹配的机构
+				String matchedAgency = targetAgencies.stream()
+					.filter(targetAgency -> agency != null && agency.contains(targetAgency))
+					.findFirst()
+					.orElse(null);
+				
+				if (matchedAgency != null) {
+					// 检查是否有异常（去重前统计）
+					if ("是".equals(onSite.getIssueFound())) {
+						abnormalCount++;
+						agencyAbnormalCounts.put(matchedAgency, agencyAbnormalCounts.get(matchedAgency) + 1);
+					}
+				}
+			}
+			
+			// 使用去重逻辑：按船名+日期+机构分组（只用于统计onSiteCount）
 			Map<String, List<ShipOnSiteInspection>> groupedData = onSiteList.stream()
 				.collect(Collectors.groupingBy(onSite -> 
 					onSite.getShipNameCn() + "|" + 
 					DateUtils.formatDate(onSite.getInspectionDate()) + "|" + 
 					onSite.getInspectionAgency()));
 			
-			// 处理分组后的数据
+			// 处理分组后的数据（只统计现场监督数量）
 			for (Map.Entry<String, List<ShipOnSiteInspection>> entry : groupedData.entrySet()) {
 				List<ShipOnSiteInspection> group = entry.getValue();
 				if (!group.isEmpty()) {
@@ -2133,15 +2187,6 @@ public class WeeklyReportController extends BaseController {
 					if (matchedAgency != null) {
 						onSiteCount++;
 						agencyOnSiteCounts.put(matchedAgency, agencyOnSiteCounts.get(matchedAgency) + 1);
-						
-						// 检查该分组是否有异常（任何一条记录有问题就算异常）
-						boolean hasIssue = group.stream()
-							.anyMatch(onSite -> "是".equals(onSite.getIssueFound()));
-						
-						if (hasIssue) {
-							abnormalCount++;
-							agencyAbnormalCounts.put(matchedAgency, agencyAbnormalCounts.get(matchedAgency) + 1);
-						}
 					}
 				}
 			}
@@ -2164,7 +2209,8 @@ public class WeeklyReportController extends BaseController {
 	 */
 	private List<Map<String, Object>> buildDepartmentDataListForZhangjiagang(
 			Map<String, Object> shipData, Map<String, Object> onSiteData,
-			Map<String, Object> prevShipData, Map<String, Object> prevOnSiteData) {
+			Map<String, Object> prevShipData, Map<String, Object> prevOnSiteData,
+			Map<String, Object> pscData, Map<String, Object> prevPscData) {
 		
 		List<Map<String, Object>> agencyDataList = new ArrayList<>();
 		
@@ -2186,6 +2232,11 @@ public class WeeklyReportController extends BaseController {
 		Map<String, Long> agencyOnSiteCounts = (Map<String, Long>) onSiteData.get("agencyOnSiteCounts");
 		Map<String, Long> agencyAbnormalCounts = (Map<String, Long>) onSiteData.get("agencyAbnormalCounts");
 		
+		// 获取PSC数据
+		Map<String, Long> agencyPscCounts = (Map<String, Long>) pscData.getOrDefault("agencyPscCounts", new HashMap<>());
+		Map<String, Long> agencyPscDefectCounts = (Map<String, Long>) pscData.getOrDefault("agencyPscDefectCounts", new HashMap<>());
+		Map<String, Long> agencyPscDetentionCounts = (Map<String, Long>) pscData.getOrDefault("agencyPscDetentionCounts", new HashMap<>());
+		
 		// 获取上期数据
 		Map<String, Long> prevAgencySeaShipCounts = prevShipData != null ? 
 			(Map<String, Long>) prevShipData.get("agencySeaShipCounts") : new HashMap<>();
@@ -2203,6 +2254,14 @@ public class WeeklyReportController extends BaseController {
 			(Map<String, Long>) prevOnSiteData.get("agencyOnSiteCounts") : new HashMap<>();
 		Map<String, Long> prevAgencyAbnormalCounts = prevOnSiteData != null ? 
 			(Map<String, Long>) prevOnSiteData.get("agencyAbnormalCounts") : new HashMap<>();
+		
+		// 获取上期PSC数据
+		Map<String, Long> prevAgencyPscCounts = prevPscData != null ? 
+			(Map<String, Long>) prevPscData.getOrDefault("agencyPscCounts", new HashMap<>()) : new HashMap<>();
+		Map<String, Long> prevAgencyPscDefectCounts = prevPscData != null ? 
+			(Map<String, Long>) prevPscData.getOrDefault("agencyPscDefectCounts", new HashMap<>()) : new HashMap<>();
+		Map<String, Long> prevAgencyPscDetentionCounts = prevPscData != null ? 
+			(Map<String, Long>) prevPscData.getOrDefault("agencyPscDetentionCounts", new HashMap<>()) : new HashMap<>();
 		
 		// 为每个机构构建数据
 		for (String agency : targetAgencies) {
@@ -2251,12 +2310,19 @@ public class WeeklyReportController extends BaseController {
 			
 			// PSC数据（只有张家港海事局有）
 			if ("张家港海事局".equals(agency)) {
-				agencyData.put("pscCount", 0L); // PSC数据需要单独处理
-				agencyData.put("pscDefectCount", 0L);
-				agencyData.put("pscDetentionCount", 0L);
-				agencyData.put("pscCountRate", 0.0);
-				agencyData.put("pscDefectRate", 0.0);
-				agencyData.put("pscDetentionRate", 0.0);
+				long pscCount = agencyPscCounts.getOrDefault(agency, 0L);
+				long pscDefectCount = agencyPscDefectCounts.getOrDefault(agency, 0L);
+				long pscDetentionCount = agencyPscDetentionCounts.getOrDefault(agency, 0L);
+				long prevPscCount = prevAgencyPscCounts.getOrDefault(agency, 0L);
+				long prevPscDefectCount = prevAgencyPscDefectCounts.getOrDefault(agency, 0L);
+				long prevPscDetentionCount = prevAgencyPscDetentionCounts.getOrDefault(agency, 0L);
+				
+				agencyData.put("pscCount", pscCount);
+				agencyData.put("pscDefectCount", pscDefectCount);
+				agencyData.put("pscDetentionCount", pscDetentionCount);
+				agencyData.put("pscCountRate", calculateRate(pscCount, prevPscCount));
+				agencyData.put("pscDefectRate", calculateRate(pscDefectCount, prevPscDefectCount));
+				agencyData.put("pscDetentionRate", calculateRate(pscDetentionCount, prevPscDetentionCount));
 			} else {
 				agencyData.put("pscCount", 0L);
 				agencyData.put("pscDefectCount", 0L);

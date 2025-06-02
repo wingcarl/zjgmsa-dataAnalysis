@@ -1337,7 +1337,7 @@
 
                 // 发送 AJAX 请求获取数据
                 $.ajax({
-                    url: 'fetchData',
+                    url: 'weeklyChartDataWithDate',
                     type: 'GET',
                     dataType: 'json',
                     data: params,
@@ -2295,7 +2295,7 @@
                 }
             }
             
-            var penaltyCountRateTotal = calculateChangeRate(penaltyCountLastTotal, penaltyCountCurrentTotal);
+            var penaltyCountRateTotal = calculateChangeRate(penaltyCountCurrentTotal, penaltyCountLastTotal);
 
             row.append('<td><strong>' + penaltyCountLastTotal + '</strong></td>');
             row.append('<td><strong>' + penaltyCountCurrentTotal + '</strong></td>');
@@ -2328,7 +2328,7 @@
                 penaltyAmountCurrentTotal = data.indicatorData?.penaltyAmount?.value || 0;
             }
 
-            var penaltyAmountRateTotal = calculateChangeRate(penaltyAmountLastTotal, penaltyAmountCurrentTotal);
+            var penaltyAmountRateTotal = calculateChangeRate(penaltyAmountCurrentTotal, penaltyAmountLastTotal);
 
             // 金额显示为万元，保留2位小数
             row.append('<td><strong>' + (penaltyAmountLastTotal / 10000).toFixed(2) + '</strong></td>');
@@ -2347,7 +2347,7 @@
         }
 
         // 计算变化率
-        function calculateChangeRate(lastValue, currentValue) {
+        function calculateChangeRate(currentValue, lastValue) {
             if (lastValue === 0) return currentValue > 0 ? 100 : 0;
             return ((currentValue - lastValue) / lastValue) * 100;
         }
