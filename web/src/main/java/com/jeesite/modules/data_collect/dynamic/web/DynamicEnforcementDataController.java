@@ -791,7 +791,7 @@ public class DynamicEnforcementDataController extends BaseController {
 					"FROM dynamic_enforcement_data ded " +
 					"LEFT JOIN agency_dept ad ON ded.inspection_unit = ad.agency " +
 					"WHERE ded.inspection_time >= ? AND ded.inspection_time <= ? " +
-					"AND ad.dept IS NOT NULL AND ad.dept != '江苏海事局' " +
+					"AND ad.dept IS NOT NULL AND ad.dept != '江苏海事局' and ded.inspection_result='立案调查' and ded.cruise_task_name like '%电子%'  " +
 					"ORDER BY ded.inspection_time";
 		
 		// 执行原生SQL查询
