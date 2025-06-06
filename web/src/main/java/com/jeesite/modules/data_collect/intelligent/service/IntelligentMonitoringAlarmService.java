@@ -16,6 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 
+// 新增导入
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import com.jeesite.common.lang.StringUtils;
+
 /**
  * 智能卡口预警记录表Service
  * @author 王浩宇
@@ -132,6 +137,45 @@ public class IntelligentMonitoringAlarmService extends CrudService<IntelligentMo
 	@Transactional
 	public void delete(IntelligentMonitoringAlarm intelligentMonitoringAlarm) {
 		super.delete(intelligentMonitoringAlarm);
+	}
+	
+	/**
+	 * 按时间范围查询智能卡口数据
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return
+	 */
+	public List<IntelligentMonitoringAlarm> getIntelligentMonitoringDataByDateRange(String startDate, String endDate) {
+		try {
+			// 直接获取所有数据，然后在应用层进行过滤
+			IntelligentMonitoringAlarm queryParam = new IntelligentMonitoringAlarm();
+			List<IntelligentMonitoringAlarm> allData = this.findList(queryParam);
+			
+			if (StringUtils.isBlank(startDate) || StringUtils.isBlank(endDate)) {
+				return allData;
+			}
+			
+			// 在应用层进行时间过滤
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date start = sdf.parse(startDate);
+			Date end = sdf.parse(endDate);
+			end = new Date(end.getTime() + 24 * 60 * 60 * 1000 - 1); // 结束日期到当天23:59:59
+			
+			List<IntelligentMonitoringAlarm> filteredData = new java.util.ArrayList<>();
+			for (IntelligentMonitoringAlarm item : allData) {
+				if (item.getCaptureTime() != null) {
+					Date captureTime = item.getCaptureTime();
+					if (captureTime.compareTo(start) >= 0 && captureTime.compareTo(end) <= 0) {
+						filteredData.add(item);
+					}
+				}
+			}
+			
+			return filteredData;
+		} catch (Exception e) {
+			logger.error("按时间范围查询智能卡口数据失败", e);
+			return new java.util.ArrayList<>();
+		}
 	}
 	
 }

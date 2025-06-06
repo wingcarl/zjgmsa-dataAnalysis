@@ -3,6 +3,10 @@ package com.jeesite.modules.data_collect.dynamic.service;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Date;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -110,14 +114,22 @@ public class DynamicEnforcementDataService extends CrudService<DynamicEnforcemen
 		StringBuilder failureMsg = new StringBuilder();
 		try(ExcelImport ei = new ExcelImport(file, 2, 0)){
 			List<DynamicEnforcementData> list = ei.getDataList(DynamicEnforcementData.class);
+			
+			// 性能优化：如果需要检查重复记录，先批量查询相关数据
+			Map<String, DynamicEnforcementData> existingDataMap = new HashMap<>();
+			if ("abnormal".equals(importType) || "case".equals(importType)) {
+				existingDataMap = buildExistingDataMap(list);
+			}
+			
 			for (DynamicEnforcementData dynamicEnforcementData : list) {
 				try{
 					ValidatorUtils.validateWithException(dynamicEnforcementData);
 
 					// 只有在特定导入类型时才检查现有记录
 					if ("abnormal".equals(importType) || "case".equals(importType)) {
-					// 检查是否存在相同的记录
-					DynamicEnforcementData existingData = findExistingData(dynamicEnforcementData);
+						// 使用优化后的查找方法
+						String key = buildDataKey(dynamicEnforcementData);
+						DynamicEnforcementData existingData = existingDataMap.get(key);
 
 					if (existingData != null) {
 						// 更新记录
@@ -170,26 +182,95 @@ public class DynamicEnforcementDataService extends CrudService<DynamicEnforcemen
 	}
 
 	/**
-	 * 查找是否存在相同的记录
-	 * @param dynamicEnforcementData
-	 * @return
+	 * 优化后的批量查询现有数据方法
+	 * 根据导入数据的时间范围，批量查询相关数据，然后在内存中建立索引
+	 * @param importDataList 导入的数据列表
+	 * @return 现有数据的映射表，key为数据的唯一标识，value为现有数据
 	 */
-	private DynamicEnforcementData findExistingData(DynamicEnforcementData dynamicEnforcementData) {
-		DynamicEnforcementData params = new DynamicEnforcementData();
-		params.setInspectionUnit(dynamicEnforcementData.getInspectionUnit());
-		params.setInspectionTime(dynamicEnforcementData.getInspectionTime());
-		params.setInspectionLocation(dynamicEnforcementData.getInspectionLocation());
-		params.setInspectionTarget(dynamicEnforcementData.getInspectionTarget());
-		params.setCruiseTaskName(dynamicEnforcementData.getCruiseTaskName());
-		params.setMajorItemName(dynamicEnforcementData.getMajorItemName());
-		params.setShipGrossTonnage(dynamicEnforcementData.getShipGrossTonnage());
-
-		List<DynamicEnforcementData> list = super.findList(params);
-		if (list != null && list.size() > 0) {
-			return list.get(0);
+	private Map<String, DynamicEnforcementData> buildExistingDataMap(List<DynamicEnforcementData> importDataList) {
+		Map<String, DynamicEnforcementData> resultMap = new HashMap<>();
+		
+		if (importDataList == null || importDataList.isEmpty()) {
+			return resultMap;
 		}
-		return null;
+		
+		// 计算时间范围
+		Date minTime = null;
+		Date maxTime = null;
+		for (DynamicEnforcementData data : importDataList) {
+			Date inspectionTime = data.getInspectionTime();
+			if (inspectionTime != null) {
+				if (minTime == null || inspectionTime.before(minTime)) {
+					minTime = inspectionTime;
+				}
+				if (maxTime == null || inspectionTime.after(maxTime)) {
+					maxTime = inspectionTime;
+				}
+			}
+		}
+		
+		// 如果没有有效的时间数据，返回空Map
+		if (minTime == null || maxTime == null) {
+			return resultMap;
+		}
+		
+		// 扩展时间范围，避免边界问题（前后各扩展1天）
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(minTime);
+		cal.add(Calendar.DAY_OF_MONTH, -1);
+		minTime = cal.getTime();
+		
+		cal.setTime(maxTime);
+		cal.add(Calendar.DAY_OF_MONTH, 1);
+		maxTime = cal.getTime();
+		
+		// 构建查询条件，按时间范围批量查询
+		DynamicEnforcementData queryParams = new DynamicEnforcementData();
+		queryParams.setInspectionTime_gte(minTime);
+		queryParams.setInspectionTime_lte(maxTime);
+		
+		// 批量查询指定时间范围内的所有数据
+		List<DynamicEnforcementData> existingDataList = super.findList(queryParams);
+		
+		// 在内存中建立索引，以便快速查找
+		for (DynamicEnforcementData existingData : existingDataList) {
+			String key = buildDataKey(existingData);
+			resultMap.put(key, existingData);
+		}
+		
+		return resultMap;
 	}
+	
+	/**
+	 * 构建数据的唯一标识key
+	 * 基于检查单位、检查时间、检查地点、检查对象、巡航任务名称、大项名称、船舶总吨生成唯一key
+	 * @param data 数据对象
+	 * @return 唯一标识key
+	 */
+	private String buildDataKey(DynamicEnforcementData data) {
+		if (data == null) {
+			return "";
+		}
+		
+		StringBuilder keyBuilder = new StringBuilder();
+		keyBuilder.append(data.getInspectionUnit() != null ? data.getInspectionUnit() : "").append("|");
+		
+		// 格式化检查时间为字符串，精确到分钟
+		if (data.getInspectionTime() != null) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+			keyBuilder.append(sdf.format(data.getInspectionTime()));
+		}
+		keyBuilder.append("|");
+		
+		keyBuilder.append(data.getInspectionLocation() != null ? data.getInspectionLocation() : "").append("|");
+		keyBuilder.append(data.getInspectionTarget() != null ? data.getInspectionTarget() : "").append("|");
+		keyBuilder.append(data.getCruiseTaskName() != null ? data.getCruiseTaskName() : "").append("|");
+		keyBuilder.append(data.getMajorItemName() != null ? data.getMajorItemName() : "").append("|");
+		keyBuilder.append(data.getShipGrossTonnage() != null ? data.getShipGrossTonnage() : "");
+		
+		return keyBuilder.toString();
+	}
+
 	/**
 	 * 更新数据状态
 	 * @param dynamicEnforcementData
@@ -208,6 +289,30 @@ public class DynamicEnforcementDataService extends CrudService<DynamicEnforcemen
 	@Transactional
 	public void delete(DynamicEnforcementData dynamicEnforcementData) {
 		super.delete(dynamicEnforcementData);
+	}
+	
+	/**
+	 * 查找是否存在相同的记录（已废弃，保留用于兼容性）
+	 * @param dynamicEnforcementData
+	 * @return
+	 * @deprecated 此方法性能较差，建议使用 buildExistingDataMap 方法批量处理
+	 */
+	@Deprecated
+	private DynamicEnforcementData findExistingData(DynamicEnforcementData dynamicEnforcementData) {
+		DynamicEnforcementData params = new DynamicEnforcementData();
+		params.setInspectionUnit(dynamicEnforcementData.getInspectionUnit());
+		params.setInspectionTime(dynamicEnforcementData.getInspectionTime());
+		params.setInspectionLocation(dynamicEnforcementData.getInspectionLocation());
+		params.setInspectionTarget(dynamicEnforcementData.getInspectionTarget());
+		params.setCruiseTaskName(dynamicEnforcementData.getCruiseTaskName());
+		params.setMajorItemName(dynamicEnforcementData.getMajorItemName());
+		params.setShipGrossTonnage(dynamicEnforcementData.getShipGrossTonnage());
+
+		List<DynamicEnforcementData> list = super.findList(params);
+		if (list != null && list.size() > 0) {
+			return list.get(0);
+		}
+		return null;
 	}
 	
 }

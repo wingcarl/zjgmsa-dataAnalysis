@@ -489,6 +489,15 @@
                         <td>0</td>
                         <td>0</td>
                     </tr>
+                    <tr>
+                        <td>中油泰富</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -534,7 +543,7 @@
             // 初始化图表
             initCharts();
             
-            // 设置默认时间范围（本周）
+            // 设置默认时间范围
             setDefaultDateRange();
             
             // 初始加载数据
@@ -563,22 +572,34 @@
         // 设置默认时间范围
         function setDefaultDateRange() {
             var today = new Date();
-            var currentDay = today.getDay(); // 0是周日，1是周一
+            var dayOfWeek = today.getDay(); // 0是周日，1-6是周一到周六
             
-            // 计算本周一
-            var monday = new Date(today);
-            monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
+            var endDate = new Date(today);
+            var startDate = new Date(today);
             
-            // 计算本周日
-            var sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
+            // 如果今天是周五(5)或周六(6)，则结束日期是本周四
+            if (dayOfWeek >= 5) {
+                endDate.setDate(today.getDate() - (dayOfWeek - 4));
+            } else {
+                // 否则结束日期是上周四
+                endDate.setDate(today.getDate() - (dayOfWeek + 3));
+            }
             
-            // 格式化日期
-            var startDate = monday.toISOString().split('T')[0];
-            var endDate = sunday.toISOString().split('T')[0];
+            // 开始日期是结束日期往前推6天（周五）
+            startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - 6);
             
-            $('#startDate').val(startDate);
-            $('#endDate').val(endDate);
+            // 格式化日期为YYYY-MM-DD
+            $('#startDate').val(formatDate(startDate));
+            $('#endDate').val(formatDate(endDate));
+        }
+
+        // 格式化日期函数
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
         }
 
         // 加载数据
@@ -758,7 +779,7 @@
                 success: function(response) {
                     if (response.result === 'true') {
                         var data = response.data;
-                        var companies = ['双山汽渡', '高尔夫', '张皋汽渡'];
+                        var companies = ['双山汽渡', '高尔夫', '张皋汽渡','中油泰富'];
                         var dataMap = {};
                         
                         // 创建数据映射

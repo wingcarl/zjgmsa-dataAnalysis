@@ -86,6 +86,7 @@
         FROM punish_judge
         WHERE management_category = '危防管理'
         AND penalty_decision_time BETWEEN #{startDate} AND #{endDate}
+        AND penalty_agency IN ('张家港港区海事处', '张家港港区海事处保税区海巡执法大队', '张家港锦丰海事处', '海巡执法支队')
         GROUP BY case_reason
         ORDER BY value DESC
         LIMIT 10
@@ -98,6 +99,10 @@
         FROM dynamic_enforcement_data
         WHERE major_item_name IN ('船舶载运固体散装货物现场监督检查', '船载包装危险货物/污染危害性货物现场监督检查', '船载散装液体危险货物/污染危害性货物现场监督检查')
         AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        AND inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元',
+                               '东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元',
+                               '福姜沙快反处置中心', '七号快反执法单元',
+                               '保税区快反处置中心', '四号快反执法单元')
         GROUP BY major_item_name
         ORDER BY value DESC
         LIMIT 10
@@ -111,6 +116,10 @@
         WHERE major_item_name IN ('船舶使用岸电监督检查', '船舶油污损害赔偿基金现场稽查', '船舶燃油质量监督检查', 
                                 '船舶能耗数据和碳强度监督管理', '船舶防污染作业现场检查', '船舶防污染证书、文书检查')
         AND inspection_time BETWEEN #{startDate} AND #{endDate}
+        AND inspection_unit IN ('西港区快反处置中心', '五号快反执法单元', '六号快反执法单元',
+                               '东港区快反处置中心', '一号快反执法单元', '二号快反执法单元', '三号快反执法单元',
+                               '福姜沙快反处置中心', '七号快反执法单元',
+                               '保税区快反处置中心', '四号快反执法单元')
         GROUP BY major_item_name
         ORDER BY value DESC
         LIMIT 10

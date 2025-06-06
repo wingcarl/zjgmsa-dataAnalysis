@@ -518,6 +518,8 @@
             min-width: 60%;
             position: relative;
             background-color: #fff;
+            overflow-y: auto;
+            max-height: calc(100vh - 40px);
         }
         
         .fullscreen-chart {
@@ -1153,6 +1155,78 @@
             </div>
         </div>
     </div>
+
+    <!-- 新增智能监控数据分析图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-camera icon-box"></i>智能监控数据分析</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="intelligentMonitoringLevel">统计层级：</label>
+                                <select id="intelligentMonitoringLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshIntelligentMonitoringData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('intelligent-monitoring-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="intelligent-monitoring-chart" class="chart-container">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增智能监控alarm_flag分类统计图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-flag icon-box"></i>智能监控告警类型分析</h5>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="alarmFlagLevel">统计层级：</label>
+                                <select id="alarmFlagLevel" class="form-control">
+                                    <option value="分支局">分支局</option>
+                                    <option value="海事处">海事处</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="refreshAlarmFlagData" class="btn btn-primary" style="margin-top: 32px;">
+                                <i class="fas fa-sync-alt"></i> 刷新数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12" style="position: relative;">
+                <button class="chart-fullscreen-btn" onclick="openFullscreen('alarm-flag-chart')">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <div id="alarm-flag-chart" class="chart-container">
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- 全屏模态框 -->
@@ -1160,6 +1234,25 @@
     <div class="fullscreen-modal-content">
         <span class="close-fullscreen" onclick="closeFullscreen()">&times;</span>
         <div class="fullscreen-chart-area">
+            <!-- alarm-flag-chart专用的筛选区域 -->
+            <div id="alarm-flag-filter-area" class="filter-section" style="display: none; margin: 15px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="fullscreen-branch-office">分支局筛选：</label>
+                            <select id="fullscreen-branch-office" class="form-control">
+                                <option value="">全部分支局</option>
+                                <!-- 动态加载选项 -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button id="apply-alarm-flag-filter" class="btn btn-primary" style="margin-top: 32px;">
+                            <i class="fas fa-filter"></i> 应用筛选
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div id="fullscreen-chart" class="fullscreen-chart"></div>
         </div>
         <div class="fullscreen-description-area">
@@ -1213,6 +1306,12 @@
         // 初始化红码船数据图表
         var redCodeShipChart = echarts.init(document.getElementById('red-code-ship-chart'));
 
+        // 初始化智能监控数据图表
+        var intelligentMonitoringChart = echarts.init(document.getElementById('intelligent-monitoring-chart'));
+
+        // 初始化智能监控alarm_flag分类图表
+        var alarmFlagChart = echarts.init(document.getElementById('alarm-flag-chart'));
+
         // 获取日期选择器和拉取数据按钮
         var startDateInput = $('#startDate');
         var endDateInput = $('#endDate');
@@ -1245,6 +1344,12 @@
         
         // 初始化红码船数据
         fetchRedCodeShipData();
+
+        // 初始化智能监控数据
+        fetchIntelligentMonitoringData();
+
+        // 初始化智能监控alarm_flag数据
+        fetchAlarmFlagData();
 
         // 日期改变事件
         startDateInput.on('change', function() {
@@ -1310,6 +1415,12 @@
                 
                 // 同时更新红码船数据
                 fetchRedCodeShipData();
+
+                // 同时更新智能监控数据
+                fetchIntelligentMonitoringData();
+
+                // 同时更新智能监控alarm_flag数据
+                fetchAlarmFlagData();
             });
         });
 
@@ -2325,6 +2436,8 @@
             anchorRateChart.resize();
             portShippingChart.resize();
             redCodeShipChart.resize();
+            intelligentMonitoringChart.resize();
+            alarmFlagChart.resize();
         });
         
         // 高级筛选部分代码
@@ -3797,6 +3910,740 @@
         $('#redCodeShipLevel').on('change', function() {
             fetchRedCodeShipData();
         });
+
+        // ========== 智能监控数据相关函数 ==========
+
+        // 获取智能监控数据
+        function fetchIntelligentMonitoringData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#intelligentMonitoringLevel').val()
+            };
+
+            $.ajax({
+                url: '${ctx}/intelligent/intelligentMonitoringAlarm/getIntelligentMonitoringData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderIntelligentMonitoringChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching intelligent monitoring data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取智能监控数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+
+        // 渲染智能监控数据图表
+        function renderIntelligentMonitoringChart(data) {
+            if (!data || !data.organizations || data.organizations.length === 0) {
+                intelligentMonitoringChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+
+            var organizations = data.organizations;
+            var realAlarmCounts = data.realAlarmCounts;
+            var falseAlarmCounts = data.falseAlarmCounts;
+            var invalidAlarmCounts = data.invalidAlarmCounts;
+            var uncheckAlarmCounts = data.uncheckAlarmCounts;
+            var realAlarmRates = data.realAlarmRates;
+
+            // 创建数据对象数组以便于排序
+            var dataArr = organizations.map((org, index) => ({
+                organization: org,
+                realAlarmCount: realAlarmCounts[index],
+                falseAlarmCount: falseAlarmCounts[index],
+                invalidAlarmCount: invalidAlarmCounts[index],
+                uncheckAlarmCount: uncheckAlarmCounts[index],
+                realAlarmRate: realAlarmRates[index]
+            }));
+
+            // 按照真实告警率从高到低排序
+            dataArr.sort((a, b) => b.realAlarmRate - a.realAlarmRate);
+
+            // 提取排序后的数据
+            var sortedOrganizations = dataArr.map(item => item.organization);
+            var sortedRealAlarmCounts = dataArr.map(item => item.realAlarmCount);
+            var sortedFalseAlarmCounts = dataArr.map(item => item.falseAlarmCount);
+            var sortedInvalidAlarmCounts = dataArr.map(item => item.invalidAlarmCount);
+            var sortedUncheckAlarmCounts = dataArr.map(item => item.uncheckAlarmCount);
+            var sortedRealAlarmRates = dataArr.map(item => item.realAlarmRate);
+
+            var option = {
+                title: {
+                    text: '智能监控数据分析',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            var unit = '';
+                            if (item.seriesName === '真实报警率') {
+                                unit = '%';
+                            } else {
+                                unit = '次';
+                            }
+                            result += item.marker + item.seriesName + ': ' + item.value + unit + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['真实报警', '误报警', '无效报警', '未核查', '真实报警率'],
+                    top: 30
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: sortedOrganizations,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: 30
+                    }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '报警数量(次)',
+                        position: 'left',
+                        axisLabel: {
+                            formatter: '{value}次'
+                        }
+                    },
+                    {
+                        type: 'value',
+                        name: '真实报警率(%)',
+                        position: 'right',
+                        max: 100,
+                        axisLabel: {
+                            formatter: '{value}%'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: '真实报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        yAxisIndex: 0,
+                        data: realAlarmCounts,
+                        itemStyle: {
+                            color: '#5cb85c'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '误报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        yAxisIndex: 0,
+                        data: falseAlarmCounts,
+                        itemStyle: {
+                            color: '#f0ad4e'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '无效报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        yAxisIndex: 0,
+                        data: invalidAlarmCounts,
+                        itemStyle: {
+                            color: '#d9534f'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '未核查',
+                        type: 'bar',
+                        stack: '报警类型',
+                        yAxisIndex: 0,
+                        data: uncheckAlarmCounts,
+                        itemStyle: {
+                            color: '#777'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '真实报警率',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: realAlarmRates,
+                        lineStyle: {
+                            color: '#5470c6',
+                            width: 3
+                        },
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%',
+                            color: '#5470c6'
+                        }
+                    }
+                ]
+            };
+
+            intelligentMonitoringChart.setOption(option, true);
+        }
+
+        // 智能监控数据刷新按钮事件
+        $('#refreshIntelligentMonitoringData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+
+            fetchIntelligentMonitoringData();
+
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+
+        // 智能监控层级选择改变事件
+        $('#intelligentMonitoringLevel').on('change', function() {
+            fetchIntelligentMonitoringData();
+        });
+
+        // ========== 智能监控alarm_flag分类统计相关函数 ==========
+
+        // 获取alarm_flag分类统计数据
+        function fetchAlarmFlagData() {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#alarmFlagLevel').val()
+            };
+
+            $.ajax({
+                url: '${ctx}/intelligent/intelligentMonitoringAlarm/getAlarmFlagData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    renderAlarmFlagChart(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching alarm flag data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取告警类型数据失败，请查看控制台错误信息。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+
+        // 获取带分支局筛选的alarm_flag数据
+        function fetchFilteredAlarmFlagData(branchOffice) {
+            var params = {
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                level: $('#alarmFlagLevel').val(),
+                branchOffice: branchOffice || ''
+            };
+
+            $.ajax({
+                url: '${ctx}/intelligent/intelligentMonitoringAlarm/getAlarmFlagData',
+                type: 'POST',
+                dataType: 'json',
+                data: params,
+                success: function(data) {
+                    if (fullscreenChartInstance) {
+                        renderAlarmFlagChartInFullscreen(data);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error fetching filtered alarm flag data:', error);
+                    Swal.fire({
+                        title: '错误!',
+                        text: '获取筛选后的告警类型数据失败。',
+                        icon: 'error',
+                        confirmButtonText: '确定'
+                    });
+                }
+            });
+        }
+
+        // 渲染alarm_flag分类统计图表（水平堆叠图）
+        function renderAlarmFlagChart(data) {
+            if (!data || !data.alarmFlags || data.alarmFlags.length === 0) {
+                alarmFlagChart.setOption({
+                    title: {
+                        text: '暂无数据',
+                        left: 'center',
+                        top: 'center',
+                        textStyle: {
+                            color: '#999',
+                            fontSize: 20
+                        }
+                    }
+                });
+                return;
+            }
+
+            var alarmFlags = data.alarmFlags;
+            var realAlarmCounts = data.realAlarmCounts;
+            var falseAlarmCounts = data.falseAlarmCounts;
+            var invalidAlarmCounts = data.invalidAlarmCounts;
+            var uncheckAlarmCounts = data.uncheckAlarmCounts;
+            var realAlarmRates = data.realAlarmRates;
+
+            // 创建数据对象数组以便于排序
+            var dataArr = alarmFlags.map((flag, index) => ({
+                alarmFlag: flag,
+                realAlarmCount: realAlarmCounts[index],
+                falseAlarmCount: falseAlarmCounts[index],
+                invalidAlarmCount: invalidAlarmCounts[index],
+                uncheckAlarmCount: uncheckAlarmCounts[index],
+                realAlarmRate: realAlarmRates[index]
+            }));
+
+            // 按照真实告警率从高到低排序
+            dataArr.sort((a, b) => b.realAlarmRate - a.realAlarmRate);
+
+            // 提取排序后的数据（告警率高的排在上面，所以需要reverse）
+            var sortedAlarmFlags = dataArr.map(item => item.alarmFlag).reverse();
+            var sortedRealAlarmCounts = dataArr.map(item => item.realAlarmCount).reverse();
+            var sortedFalseAlarmCounts = dataArr.map(item => item.falseAlarmCount).reverse();
+            var sortedInvalidAlarmCounts = dataArr.map(item => item.invalidAlarmCount).reverse();
+            var sortedUncheckAlarmCounts = dataArr.map(item => item.uncheckAlarmCount).reverse();
+            var sortedRealAlarmRates = dataArr.map(item => item.realAlarmRate).reverse();
+
+            var option = {
+                title: {
+                    text: '智能监控告警类型分析',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        var totalCount = 0;
+                        params.forEach(function(item) {
+                            if (item.seriesName !== '真实报警率') {
+                                totalCount += item.value;
+                                result += item.marker + item.seriesName + ': ' + item.value + '次<br/>';
+                            }
+                        });
+                        // 添加真实报警率
+                        var rateParam = params.find(p => p.seriesName === '真实报警率');
+                        if (rateParam) {
+                            result += rateParam.marker + '真实报警率: ' + rateParam.value + '%<br/>';
+                        }
+                        result += '总计: ' + totalCount + '次';
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['真实报警', '误报警', '无效报警', '未核查', '真实报警率'],
+                    top: 30
+                },
+                grid: {
+                    left: '15%',
+                    right: '8%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    name: '报警数量',
+                    position: 'top'
+                },
+                yAxis: [
+                    {
+                        type: 'category',
+                        data: sortedAlarmFlags,
+                        axisLabel: {
+                            interval: 0,
+                            formatter: function(value) {
+                                // 限制标签长度
+                                if (value && value.length > 20) {
+                                    return value.substring(0, 20) + '...';
+                                }
+                                return value;
+                            }
+                        }
+                    },
+                    {
+                        type: 'category',
+                        data: sortedAlarmFlags,
+                        show: false
+                    }
+                ],
+                series: [
+                    {
+                        name: '真实报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedRealAlarmCounts,
+                        itemStyle: {
+                            color: '#5cb85c'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '误报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedFalseAlarmCounts,
+                        itemStyle: {
+                            color: '#f0ad4e'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '无效报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedInvalidAlarmCounts,
+                        itemStyle: {
+                            color: '#d9534f'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '未核查',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedUncheckAlarmCounts,
+                        itemStyle: {
+                            color: '#777'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '真实报警率',
+                        type: 'scatter',
+                        yAxisIndex: 1,
+                        data: sortedRealAlarmRates.map((rate, index) => [rate, index]),
+                        symbolSize: function(data) {
+                            return Math.max(8, data[0] / 5); // 根据比率调整点的大小
+                        },
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{@[0]}',
+                            color: '#5470c6'
+                        }
+                    }
+                ]
+            };
+
+            alarmFlagChart.setOption(option, true);
+        }
+
+        // 在全屏模式下渲染alarm_flag图表
+        function renderAlarmFlagChartInFullscreen(data) {
+            if (!fullscreenChartInstance || !data || !data.alarmFlags || data.alarmFlags.length === 0) {
+                if (fullscreenChartInstance) {
+                    fullscreenChartInstance.setOption({
+                        title: {
+                            text: '暂无数据',
+                            left: 'center',
+                            top: 'center',
+                            textStyle: {
+                                color: '#999',
+                                fontSize: 20
+                            }
+                        }
+                    });
+                }
+                return;
+            }
+
+            var alarmFlags = data.alarmFlags;
+            var realAlarmCounts = data.realAlarmCounts;
+            var falseAlarmCounts = data.falseAlarmCounts;
+            var invalidAlarmCounts = data.invalidAlarmCounts;
+            var uncheckAlarmCounts = data.uncheckAlarmCounts;
+            var realAlarmRates = data.realAlarmRates;
+
+            // 创建数据对象数组以便于排序
+            var dataArr = alarmFlags.map((flag, index) => ({
+                alarmFlag: flag,
+                realAlarmCount: realAlarmCounts[index],
+                falseAlarmCount: falseAlarmCounts[index],
+                invalidAlarmCount: invalidAlarmCounts[index],
+                uncheckAlarmCount: uncheckAlarmCounts[index],
+                realAlarmRate: realAlarmRates[index]
+            }));
+
+            // 按照真实告警率从高到低排序
+            dataArr.sort((a, b) => b.realAlarmRate - a.realAlarmRate);
+
+            // 提取排序后的数据（告警率高的排在上面，所以需要reverse）
+            var sortedAlarmFlags = dataArr.map(item => item.alarmFlag).reverse();
+            var sortedRealAlarmCounts = dataArr.map(item => item.realAlarmCount).reverse();
+            var sortedFalseAlarmCounts = dataArr.map(item => item.falseAlarmCount).reverse();
+            var sortedInvalidAlarmCounts = dataArr.map(item => item.invalidAlarmCount).reverse();
+            var sortedUncheckAlarmCounts = dataArr.map(item => item.uncheckAlarmCount).reverse();
+            var sortedRealAlarmRates = dataArr.map(item => item.realAlarmRate).reverse();
+
+            var option = {
+                title: {
+                    text: '智能监控告警类型分析（全屏模式）',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        var result = params[0].name + '<br/>';
+                        var totalCount = 0;
+                        params.forEach(function(item) {
+                            if (item.seriesName !== '真实报警率') {
+                                totalCount += item.value;
+                                result += item.marker + item.seriesName + ': ' + item.value + '次<br/>';
+                            }
+                        });
+                        // 添加真实报警率
+                        var rateParam = params.find(p => p.seriesName === '真实报警率');
+                        if (rateParam) {
+                            result += rateParam.marker + '真实报警率: ' + rateParam.value + '%<br/>';
+                        }
+                        result += '总计: ' + totalCount + '次';
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['真实报警', '误报警', '无效报警', '未核查', '真实报警率'],
+                    top: 30
+                },
+                grid: {
+                    left: '20%',
+                    right: '8%',
+                    bottom: '3%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    name: '报警数量',
+                    position: 'top'
+                },
+                yAxis: [
+                    {
+                        type: 'category',
+                        data: sortedAlarmFlags,
+                        axisLabel: {
+                            interval: 0
+                        }
+                    },
+                    {
+                        type: 'category',
+                        data: sortedAlarmFlags,
+                        show: false
+                    }
+                ],
+                series: [
+                    {
+                        name: '真实报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedRealAlarmCounts,
+                        itemStyle: {
+                            color: '#5cb85c'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '误报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedFalseAlarmCounts,
+                        itemStyle: {
+                            color: '#f0ad4e'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '无效报警',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedInvalidAlarmCounts,
+                        itemStyle: {
+                            color: '#d9534f'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '未核查',
+                        type: 'bar',
+                        stack: '报警类型',
+                        data: sortedUncheckAlarmCounts,
+                        itemStyle: {
+                            color: '#777'
+                        },
+                        label: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function(params) {
+                                return params.value > 0 ? params.value : '';
+                            }
+                        }
+                    },
+                    {
+                        name: '真实报警率',
+                        type: 'scatter',
+                        yAxisIndex: 1,
+                        data: sortedRealAlarmRates.map((rate, index) => [rate, index]),
+                        symbolSize: function(data) {
+                            return Math.max(10, data[0] / 4); // 全屏模式下点稍大一些
+                        },
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            formatter: '{@[0]}',
+                            color: '#5470c6'
+                        }
+                    }
+                ]
+            };
+
+            fullscreenChartInstance.setOption(option, true);
+        }
+
+        // alarm_flag数据刷新按钮事件
+        $('#refreshAlarmFlagData').on('click', function() {
+            var btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin"></i> 加载中...');
+            btn.prop('disabled', true);
+
+            fetchAlarmFlagData();
+
+            setTimeout(function() {
+                btn.html('<i class="fas fa-sync-alt"></i> 刷新数据');
+                btn.prop('disabled', false);
+            }, 1000);
+        });
+
+        // alarm_flag层级选择改变事件
+        $('#alarmFlagLevel').on('change', function() {
+            fetchAlarmFlagData();
+        });
+
+        // 全屏模式下的分支局筛选事件
+        $('#apply-alarm-flag-filter').on('click', function() {
+            var branchOffice = $('#fullscreen-branch-office').val();
+            fetchFilteredAlarmFlagData(branchOffice);
+        });
+
+        // 分支局下拉框改变事件
+        $('#fullscreen-branch-office').on('change', function() {
+            var branchOffice = $(this).val();
+            fetchFilteredAlarmFlagData(branchOffice);
+        });
     });
     
     // ========== 全屏功能相关函数 ==========
@@ -3819,6 +4666,17 @@
         // 显示模态框
         $('#fullscreen-modal').show();
         
+        // 根据图表类型显示相应的筛选区域
+        if (chartId === 'alarm-flag-chart') {
+            $('#alarm-flag-filter-area').show();
+            // 加载分支局数据
+            loadBranchOfficesForFilter();
+            // 重置筛选选项为默认值（全部分支局）
+            $('#fullscreen-branch-office').val('');
+        } else {
+            $('#alarm-flag-filter-area').hide();
+        }
+        
         // 创建全屏图表实例
         setTimeout(function() {
             if (fullscreenChartInstance) {
@@ -3826,9 +4684,15 @@
             }
             fullscreenChartInstance = echarts.init(document.getElementById('fullscreen-chart'));
             
-            // 复制原图表的配置
-            var option = originalChart.getOption();
-            fullscreenChartInstance.setOption(option, true);
+            // 对于alarm-flag-chart，使用专用的全屏渲染函数
+            if (chartId === 'alarm-flag-chart') {
+                // 获取当前数据并重新渲染
+                fetchFilteredAlarmFlagData('');
+            } else {
+                // 复制原图表的配置
+                var option = originalChart.getOption();
+                fullscreenChartInstance.setOption(option, true);
+            }
             
             // 加载图表描述
             loadChartDescription(chartId);
@@ -3841,6 +4705,7 @@
     // 关闭全屏显示
     function closeFullscreen() {
         $('#fullscreen-modal').hide();
+        $('#alarm-flag-filter-area').hide(); // 隐藏筛选区域
         
         if (fullscreenChartInstance) {
             fullscreenChartInstance.dispose();
@@ -3882,6 +4747,10 @@
                 return echarts.getInstanceByDom(document.getElementById('port-shipping-chart'));
             case 'red-code-ship-chart':
                 return echarts.getInstanceByDom(document.getElementById('red-code-ship-chart'));
+            case 'intelligent-monitoring-chart':
+                return echarts.getInstanceByDom(document.getElementById('intelligent-monitoring-chart'));
+            case 'alarm-flag-chart':
+                return echarts.getInstanceByDom(document.getElementById('alarm-flag-chart'));
             default:
                 return null;
         }
@@ -3990,6 +4859,35 @@
             fullscreenChartInstance.resize();
         }
     });
+
+    // 加载分支局数据用于筛选
+    function loadBranchOfficesForFilter() {
+        var params = {
+            startDate: $('#startDate').val(),
+            endDate: $('#endDate').val()
+        };
+
+        $.ajax({
+            url: '${ctx}/intelligent/intelligentMonitoringAlarm/getBranchOffices',
+            type: 'POST',
+            dataType: 'json',
+            data: params,
+            success: function(data) {
+                var $select = $('#fullscreen-branch-office');
+                $select.empty();
+                $select.append('<option value="">全部分支局</option>');
+                
+                if (data && data.length > 0) {
+                    data.forEach(function(branchOffice) {
+                        $select.append('<option value="' + branchOffice + '">' + branchOffice + '</option>');
+                    });
+                }
+            },
+            error: function(error) {
+                console.error('Error loading branch offices:', error);
+            }
+        });
+    }
 </script>
 </body>
 

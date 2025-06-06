@@ -368,7 +368,12 @@
             <a href="${ctx}/weekly/weeklyReport/dataDashboard" class="btn btn-light btn-back-home">
                 <i class="fas fa-home mr-2"></i>返回主页
             </a>
+            <div class="text-center">
             <h1 class="main-title">张家港海事局危防管理数据看板</h1>
+                <div style="color: rgba(255, 255, 255, 0.8); font-size: 14px; margin-top: 5px;">
+                    <i class="fas fa-filter mr-1"></i>数据范围：张家港港区海事处、张家港港区海事处保税区海巡执法大队、张家港锦丰海事处、海巡执法支队
+                </div>
+            </div>
             <div style="width: 115px;"></div> <!-- 用于平衡布局的空div -->
         </div>
     </div>
@@ -507,6 +512,92 @@
 
 <script>
     $(document).ready(function() {
+        // 定义需要保留的单位列表
+        var allowedAgencies = [
+            '张家港港区海事处',
+            '张家港港区海事处保税区海巡执法大队', 
+            '张家港锦丰海事处',
+            '海巡执法支队'
+        ];
+
+        // 数据筛选函数
+        function filterDataByAgencies(data) {
+            if (!data || !data.categories) {
+                console.log('数据为空或缺少categories字段');
+                return data;
+            }
+
+            console.log('原始单位列表:', data.categories);
+            console.log('允许的单位列表:', allowedAgencies);
+
+            var filteredData = {
+                categories: [],
+                dangerDefenseData: {
+                    last: [],
+                    current: []
+                },
+                dangerousGoodsData: {
+                    last: [],
+                    current: []
+                },
+                pollutionData: {
+                    last: [],
+                    current: []
+                },
+                indicatorData: data.indicatorData, // 临时保持原始指标数据
+                caseReasonData: data.caseReasonData // 保持案由数据不变
+            };
+
+            // 遍历原始数据，只保留允许的单位
+            data.categories.forEach(function(category, index) {
+                if (allowedAgencies.indexOf(category) !== -1) {
+                    filteredData.categories.push(category);
+                    
+                    // 安全地获取对应的数据
+                    if (data.dangerDefenseData && data.dangerDefenseData.last) {
+                        filteredData.dangerDefenseData.last.push(data.dangerDefenseData.last[index] || 0);
+                    }
+                    if (data.dangerDefenseData && data.dangerDefenseData.current) {
+                        filteredData.dangerDefenseData.current.push(data.dangerDefenseData.current[index] || 0);
+                    }
+                    
+                    if (data.dangerousGoodsData && data.dangerousGoodsData.last) {
+                        filteredData.dangerousGoodsData.last.push(data.dangerousGoodsData.last[index] || 0);
+                    }
+                    if (data.dangerousGoodsData && data.dangerousGoodsData.current) {
+                        filteredData.dangerousGoodsData.current.push(data.dangerousGoodsData.current[index] || 0);
+                    }
+                    
+                    if (data.pollutionData && data.pollutionData.last) {
+                        filteredData.pollutionData.last.push(data.pollutionData.last[index] || 0);
+                    }
+                    if (data.pollutionData && data.pollutionData.current) {
+                        filteredData.pollutionData.current.push(data.pollutionData.current[index] || 0);
+                    }
+                }
+            });
+
+            console.log('筛选后的单位列表:', filteredData.categories);
+
+            // 重新计算指标数据，基于筛选后的数据
+            filteredData.indicatorData = {
+                dangerDefense: {
+                    value: sumArray(filteredData.dangerDefenseData.current),
+                    rate: calculateChangeRate(sumArray(filteredData.dangerDefenseData.last), sumArray(filteredData.dangerDefenseData.current))
+                },
+                dangerousGoods: {
+                    value: sumArray(filteredData.dangerousGoodsData.current),
+                    rate: calculateChangeRate(sumArray(filteredData.dangerousGoodsData.last), sumArray(filteredData.dangerousGoodsData.current))
+                },
+                pollution: {
+                    value: sumArray(filteredData.pollutionData.current),
+                    rate: calculateChangeRate(sumArray(filteredData.pollutionData.last), sumArray(filteredData.pollutionData.current))
+                }
+            };
+
+            return filteredData;
+        }
+
         // 初始化 ECharts 实例
         var dangerDefenseChart = echarts.init(document.getElementById('danger-defense-chart'));
         var dangerousGoodsChart = echarts.init(document.getElementById('dangerous-goods-chart'));
@@ -595,20 +686,23 @@
                     dataType: 'json',
                     data: params,
                     success: function(data) {
+                        // 应用单位筛选
+                        var filteredData = filterDataByAgencies(data);
+                        
                         Swal.fire({
                             title: '成功!',
                             text: '数据拉取成功',
                             icon: 'success',
                             confirmButtonText: '确定'
                         });
-                        renderDataCards(data);
-                        renderDangerDefenseChart(data);
-                        renderDangerousGoodsChart(data);
-                        renderPollutionChart(data);
-                        renderDangerDefenseCaseReasonChart(data);
-                        renderDangerousGoodsCaseReasonChart(data);
-                        renderPollutionCaseReasonChart(data);
-                        renderDepartmentTable(data);
+                        renderDataCards(filteredData);
+                        renderDangerDefenseChart(filteredData);
+                        renderDangerousGoodsChart(filteredData);
+                        renderPollutionChart(filteredData);
+                        renderDangerDefenseCaseReasonChart(filteredData);
+                        renderDangerousGoodsCaseReasonChart(filteredData);
+                        renderPollutionCaseReasonChart(filteredData);
+                        renderDepartmentTable(filteredData);
                         resolve();
                     },
                     error: function(error){
@@ -632,7 +726,7 @@
 
             // 更新标题
             var titleText = "张家港海事局危防管理数据看板 ("+startDate+" 至 "+ endDate+")";
-            $('.main-title').html('<i class="fas fa-shield-alt icon-box"></i>' + titleText);
+            $('.main-title').text(titleText);
 
             // 构建请求参数
             var params = {
@@ -647,14 +741,17 @@
                 dataType: 'json',
                 data: params,
                 success: function(data) {
-                    renderDataCards(data);
-                    renderDangerDefenseChart(data);
-                    renderDangerousGoodsChart(data);
-                    renderPollutionChart(data);
-                    renderDangerDefenseCaseReasonChart(data);
-                    renderDangerousGoodsCaseReasonChart(data);
-                    renderPollutionCaseReasonChart(data);
-                    renderDepartmentTable(data);
+                    // 应用单位筛选
+                    var filteredData = filterDataByAgencies(data);
+                    
+                    renderDataCards(filteredData);
+                    renderDangerDefenseChart(filteredData);
+                    renderDangerousGoodsChart(filteredData);
+                    renderPollutionChart(filteredData);
+                    renderDangerDefenseCaseReasonChart(filteredData);
+                    renderDangerousGoodsCaseReasonChart(filteredData);
+                    renderPollutionCaseReasonChart(filteredData);
+                    renderDepartmentTable(filteredData);
                 },
                 error: function(error) {
                     console.error('Error fetching chart data:', error);

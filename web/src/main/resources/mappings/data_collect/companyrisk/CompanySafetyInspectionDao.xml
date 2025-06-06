@@ -92,10 +92,10 @@
 			<if test="endDate != null and endDate != ''">
 				AND inspection_date &lt;= #{endDate}
 			</if>
-			AND company_name IN ('双山汽渡', '高尔夫', '张皋汽渡')
+			AND company_name IN ('双山汽渡', '高尔夫', '张皋汽渡','中油泰富')
 		</where>
 		GROUP BY company_name
-		ORDER BY FIELD(company_name, '双山汽渡', '高尔夫', '张皋汽渡')
+		ORDER BY FIELD(company_name, '双山汽渡', '高尔夫', '张皋汽渡','中油泰富')
 	</select>
 	
 </mapper>
