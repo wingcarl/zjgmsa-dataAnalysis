@@ -1,8 +1,11 @@
 package com.jeesite.modules.data_collect.danger.service;
 
 import java.util.List;
+import java.util.ArrayList;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.jeesite.common.entity.Page;
 import com.jeesite.common.service.CrudService;
@@ -15,6 +18,8 @@ import com.jeesite.common.utils.excel.ExcelImport;
 import org.springframework.web.multipart.MultipartFile;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 危险货物申报表Service
@@ -23,6 +28,9 @@ import javax.validation.ConstraintViolationException;
  */
 @Service
 public class DangerCargoDeclarationService extends CrudService<DangerCargoDeclarationDao, DangerCargoDeclaration> {
+	
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 	
 	/**
 	 * 获取单条数据
@@ -68,9 +76,10 @@ public class DangerCargoDeclarationService extends CrudService<DangerCargoDeclar
 	/**
 	 * 导入数据
 	 * @param file 导入的数据文件
+	 * @param remarkType 备注类型
 	 */
 	@Transactional
-	public String importData(MultipartFile file) {
+	public String importData(MultipartFile file, String remarkType) {
 		if (file == null){
 			throw new ServiceException(text("请选择导入的数据文件！"));
 		}
@@ -82,6 +91,8 @@ public class DangerCargoDeclarationService extends CrudService<DangerCargoDeclar
 			for (DangerCargoDeclaration dangerCargoDeclaration : list) {
 				try{
 					ValidatorUtils.validateWithException(dangerCargoDeclaration);
+					// 设置remark类型
+					dangerCargoDeclaration.setRemarks(remarkType);
 					this.save(dangerCargoDeclaration);
 					successNum++;
 					successMsg.append("<br/>" + successNum + "、编号 " + dangerCargoDeclaration.getId() + " 导入成功");
@@ -125,6 +136,57 @@ public class DangerCargoDeclarationService extends CrudService<DangerCargoDeclar
 	}
 	
 	/**
+	 * 获取指定时间范围内的危险货物申报表数据
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return 危险货物申报表列表
+	 */
+	public List<DangerCargoDeclaration> getDangerCargoDeclarationData(String startDate, String endDate) {
+		DangerCargoDeclaration query = new DangerCargoDeclaration();
+		try {
+			if (startDate != null && !startDate.isEmpty()) {
+				query.setDeclarationDate_gte(java.sql.Date.valueOf(startDate));
+			}
+			if (endDate != null && !endDate.isEmpty()) {
+				query.setDeclarationDate_lte(java.sql.Date.valueOf(endDate));
+			}
+		} catch (Exception e) {
+			logger.error("日期格式错误: " + e.getMessage(), e);
+			return new ArrayList<>();
+		}
+		return findList(query);
+	}
+	
+	/**
+	 * 根据备注类型和时间范围获取总重量
+	 * @param remarkType 备注类型
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return 总重量
+	 */
+	public Double getTotalWeightByRemarkType(String remarkType, String startDate, String endDate) {
+		DangerCargoDeclaration query = new DangerCargoDeclaration();
+		query.setRemarks(remarkType);
+		try {
+			if (startDate != null && !startDate.isEmpty()) {
+				query.setDeclarationDate_gte(java.sql.Date.valueOf(startDate));
+			}
+			if (endDate != null && !endDate.isEmpty()) {
+				query.setDeclarationDate_lte(java.sql.Date.valueOf(endDate));
+			}
+		} catch (Exception e) {
+			logger.error("日期格式错误: " + e.getMessage(), e);
+			return 0.0;
+		}
+		
+		List<DangerCargoDeclaration> list = findList(query);
+		return list.stream()
+				.filter(item -> item.getTotalWeight() != null)
+				.mapToDouble(DangerCargoDeclaration::getTotalWeight)
+				.sum();
+	}
+	
+	/**
 	 * 删除数据
 	 * @param dangerCargoDeclaration
 	 */
@@ -132,6 +194,75 @@ public class DangerCargoDeclarationService extends CrudService<DangerCargoDeclar
 	@Transactional
 	public void delete(DangerCargoDeclaration dangerCargoDeclaration) {
 		super.delete(dangerCargoDeclaration);
+	}
+	
+	/**
+	 * 根据备注类型和时间范围获取各agency的总重量统计
+	 * @param remarkType 备注类型
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return agency重量统计列表
+	 */
+	public List<Map<String, Object>> getWeightStatsByAgency(String remarkType, String startDate, String endDate) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT bh.agency, SUM(dcd.total_weight) as totalWeight ");
+		sql.append("FROM danger_cargo_declaration dcd ");
+		sql.append("LEFT JOIN berth_habor bh ON dcd.berth = bh.berth ");
+		sql.append("WHERE dcd.remarks = ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(remarkType);
+		
+		if (startDate != null && !startDate.isEmpty()) {
+			sql.append("AND dcd.declaration_date >= ? ");
+			params.add(startDate);
+		}
+		if (endDate != null && !endDate.isEmpty()) {
+			sql.append("AND dcd.declaration_date <= ? ");
+			params.add(endDate);
+		}
+		
+		sql.append("AND bh.agency IS NOT NULL ");
+		sql.append("GROUP BY bh.agency ");
+		sql.append("ORDER BY totalWeight DESC");
+		
+		return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+	}
+	
+	/**
+	 * 根据备注类型、agency和时间范围获取各habor的总重量统计
+	 * @param remarkType 备注类型
+	 * @param agency 机构
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return habor重量统计列表
+	 */
+	public List<Map<String, Object>> getWeightStatsByHabor(String remarkType, String agency, String startDate, String endDate) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT bh.habor, SUM(dcd.total_weight) as totalWeight ");
+		sql.append("FROM danger_cargo_declaration dcd ");
+		sql.append("LEFT JOIN berth_habor bh ON dcd.berth = bh.berth ");
+		sql.append("WHERE dcd.remarks = ? ");
+		sql.append("AND bh.agency = ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(remarkType);
+		params.add(agency);
+		
+		if (startDate != null && !startDate.isEmpty()) {
+			sql.append("AND dcd.declaration_date >= ? ");
+			params.add(startDate);
+		}
+		if (endDate != null && !endDate.isEmpty()) {
+			sql.append("AND dcd.declaration_date <= ? ");
+			params.add(endDate);
+		}
+		
+		sql.append("AND bh.habor IS NOT NULL ");
+		sql.append("GROUP BY bh.habor ");
+		sql.append("ORDER BY totalWeight DESC");
+		
+		return jdbcTemplate.queryForList(sql.toString(), params.toArray());
 	}
 	
 }

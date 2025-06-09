@@ -9,7 +9,9 @@
 				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
 				<a href="#" class="btn btn-default" id="btnExport"><i class="glyphicon glyphicon-export"></i> 导出</a>
 				<% if(hasPermi('danger:dangerCargoDeclaration:edit')){ %>
-						<a href="#" class="btn btn-default" id="btnImport"><i class="glyphicon glyphicon-import"></i> 导入</a>
+					<a href="#" class="btn btn-default" id="btnImportLiquid"><i class="glyphicon glyphicon-import"></i> 散液导入</a>
+					<a href="#" class="btn btn-default" id="btnImportSolid"><i class="glyphicon glyphicon-import"></i> 散固导入</a>
+					<a href="#" class="btn btn-default" id="btnImportPackaged"><i class="glyphicon glyphicon-import"></i> 包装导入</a>
 					<a href="${ctx}/danger/dangerCargoDeclaration/form" class="btn btn-default btnTool" title="${text('新增危险货物申报表')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
 				<% } %>
 				<a href="#" class="btn btn-default" id="btnSetting" title="${text('设置')}"><i class="fa fa-navicon"></i></a>
@@ -247,7 +249,17 @@ $('#btnExport').click(function(){
 		downloadFile: true
 	});
 });
-$('#btnImport').click(function(){
+$('#btnImportLiquid').click(function(){
+	openImportDialog('散装液体');
+});
+$('#btnImportSolid').click(function(){
+	openImportDialog('散装固体');
+});
+$('#btnImportPackaged').click(function(){
+	openImportDialog('包装货物');
+});
+
+function openImportDialog(remarkType) {
 	js.layer.open({
 		type: 1,
 		area: ['400px'],
@@ -266,6 +278,8 @@ $('#btnImport').click(function(){
 		    	js.showMessage("${text('文件不正确，请选择后缀为“xls”或“xlsx”的文件。')}", null, 'warning');
 		        return false;
 		    }
+		    // 设置remark参数
+		    layero.find('#remarkType').val(remarkType);
 			js.ajaxSubmitForm(form.inputForm, function(data){
 				js.showMessage(data.message);
 				if(data.result == Global.TRUE){
@@ -276,16 +290,17 @@ $('#btnImport').click(function(){
 			return true;
 		}
 	});
-});
+}
 </script>
 <script id="importTpl" type="text/template">//<!--
 <form id="inputForm" action="${ctx}/danger/dangerCargoDeclaration/importData" method="post" enctype="multipart/form-data"
 	class="form-horizontal mt20 mb10" style="overflow:auto;max-height:200px;">
+	<input type="hidden" id="remarkType" name="remarkType" value=""/>
 	<div class="row">
 		<div class="col-xs-12 col-xs-offset-1">
 			<input type="file" id="file" name="file" class="form-file"/>
 			<div class="mt10 pt5" style="color:red">
-				${text('提示：仅允许导入“xls”或“xlsx”格式文件！')}
+				${text('提示：仅允许导入"xls"或"xlsx"格式文件！')}
 			</div>
 			<div class="mt10 pt5">
 				<a href="${ctx}/danger/dangerCargoDeclaration/importTemplate" class="btn btn-default btn-xs"><i class="fa fa-file-excel-o"></i> ${text('下载模板')}</a>

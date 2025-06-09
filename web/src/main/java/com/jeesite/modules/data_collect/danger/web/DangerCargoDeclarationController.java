@@ -121,9 +121,9 @@ public class DangerCargoDeclarationController extends BaseController {
 	@ResponseBody
 	@RequiresPermissions("danger:dangerCargoDeclaration:edit")
 	@PostMapping(value = "importData")
-	public String importData(MultipartFile file) {
+	public String importData(MultipartFile file, String remarkType) {
 		try {
-			String message = dangerCargoDeclarationService.importData(file);
+			String message = dangerCargoDeclarationService.importData(file, remarkType);
 			return renderResult(Global.TRUE, "posfull:"+message);
 		} catch (Exception ex) {
 			return renderResult(Global.FALSE, "posfull:"+ex.getMessage());

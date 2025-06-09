@@ -3,6 +3,8 @@ package com.jeesite.modules.data_collect.weekly.controller;
 import com.jeesite.common.web.BaseController;
 import com.jeesite.modules.data_collect.weekly.entity.WeeklyReportDangerDefense;
 import com.jeesite.modules.data_collect.weekly.service.WeeklyReportDangerDefenseService;
+import com.jeesite.modules.data_collect.danger.service.DangerCargoDeclarationService;
+import com.jeesite.modules.data_collect.danger.entity.DangerCargoDeclaration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +23,9 @@ public class WeeklyReportDangerDefenseController extends BaseController {
 
     @Autowired
     private WeeklyReportDangerDefenseService weeklyReportDangerDefenseService;
+    
+    @Autowired
+    private DangerCargoDeclarationService dangerCargoDeclarationService;
 
     /**
      * 危防数据图表页面
@@ -104,6 +109,11 @@ public class WeeklyReportDangerDefenseController extends BaseController {
                 currentDangerousGoodsList, lastDangerousGoodsList,
                 currentPollutionList, lastPollutionList
             );
+            
+            // 新增：获取危险货物申报表数据
+            Map<String, Object> cargoData = getDangerCargoDeclarationData(startDate, endDate, lastWeekStartDate, lastWeekEndDate);
+            indicatorData.putAll(cargoData);
+            
             result.put("indicatorData", indicatorData);
             
         } catch (ParseException e) {
@@ -245,5 +255,102 @@ public class WeeklyReportDangerDefenseController extends BaseController {
             return currentValue > 0 ? 100 : 0;
         }
         return ((double) (currentValue - lastValue) / lastValue) * 100;
+    }
+
+    /**
+     * 获取危险货物申报表数据
+     */
+    private Map<String, Object> getDangerCargoDeclarationData(String startDate, String endDate, String lastWeekStartDate, String lastWeekEndDate) {
+        Map<String, Object> cargoData = new HashMap<>();
+        
+        // 散装液体数据
+        Double currentBulkLiquidWeight = dangerCargoDeclarationService.getTotalWeightByRemarkType("散装液体", startDate, endDate);
+        Double lastBulkLiquidWeight = dangerCargoDeclarationService.getTotalWeightByRemarkType("散装液体", lastWeekStartDate, lastWeekEndDate);
+        Map<String, Object> bulkLiquid = new HashMap<>();
+        bulkLiquid.put("value", Math.round(currentBulkLiquidWeight));
+        bulkLiquid.put("rate", calculateRate(lastBulkLiquidWeight.intValue(), currentBulkLiquidWeight.intValue()));
+        cargoData.put("bulkLiquid", bulkLiquid);
+        
+        // 散装固体数据
+        Double currentBulkSolidWeight = dangerCargoDeclarationService.getTotalWeightByRemarkType("散装固体", startDate, endDate);
+        Double lastBulkSolidWeight = dangerCargoDeclarationService.getTotalWeightByRemarkType("散装固体", lastWeekStartDate, lastWeekEndDate);
+        Map<String, Object> bulkSolid = new HashMap<>();
+        bulkSolid.put("value", Math.round(currentBulkSolidWeight));
+        bulkSolid.put("rate", calculateRate(lastBulkSolidWeight.intValue(), currentBulkSolidWeight.intValue()));
+        cargoData.put("bulkSolid", bulkSolid);
+        
+        // 包装货物数据
+        Double currentPackagedCargoWeight = dangerCargoDeclarationService.getTotalWeightByRemarkType("包装货物", startDate, endDate);
+        Double lastPackagedCargoWeight = dangerCargoDeclarationService.getTotalWeightByRemarkType("包装货物", lastWeekStartDate, lastWeekEndDate);
+        Map<String, Object> packagedCargo = new HashMap<>();
+        packagedCargo.put("value", Math.round(currentPackagedCargoWeight));
+        packagedCargo.put("rate", calculateRate(lastPackagedCargoWeight.intValue(), currentPackagedCargoWeight.intValue()));
+        cargoData.put("packagedCargo", packagedCargo);
+        
+        return cargoData;
+    }
+    
+    /**
+     * 获取散装固体统计数据
+     */
+    @RequestMapping(value = "getBulkSolidChartData")
+    @ResponseBody
+    public Map<String, Object> getBulkSolidChartData(String startDate, String endDate) {
+        List<Map<String, Object>> agencyData = dangerCargoDeclarationService.getWeightStatsByAgency("散装固体", startDate, endDate);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("agencies", agencyData.stream().map(m -> m.get("agency")).toArray());
+        result.put("weights", agencyData.stream().map(m -> m.get("totalWeight")).toArray());
+        result.put("title", "散装固体重量统计");
+        
+        return result;
+    }
+    
+    /**
+     * 获取散装液体统计数据
+     */
+    @RequestMapping(value = "getBulkLiquidChartData")
+    @ResponseBody
+    public Map<String, Object> getBulkLiquidChartData(String startDate, String endDate) {
+        List<Map<String, Object>> agencyData = dangerCargoDeclarationService.getWeightStatsByAgency("散装液体", startDate, endDate);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("agencies", agencyData.stream().map(m -> m.get("agency")).toArray());
+        result.put("weights", agencyData.stream().map(m -> m.get("totalWeight")).toArray());
+        result.put("title", "散装液体重量统计");
+        
+        return result;
+    }
+    
+    /**
+     * 获取包装货物统计数据
+     */
+    @RequestMapping(value = "getPackagedCargoChartData")
+    @ResponseBody
+    public Map<String, Object> getPackagedCargoChartData(String startDate, String endDate) {
+        List<Map<String, Object>> agencyData = dangerCargoDeclarationService.getWeightStatsByAgency("包装货物", startDate, endDate);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("agencies", agencyData.stream().map(m -> m.get("agency")).toArray());
+        result.put("weights", agencyData.stream().map(m -> m.get("totalWeight")).toArray());
+        result.put("title", "包装货物重量统计");
+        
+        return result;
+    }
+    
+    /**
+     * 获取指定agency下的habor详细数据
+     */
+    @RequestMapping(value = "getHaborDetailData")
+    @ResponseBody
+    public Map<String, Object> getHaborDetailData(String remarkType, String agency, String startDate, String endDate) {
+        List<Map<String, Object>> haborData = dangerCargoDeclarationService.getWeightStatsByHabor(remarkType, agency, startDate, endDate);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("habors", haborData.stream().map(m -> m.get("habor")).toArray());
+        result.put("weights", haborData.stream().map(m -> m.get("totalWeight")).toArray());
+        result.put("title", remarkType + " - " + agency + " 港口分布");
+        
+        return result;
     }
 } 

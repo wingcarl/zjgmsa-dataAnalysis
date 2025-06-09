@@ -416,6 +416,31 @@
         </div>
     </div>
 
+    <!-- 新增危险货物申报表看板 -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-flask icon-box"></i>散装液体(吨)</div>
+                <div class="value" id="bulk-liquid-value">0</div>
+                <div class="change-rate" id="bulk-liquid-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-cubes icon-box"></i>散装固体(吨)</div>
+                <div class="value" id="bulk-solid-value">0</div>
+                <div class="change-rate" id="bulk-solid-rate">0%</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="data-card">
+                <div class="label"><i class="fas fa-archive icon-box"></i>包装货物(吨)</div>
+                <div class="value" id="packaged-cargo-value">0</div>
+                <div class="change-rate" id="packaged-cargo-rate">0%</div>
+            </div>
+        </div>
+    </div>
+
     <!-- 部门数据统计表格 -->
     <div class="row">
         <div class="col-12">
@@ -502,13 +527,40 @@
             </div>
         </div>
     </div>
+    
+    <!-- 新增：危险货物申报表重量统计图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>散装固体危险货物吞吐量(吨)</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="bulk-solid-weight-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>散装液体危险货物吞吐量(吨)</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="bulk-liquid-weight-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>包装货物吞吐量(吨)</h5>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="packaged-cargo-weight-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Bootstrap JS (Popper.js and Bootstrap's JS are required) -->
 <script src="${ctxStatic}/nickjs/popper.min.js"></script>
 <script src="${ctxStatic}/bootstrap/js/bootstrap.min.js"></script>
-<!-- SweetAlert2 为拉取数据时的消息提示 -->
-<script src="${ctxStatic}/nickjs/sweetalert2@11"></script>
+
 
 <script>
     $(document).ready(function() {
@@ -592,6 +644,19 @@
                 pollution: {
                     value: sumArray(filteredData.pollutionData.current),
                     rate: calculateChangeRate(sumArray(filteredData.pollutionData.last), sumArray(filteredData.pollutionData.current))
+                },
+                // 新增：危险货物申报表指标数据
+                bulkLiquid: {
+                    value: data.indicatorData && data.indicatorData.bulkLiquid ? data.indicatorData.bulkLiquid.value : 0,
+                    rate: data.indicatorData && data.indicatorData.bulkLiquid ? data.indicatorData.bulkLiquid.rate : 0
+                },
+                bulkSolid: {
+                    value: data.indicatorData && data.indicatorData.bulkSolid ? data.indicatorData.bulkSolid.value : 0,
+                    rate: data.indicatorData && data.indicatorData.bulkSolid ? data.indicatorData.bulkSolid.rate : 0
+                },
+                packagedCargo: {
+                    value: data.indicatorData && data.indicatorData.packagedCargo ? data.indicatorData.packagedCargo.value : 0,
+                    rate: data.indicatorData && data.indicatorData.packagedCargo ? data.indicatorData.packagedCargo.rate : 0
                 }
             };
 
@@ -605,6 +670,11 @@
         var dangerDefenseCaseReasonChart = echarts.init(document.getElementById('danger-defense-case-reason-chart'));
         var dangerousGoodsCaseReasonChart = echarts.init(document.getElementById('dangerous-goods-case-reason-chart'));
         var pollutionCaseReasonChart = echarts.init(document.getElementById('pollution-case-reason-chart'));
+        
+        // 新增：初始化危险货物申报表重量统计图表
+        var bulkSolidWeightChart = echarts.init(document.getElementById('bulk-solid-weight-chart'));
+        var bulkLiquidWeightChart = echarts.init(document.getElementById('bulk-liquid-weight-chart'));
+        var packagedCargoWeightChart = echarts.init(document.getElementById('packaged-cargo-weight-chart'));
 
         // 获取日期选择器和拉取数据按钮
         var startDateInput = $('#startDate');
@@ -703,6 +773,11 @@
                         renderDangerousGoodsCaseReasonChart(filteredData);
                         renderPollutionCaseReasonChart(filteredData);
                         renderDepartmentTable(filteredData);
+                        
+                        // 新增：渲染危险货物申报表重量统计图表
+                        renderBulkSolidWeightChart(startDate, endDate);
+                        renderBulkLiquidWeightChart(startDate, endDate);
+                        renderPackagedCargoWeightChart(startDate, endDate);
                         resolve();
                     },
                     error: function(error){
@@ -752,6 +827,11 @@
                     renderDangerousGoodsCaseReasonChart(filteredData);
                     renderPollutionCaseReasonChart(filteredData);
                     renderDepartmentTable(filteredData);
+                    
+                    // 新增：渲染危险货物申报表重量统计图表
+                    renderBulkSolidWeightChart(startDate, endDate);
+                    renderBulkLiquidWeightChart(startDate, endDate);
+                    renderPackagedCargoWeightChart(startDate, endDate);
                 },
                 error: function(error) {
                     console.error('Error fetching chart data:', error);
@@ -880,6 +960,11 @@
             updateDataCard("danger-defense-value", data.indicatorData.dangerDefense.value, data.indicatorData.dangerDefense.rate, "danger-defense-rate");
             updateDataCard("dangerous-goods-value", data.indicatorData.dangerousGoods.value, data.indicatorData.dangerousGoods.rate, "dangerous-goods-rate");
             updateDataCard("pollution-value", data.indicatorData.pollution.value, data.indicatorData.pollution.rate, "pollution-rate");
+            
+            // 新增：更新危险货物申报表指标板
+            updateDataCard("bulk-liquid-value", data.indicatorData.bulkLiquid.value, data.indicatorData.bulkLiquid.rate, "bulk-liquid-rate");
+            updateDataCard("bulk-solid-value", data.indicatorData.bulkSolid.value, data.indicatorData.bulkSolid.rate, "bulk-solid-rate");
+            updateDataCard("packaged-cargo-value", data.indicatorData.packagedCargo.value, data.indicatorData.packagedCargo.rate, "packaged-cargo-rate");
         }
 
         function updateDataCard(elementId, total, changeRate, changeRateId) {
@@ -1480,79 +1565,208 @@
             dangerDefenseCaseReasonChart.resize();
             dangerousGoodsCaseReasonChart.resize();
             pollutionCaseReasonChart.resize();
+            
+            // 新增：调整新图表大小
+            bulkSolidWeightChart.resize();
+            bulkLiquidWeightChart.resize();
+            packagedCargoWeightChart.resize();
         });
 
-        // 获取危险品检查详细数据
-        function fetchDangerousGoodsDetailData(agency, startDate, endDate) {
+        // 新增：渲染散装固体重量统计图表
+        function renderBulkSolidWeightChart(startDate, endDate) {
             $.ajax({
-                url: 'getDangerousGoodsDetailData',
+                url: 'getBulkSolidChartData',
                 type: 'GET',
                 dataType: 'json',
                 data: {
-                    agency: agency,
                     startDate: startDate,
                     endDate: endDate
                 },
                 success: function(data) {
-                    showDetailModal(data, "危险品检查详细数据 - " + agency);
+                    renderCargoWeightChart(bulkSolidWeightChart, data, '散装固体');
                 },
                 error: function(error) {
-                    console.error('Error fetching dangerous goods detail data:', error);
-                    Swal.fire({
-                        title: '错误!',
-                        text: '获取危险品检查详细数据失败',
-                        icon: 'error',
-                        confirmButtonText: '确定'
-                    });
+                    console.error('获取散装固体数据失败:', error);
+                }
+            });
+        }
+        
+        // 新增：渲染散装液体重量统计图表
+        function renderBulkLiquidWeightChart(startDate, endDate) {
+            $.ajax({
+                url: 'getBulkLiquidChartData',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                success: function(data) {
+                    renderCargoWeightChart(bulkLiquidWeightChart, data, '散装液体');
+                },
+                error: function(error) {
+                    console.error('获取散装液体数据失败:', error);
                 }
             });
         }
 
-        // 获取防污染检查详细数据
-        function fetchPollutionDetailData(agency, startDate, endDate) {
+        // 新增：渲染包装货物重量统计图表
+        function renderPackagedCargoWeightChart(startDate, endDate) {
             $.ajax({
-                url: 'getPollutionDetailData',
+                url: 'getPackagedCargoChartData',
                 type: 'GET',
                 dataType: 'json',
                 data: {
-                    agency: agency,
                     startDate: startDate,
                     endDate: endDate
                 },
                 success: function(data) {
-                    showDetailModal(data, "防污染检查详细数据 - " + agency);
+                    renderCargoWeightChart(packagedCargoWeightChart, data, '包装货物');
                 },
                 error: function(error) {
-                    console.error('Error fetching pollution detail data:', error);
-                    Swal.fire({
-                        title: '错误!',
-                        text: '获取防污染检查详细数据失败',
-                        icon: 'error',
-                        confirmButtonText: '确定'
-                    });
+                    console.error('获取包装货物数据失败:', error);
+                }
+            });
+        }
+        
+        // 新增：通用的货物重量图表渲染函数
+        function renderCargoWeightChart(chartInstance, data, remarkType) {
+            var chartOption = {
+                title: {
+                    text: data.title || (remarkType + '危险货物吞吐量'),
+                    textStyle: {
+                        color: '#0466c8',
+                        fontWeight: 'bold',
+                        fontSize: 16
+                    },
+                    left: 'center',
+                    top: 10
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#0466c8',
+                    borderWidth: 1,
+                    textStyle: {
+                        color: '#333',
+                        fontSize: 14
+                    },
+                    formatter: function(params) {
+                        var param = params[0];
+                        return param.axisValue + '<br/>' + 
+                               '重量: ' + (param.value || 0).toFixed(2) + ' 吨<br/>' +
+                               '<span style="color: #999;">点击查看港口详情</span>';
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.agencies || [],
+                    axisLabel: {
+                        rotate: 30,
+                        interval: 0,
+                        color: '#001845',
+                        fontSize: 12
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '重量(吨)',
+                    axisLabel: {
+                        fontSize: 12,
+                        formatter: function(value) {
+                            return value.toFixed(0);
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#0466c8'
+                        }
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(4, 102, 200, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: '重量',
+                    type: 'bar',
+                    data: data.weights || [],
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#409EFF',
+                        fontSize: 12,
+                        formatter: function(params) {
+                            return (params.value || 0).toFixed(1);
+                        }
+                    },
+                    itemStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [{
+                                offset: 0, color: '#409EFF'
+                            }, {
+                                offset: 1, color: '#7ab9ff'
+                            }]
+                        },
+                        borderRadius: [3, 3, 0, 0]
+                    }
+                }]
+            };
+            
+            chartInstance.setOption(chartOption);
+            
+            // 添加点击事件
+            chartInstance.off('click');
+            chartInstance.on('click', function(params) {
+                if (params.componentType === 'series') {
+                    var agency = data.agencies[params.dataIndex];
+                    var startDate = $('#startDate').val();
+                    var endDate = $('#endDate').val();
+                    
+                    // 获取该agency下的港口详细数据
+                    fetchHaborDetailData(remarkType, agency, startDate, endDate);
                 }
             });
         }
 
-        // 获取危防类处罚详细数据
-        function fetchDangerDefenseDetailData(agency, startDate, endDate) {
+        // 新增：获取港口详细数据并显示穿透图表
+        function fetchHaborDetailData(remarkType, agency, startDate, endDate) {
             $.ajax({
-                url: 'getDangerDefenseDetailData',
+                url: 'getHaborDetailData',
                 type: 'GET',
                 dataType: 'json',
                 data: {
+                    remarkType: remarkType,
                     agency: agency,
                     startDate: startDate,
                     endDate: endDate
                 },
                 success: function(data) {
-                    showDangerDefenseDetailModal(data, "危防类处罚详细数据 - " + agency);
+                    showHaborDetailModal(data, remarkType, agency);
                 },
                 error: function(error) {
-                    console.error('Error fetching danger defense detail data:', error);
+                    console.error('获取港口详细数据失败:', error);
                     Swal.fire({
                         title: '错误!',
-                        text: '获取危防类处罚详细数据失败',
+                        text: '获取港口详细数据失败',
                         icon: 'error',
                         confirmButtonText: '确定'
                     });
@@ -1560,64 +1774,154 @@
             });
         }
         
-        // 显示危防类处罚详细数据弹窗
-        function showDangerDefenseDetailModal(data, title) {
-            // 更新弹窗标题
-            $('#dangerDefenseDetailModalLabel').text(title);
+        // 新增：显示港口详细数据的模态框
+        function showHaborDetailModal(data, remarkType, agency) {
+            // 创建模态框HTML
+            var modalHtml = `
+                <div class="modal fade" id="haborDetailModal" tabindex="-1" role="dialog" aria-labelledby="haborDetailModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="haborDetailModalLabel">详细数据</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div id="habor-detail-chart" style="height: 400px;"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            // 清空表格内容
-            var tableBody = $('#dangerDefenseDetailTableBody');
-            tableBody.empty();
+            // 移除已存在的模态框
+            $('#haborDetailModal').remove();
             
-            // 如果没有数据，显示提示
-            if (data.length === 0) {
-                tableBody.append('<tr><td colspan="6" class="text-center">暂无数据</td></tr>');
-            } else {
-                // 填充数据
-                data.forEach(function(item) {
-                    var row = '<tr>' +
-                        '<td>' + (item.caseReason || '-') + '</td>' +
-                        '<td>' + (item.shipName || '-') + '</td>' +
-                        '<td>' + (item.shipType || '-') + '</td>' +
-                        '<td>' + (item.penaltyAgency || '-') + '</td>' +
-                        '<td>' + (item.penaltyAmount || '-') + '</td>' +
-                        '<td>' + (item.penaltyDecisionTime || '-') + '</td>' +
-                        '</tr>';
-                    tableBody.append(row);
+            // 添加新的模态框到页面
+            $('body').append(modalHtml);
+            
+            // 显示模态框
+            $('#haborDetailModal').modal('show');
+            
+            // 模态框显示后初始化图表
+            $('#haborDetailModal').on('shown.bs.modal', function () {
+                var haborDetailChart = echarts.init(document.getElementById('habor-detail-chart'));
+                
+                var chartOption = {
+                    title: {
+                        text: data.title,
+                        textStyle: {
+                            color: '#0466c8',
+                            fontWeight: 'bold',
+                            fontSize: 16
+                        },
+                        left: 'center',
+                        top: 10
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        },
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        borderColor: '#0466c8',
+                        borderWidth: 1,
+                        textStyle: {
+                            color: '#333',
+                            fontSize: 14
+                        },
+                        formatter: function(params) {
+                            var param = params[0];
+                            return param.axisValue + '<br/>' + 
+                                   '重量: ' + (param.value || 0).toFixed(2) + ' 吨';
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        top: 60,
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.habors || [],
+                        axisLabel: {
+                            rotate: 30,
+                            interval: 0,
+                            color: '#001845',
+                            fontSize: 12
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                color: '#0466c8'
+                            }
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '重量(吨)',
+                        axisLabel: {
+                            fontSize: 12,
+                            formatter: function(value) {
+                                return value.toFixed(0);
+                            }
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                color: '#0466c8'
+                            }
+                        },
+                        splitLine: {
+                            lineStyle: {
+                                color: 'rgba(4, 102, 200, 0.1)'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: '重量',
+                        type: 'bar',
+                        data: data.weights || [],
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#67C23A',
+                            fontSize: 12,
+                            formatter: function(params) {
+                                return (params.value || 0).toFixed(1);
+                            }
+                        },
+                        itemStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: '#67C23A'
+                                }, {
+                                    offset: 1, color: '#95d475'
+                                }]
+                            },
+                            borderRadius: [3, 3, 0, 0]
+                        }
+                    }]
+                };
+                
+                haborDetailChart.setOption(chartOption);
+                
+                // 监听窗口大小变化
+                $(window).resize(function() {
+                    haborDetailChart.resize();
                 });
-            }
+            });
             
-            // 显示弹窗
-            $('#dangerDefenseDetailModal').modal('show');
-        }
-
-        // 显示详细数据弹窗
-        function showDetailModal(data, title) {
-            // 更新弹窗标题
-            $('#detailModalLabel').text(title);
-            
-            // 清空表格内容
-            var tableBody = $('#detailTableBody');
-            tableBody.empty();
-            
-            // 如果没有数据，显示提示
-            if (data.length === 0) {
-                tableBody.append('<tr><td colspan="4" class="text-center">暂无数据</td></tr>');
-            } else {
-                // 填充数据
-                data.forEach(function(item) {
-                    var row = '<tr>' +
-                        '<td>' + item.inspectionDate + '</td>' +
-                        '<td>' + item.itemName + '</td>' +
-                        '<td>' + (item.shipName || '-') + '</td>' +
-                        '<td>' + (item.result || '-') + '</td>' +
-                        '</tr>';
-                    tableBody.append(row);
-                });
-            }
-            
-            // 显示弹窗
-            $('#detailModal').modal('show');
+            // 模态框关闭时清理图表
+            $('#haborDetailModal').on('hidden.bs.modal', function () {
+                $(this).remove();
+            });
         }
     });
 </script>
