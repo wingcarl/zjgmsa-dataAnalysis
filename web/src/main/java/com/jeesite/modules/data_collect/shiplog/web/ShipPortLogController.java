@@ -429,4 +429,126 @@ public class ShipPortLogController extends BaseController {
 		return result;
 	}
 	
+	/**
+	 * 获取码头下钻数据（包含当前期、环比期、同比期的船舶数量和装卸货量）
+	 */
+	@RequiresPermissions("shiplog:shipPortLog:view")
+	@RequestMapping(value = "berthingLocationDrillDown")
+	@ResponseBody
+	public Map<String, Object> berthingLocationDrillDown(String berthingLocation, String startDate, String endDate) {
+		Map<String, Object> result = new HashMap<>();
+		
+		try {
+			// 计算环比和同比时间段
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Date start = sdf.parse(startDate);
+			Date end = sdf.parse(endDate);
+			
+			// 计算时间跨度（天数）
+			long diff = end.getTime() - start.getTime();
+			long days = diff / (24 * 60 * 60 * 1000) + 1;
+			
+			// 环比时间段（向前推相同天数）
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(start);
+			cal.add(Calendar.DAY_OF_YEAR, -(int)days);
+			String seqStartDate = sdf.format(cal.getTime());
+			
+			cal.setTime(end);
+			cal.add(Calendar.DAY_OF_YEAR, -(int)days);
+			String seqEndDate = sdf.format(cal.getTime());
+			
+			// 同比时间段（去年同期）
+			cal.setTime(start);
+			cal.add(Calendar.YEAR, -1);
+			String yoyStartDate = sdf.format(cal.getTime());
+			
+			cal.setTime(end);
+			cal.add(Calendar.YEAR, -1);
+			String yoyEndDate = sdf.format(cal.getTime());
+			
+			// 获取三个时间段的数据
+			Map<String, Object> currentData = shipPortLogService.getBerthingLocationDrillDownData(berthingLocation, startDate, endDate);
+			Map<String, Object> seqData = shipPortLogService.getBerthingLocationDrillDownData(berthingLocation, seqStartDate, seqEndDate);
+			Map<String, Object> yoyData = shipPortLogService.getBerthingLocationDrillDownData(berthingLocation, yoyStartDate, yoyEndDate);
+			
+			// 计算变化率
+			double currentShipCount = getDoubleValue(currentData.get("shipCount"));
+			double seqShipCount = getDoubleValue(seqData.get("shipCount"));
+			double yoyShipCount = getDoubleValue(yoyData.get("shipCount"));
+			
+			double currentCargoTonnage = getDoubleValue(currentData.get("cargoTonnage"));
+			double seqCargoTonnage = getDoubleValue(seqData.get("cargoTonnage"));
+			double yoyCargoTonnage = getDoubleValue(yoyData.get("cargoTonnage"));
+			
+			// 计算环比和同比变化率
+			double shipCountSeqRate = calculateChangeRate(seqShipCount, currentShipCount);
+			double shipCountYoyRate = calculateChangeRate(yoyShipCount, currentShipCount);
+			double cargoTonnageSeqRate = calculateChangeRate(seqCargoTonnage, currentCargoTonnage);
+			double cargoTonnageYoyRate = calculateChangeRate(yoyCargoTonnage, currentCargoTonnage);
+			
+			// 构造返回数据
+			Map<String, Object> drillDownData = new HashMap<>();
+			drillDownData.put("berthingLocation", berthingLocation);
+			drillDownData.put("timeRanges", new String[]{
+				startDate + " 至 " + endDate + " (当前期)",
+				seqStartDate + " 至 " + seqEndDate + " (环比期)", 
+				yoyStartDate + " 至 " + yoyEndDate + " (同比期)"
+			});
+			
+			// 船舶数量数据
+			drillDownData.put("shipCountData", new double[]{currentShipCount, seqShipCount, yoyShipCount});
+			drillDownData.put("shipCountSeqRate", shipCountSeqRate);
+			drillDownData.put("shipCountYoyRate", shipCountYoyRate);
+			
+			// 装卸货量数据（转换为万吨）
+			drillDownData.put("cargoTonnageData", new double[]{
+				currentCargoTonnage / 10000, 
+				seqCargoTonnage / 10000, 
+				yoyCargoTonnage / 10000
+			});
+			drillDownData.put("cargoTonnageSeqRate", cargoTonnageSeqRate);
+			drillDownData.put("cargoTonnageYoyRate", cargoTonnageYoyRate);
+			
+			result.put("success", true);
+			result.put("data", drillDownData);
+			
+		} catch (ParseException e) {
+			result.put("success", false);
+			result.put("message", "日期解析错误: " + e.getMessage());
+		} catch (Exception e) {
+			result.put("success", false);
+			result.put("message", e.getMessage());
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 计算变化率
+	 */
+	private double calculateChangeRate(double baseValue, double currentValue) {
+		if (baseValue == 0) {
+			return currentValue > 0 ? 100 : 0;
+		}
+		return ((currentValue - baseValue) / baseValue) * 100;
+	}
+	
+	/**
+	 * 安全获取Double值
+	 */
+	private double getDoubleValue(Object value) {
+		if (value == null) {
+			return 0.0;
+		}
+		if (value instanceof Number) {
+			return ((Number) value).doubleValue();
+		}
+		try {
+			return Double.parseDouble(value.toString());
+		} catch (NumberFormatException e) {
+			return 0.0;
+		}
+	}
+
 }

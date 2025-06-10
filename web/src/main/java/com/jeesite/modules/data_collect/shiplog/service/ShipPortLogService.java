@@ -150,12 +150,23 @@ public class ShipPortLogService extends CrudService<ShipPortLogDao, ShipPortLog>
 	}
 	
 	/**
+	 * 获取码头下钻数据（指定码头在指定时间段的船舶数量和装卸货量）
+	 * @param berthingLocation 码头名称
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return 包含船舶数量和装卸货量的数据
+	 */
+	public Map<String, Object> getBerthingLocationDrillDownData(String berthingLocation, String startDate, String endDate) {
+		return dao.getBerthingLocationDrillDownData(berthingLocation, startDate, endDate);
+	}
+	
+	/**
 	 * 获取时间趋势数据
 	 * @param startDate 开始日期
 	 * @param endDate 结束日期
 	 * @param timeInterval 时间间隔
-	 * @param berthingLocation 码头
-	 * @param shipCategory 船舶类型
+	 * @param berthingLocation 码头筛选
+	 * @param shipCategory 船舶类型筛选
 	 * @return 时间趋势数据
 	 */
 	public List<Map<String, Object>> getTrendData(String startDate, String endDate, String timeInterval, String berthingLocation, String shipCategory) {

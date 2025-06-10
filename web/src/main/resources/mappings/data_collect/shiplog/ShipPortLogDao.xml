@@ -277,4 +277,19 @@
 		ORDER BY shipCount DESC
 	</select>
 	
+	<!-- 获取码头下钻数据（指定码头在指定时间段的船舶数量和装卸货量） -->
+	<select id="getBerthingLocationDrillDownData" resultType="java.util.HashMap">
+		SELECT 
+			COUNT(*) as shipCount,
+			COALESCE(SUM(lo.loaded_unloaded_cargo_tonnage), 0) as cargoTonnage
+		FROM ship_port_log lo
+		LEFT JOIN international_berth ib ON ib.泊位 = lo.berthing_location
+		WHERE lo.inspection_datetime >= #{startDate} 
+		AND lo.inspection_datetime &lt;= CONCAT(#{endDate}, ' 23:59:59')
+		AND (
+			ib.码头 = #{berthingLocation} 
+			OR (ib.码头 IS NULL AND lo.berthing_location = #{berthingLocation})
+		)
+	</select>
+	
 </mapper>

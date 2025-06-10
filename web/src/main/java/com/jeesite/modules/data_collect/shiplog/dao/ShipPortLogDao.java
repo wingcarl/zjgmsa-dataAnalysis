@@ -96,4 +96,13 @@ public interface ShipPortLogDao extends CrudDao<ShipPortLog> {
 	 */
 	List<Map<String, Object>> getShipOperatorStats(Map<String, Object> params);
 	
+	/**
+	 * 获取码头下钻数据（指定码头在指定时间段的船舶数量和装卸货量）
+	 * @param berthingLocation 码头名称
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return 包含船舶数量和装卸货量的数据
+	 */
+	Map<String, Object> getBerthingLocationDrillDownData(String berthingLocation, String startDate, String endDate);
+	
 }
