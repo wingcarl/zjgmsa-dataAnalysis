@@ -198,44 +198,68 @@
             background-color: rgba(4, 102, 200, 0.05);
         }
 
-        .table-section-title {
-            margin-top: 40px;
-            margin-bottom: 20px;
-            font-size: 24px;
-            font-weight: 600;
-            text-align: center;
-            color: var(--primary-color);
-            position: relative;
-            padding-bottom: 10px;
+        /* 港口吞吐量表格样式 */
+        .summary-table th:nth-child(1),
+        .summary-table th:nth-child(2) {
+            position: sticky;
+            left: 0;
+            z-index: 2;
         }
-
-        .table-section-title:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 3px;
-            background-color: var(--highlight-color);
+        
+        .summary-table th:nth-child(1) {
+            left: 0;
+            width: 120px;
+            min-width: 120px;
         }
-
+        
+        .summary-table th:nth-child(2) {
+            left: 120px;
+            width: 120px;
+            min-width: 120px;
+            background-color: var(--primary-color);
+        }
+        
+        .summary-table td:nth-child(1),
+        .summary-table td:nth-child(2) {
+            position: sticky;
+            z-index: 1;
+        }
+        
+        .summary-table td:nth-child(1) {
+            left: 0;
+            background-color: var(--card-bg);
+        }
+        
+        .summary-table td:nth-child(2) {
+            left: 120px;
+            background-color: var(--card-bg);
+        }
+        
+        /* 变化率样式 */
         .positive-change {
-            color: var(--positive-color);
-            font-weight: 600;
+            color: var(--positive-color) !important;
         }
-
+        
         .negative-change {
-            color: var(--negative-color);
-            font-weight: 600;
+            color: var(--negative-color) !important;
         }
-
+        
         .neutral-change {
-            color: #607d8b;
+            color: #607d8b !important;
         }
 
-        .table-active {
-            background-color: rgba(4, 102, 200, 0.08) !important;
+        /* 表格标题样式 */
+        .table-section-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .table-section-title .icon-box {
+            margin-right: 8px;
+            color: var(--accent-color);
         }
 
         /* 科技风格图标 */
@@ -351,6 +375,33 @@
                 font-size: 22px;
                 margin: 10px 0;
             }
+        }
+
+        /* 图表标题样式 */
+        .charts-title {
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            color: var(--primary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .charts-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--highlight-color);
+        }
+
+        .charts-section {
+            margin-bottom: 40px;
         }
     </style>
     <!-- jQuery 和 ECharts -->
@@ -474,6 +525,49 @@
         </div>
     </div>
 
+    <!-- 港口吞吐量数据统计表格 -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="table-section-title"><i class="fas fa-ship icon-box"></i>各港口吞吐量数据统计表</h4>
+            <div class="table-container">
+                <table class="table table-bordered table-striped summary-table">
+                    <thead>
+                    <tr>
+                        <th rowspan="3">代理</th>
+                        <th rowspan="3">港口</th>
+                        <th colspan="12">吞吐量(吨)</th>
+                    </tr>
+                    <tr>
+                        <th colspan="4">散装液体</th>
+                        <th colspan="4">散装固体</th>
+                        <th colspan="4">包装货物</th>
+                    </tr>
+                    <tr>
+                        <th>本期</th>
+                        <th>上期</th>
+                        <th>环比</th>
+                        <th>同比</th>
+                        <th>本期</th>
+                        <th>上期</th>
+                        <th>环比</th>
+                        <th>同比</th>
+                        <th>本期</th>
+                        <th>上期</th>
+                        <th>环比</th>
+                        <th>同比</th>
+                    </tr>
+                    </thead>
+                    <tbody id="port-throughput-body">
+                    <!-- 数据将通过JavaScript动态填充 -->
+                    </tbody>
+                    <tfoot id="port-throughput-footer">
+                    <!-- 合计行将通过JavaScript动态填充 -->
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="charts-section">
         <h5 class="charts-title"><i class="fas fa-chart-bar icon-box"></i>各机构危防类处罚数量</h5>
         <div class="row">
@@ -552,6 +646,54 @@
         <div class="row">
             <div class="col-md-12">
                 <div id="packaged-cargo-weight-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增：货物名称饼图筛选条件和图表 -->
+    <div class="charts-section">
+        <h5 class="charts-title"><i class="fas fa-chart-pie icon-box"></i>货物名称分布统计</h5>
+        
+        <!-- 筛选条件 -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="custom-date-input">
+                    <label for="cargoFlowDirection" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                        <i class="fas fa-filter icon-box"></i>货物流向：
+                    </label>
+                    <select id="cargoFlowDirection" class="form-control" style="width: auto; display: inline-block;">
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="custom-date-input">
+                    <label for="haborFilter" style="margin-right: 10px; line-height: 38px; font-weight: 600; font-size: 1.1rem;">
+                        港口：
+                    </label>
+                    <select id="haborFilter" class="form-control" style="width: auto; display: inline-block;">
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 三个饼图 -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <div id="bulk-liquid-pie-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <div id="bulk-solid-pie-chart" style="height: 400px;"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="chart-container">
+                    <div id="packaged-cargo-pie-chart" style="height: 400px;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -675,6 +817,11 @@
         var bulkSolidWeightChart = echarts.init(document.getElementById('bulk-solid-weight-chart'));
         var bulkLiquidWeightChart = echarts.init(document.getElementById('bulk-liquid-weight-chart'));
         var packagedCargoWeightChart = echarts.init(document.getElementById('packaged-cargo-weight-chart'));
+        
+        // 新增：初始化货物名称饼图
+        var bulkLiquidPieChart = echarts.init(document.getElementById('bulk-liquid-pie-chart'));
+        var bulkSolidPieChart = echarts.init(document.getElementById('bulk-solid-pie-chart'));
+        var packagedCargoPieChart = echarts.init(document.getElementById('packaged-cargo-pie-chart'));
 
         // 获取日期选择器和拉取数据按钮
         var startDateInput = $('#startDate');
@@ -722,6 +869,14 @@
         
         endDateInput.on('change', function() {
             fetchDataAndRenderCharts();
+        });
+        
+        // 新增：初始化筛选条件下拉框
+        initFilterDropdowns();
+        
+        // 新增：筛选条件改变事件
+        $('#cargoFlowDirection, #haborFilter').on('change', function() {
+            renderCargoNamePieCharts();
         });
 
         // 拉取数据按钮点击事件
@@ -778,6 +933,12 @@
                         renderBulkSolidWeightChart(startDate, endDate);
                         renderBulkLiquidWeightChart(startDate, endDate);
                         renderPackagedCargoWeightChart(startDate, endDate);
+                        
+                        // 新增：渲染货物名称饼图
+                        renderCargoNamePieCharts();
+                        
+                        // 新增：渲染港口吞吐量数据表格
+                        renderPortThroughputTable(startDate, endDate);
                         resolve();
                     },
                     error: function(error){
@@ -832,6 +993,12 @@
                     renderBulkSolidWeightChart(startDate, endDate);
                     renderBulkLiquidWeightChart(startDate, endDate);
                     renderPackagedCargoWeightChart(startDate, endDate);
+                    
+                    // 新增：渲染货物名称饼图
+                    renderCargoNamePieCharts();
+                    
+                    // 新增：渲染港口吞吐量数据表格
+                    renderPortThroughputTable(startDate, endDate);
                 },
                 error: function(error) {
                     console.error('Error fetching chart data:', error);
@@ -1570,6 +1737,11 @@
             bulkSolidWeightChart.resize();
             bulkLiquidWeightChart.resize();
             packagedCargoWeightChart.resize();
+            
+            // 新增：调整饼图大小
+            bulkLiquidPieChart.resize();
+            bulkSolidPieChart.resize();
+            packagedCargoPieChart.resize();
         });
 
         // 新增：渲染散装固体重量统计图表
@@ -1922,6 +2094,278 @@
             $('#haborDetailModal').on('hidden.bs.modal', function () {
                 $(this).remove();
             });
+        }
+        
+        // 新增：初始化筛选条件下拉框
+        function initFilterDropdowns() {
+            // 加载货物流向下拉框
+            $.ajax({
+                url: 'getAllCargoFlowDirections',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    var select = $('#cargoFlowDirection');
+                    select.empty().append('<option value="all">全部</option>');
+                    
+                    if (data.directions && data.directions.length > 0) {
+                        data.directions.forEach(function(item) {
+                            if (item.cargo_flow_direction) {
+                                select.append('<option value="' + item.cargo_flow_direction + '">' + item.cargo_flow_direction + '</option>');
+                            }
+                        });
+                    }
+                },
+                error: function(error) {
+                    console.error('获取货物流向数据失败:', error);
+                }
+            });
+            
+            // 加载港口下拉框
+            $.ajax({
+                url: 'getAllHabors',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    var select = $('#haborFilter');
+                    select.empty().append('<option value="all">全部</option>');
+                    
+                    if (data.habors && data.habors.length > 0) {
+                        data.habors.forEach(function(item) {
+                            if (item.habor) {
+                                select.append('<option value="' + item.habor + '">' + item.habor + '</option>');
+                            }
+                        });
+                    }
+                },
+                error: function(error) {
+                    console.error('获取港口数据失败:', error);
+                }
+            });
+        }
+        
+        // 新增：渲染货物名称饼图
+        function renderCargoNamePieCharts() {
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            var cargoFlowDirection = $('#cargoFlowDirection').val();
+            var habor = $('#haborFilter').val();
+            
+            // 渲染散装液体饼图
+            renderCargoNamePieChart('散装液体', bulkLiquidPieChart, cargoFlowDirection, habor, startDate, endDate);
+            
+            // 渲染散装固体饼图
+            renderCargoNamePieChart('散装固体', bulkSolidPieChart, cargoFlowDirection, habor, startDate, endDate);
+            
+            // 渲染包装货物饼图
+            renderCargoNamePieChart('包装货物', packagedCargoPieChart, cargoFlowDirection, habor, startDate, endDate);
+        }
+        
+        // 新增：通用的货物名称饼图渲染函数
+        function renderCargoNamePieChart(remarkType, chartInstance, cargoFlowDirection, habor, startDate, endDate) {
+            $.ajax({
+                url: 'getCargoNamePieData',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    remarkType: remarkType,
+                    cargoFlowDirection: cargoFlowDirection,
+                    habor: habor,
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                success: function(data) {
+                    var chartOption = {
+                        title: {
+                            text: data.title || (remarkType + '货物名称分布'),
+                            textStyle: {
+                                color: '#0466c8',
+                                fontWeight: 'bold',
+                                fontSize: 14
+                            },
+                            left: 'center',
+                            top: 10
+                        },
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: function(params) {
+                                return params.seriesName + '<br/>' + 
+                                       params.name + ': ' + (params.value || 0).toFixed(2) + ' 吨 (' + params.percent + '%)';
+                            },
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            borderColor: '#0466c8',
+                            borderWidth: 1,
+                            textStyle: {
+                                color: '#333',
+                                fontSize: 12
+                            }
+                        },
+                        legend: {
+                            orient: 'vertical',
+                            left: 'left',
+                            top: 50,
+                            textStyle: {
+                                color: '#0466c8',
+                                fontSize: 10
+                            },
+                            itemWidth: 10,
+                            itemHeight: 10,
+                            formatter: function(name) {
+                                // 限制图例文字长度
+                                return name.length > 8 ? name.substring(0, 8) + '...' : name;
+                            }
+                        },
+                        series: [{
+                            name: remarkType,
+                            type: 'pie',
+                            radius: ['30%', '70%'],
+                            center: ['60%', '50%'],
+                            avoidLabelOverlap: false,
+                            itemStyle: {
+                                borderRadius: 8,
+                                borderColor: '#fff',
+                                borderWidth: 2
+                            },
+                            label: {
+                                show: false,
+                                position: 'center'
+                            },
+                            emphasis: {
+                                label: {
+                                    show: true,
+                                    fontSize: '14',
+                                    fontWeight: 'bold',
+                                    formatter: function(params) {
+                                        return params.name + '\n' + (params.value || 0).toFixed(1) + '吨';
+                                    }
+                                }
+                            },
+                            labelLine: {
+                                show: false
+                            },
+                            data: data.data || []
+                        }]
+                    };
+                    
+                    chartInstance.setOption(chartOption);
+                },
+                error: function(error) {
+                    console.error('获取' + remarkType + '饼图数据失败:', error);
+                }
+            });
+        }
+        
+        // 新增：渲染港口吞吐量数据表格
+        function renderPortThroughputTable(startDate, endDate) {
+            $.ajax({
+                url: 'getPortThroughputTableData',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                success: function(data) {
+                    var tableBody = $('#port-throughput-body');
+                    var tableFooter = $('#port-throughput-footer');
+                    tableBody.empty();
+                    tableFooter.empty();
+                    
+                    if (data.error) {
+                        console.error('获取港口吞吐量数据失败:', data.error);
+                        tableBody.append('<tr><td colspan="14" class="text-center text-danger">数据获取失败：' + data.error + '</td></tr>');
+                        return;
+                    }
+                    
+                    var tableData = data.tableData || [];
+                    var totalData = data.totalData || {};
+                    
+                    // 按agency分组处理数据
+                    var groupedData = {};
+                    tableData.forEach(function(row) {
+                        var agency = row.agency || '未知代理';
+                        if (!groupedData[agency]) {
+                            groupedData[agency] = [];
+                        }
+                        groupedData[agency].push(row);
+                    });
+                    
+                    // 渲染数据行
+                    Object.keys(groupedData).forEach(function(agency) {
+                        var rows = groupedData[agency];
+                        
+                        rows.forEach(function(row, index) {
+                            var tr = $('<tr></tr>');
+                            
+                            // 第一行显示agency，其他行为空（实现合并效果）
+                            if (index === 0) {
+                                tr.append('<td rowspan="' + rows.length + '" style="vertical-align: middle; background-color: rgba(4, 102, 200, 0.05);"><strong>' + agency + '</strong></td>');
+                            }
+                            
+                            // 港口名称
+                            tr.append('<td>' + (row.habor || '') + '</td>');
+                            
+                            // 散装液体数据
+                            tr.append('<td class="text-right">' + formatNumber(row.currentBulkLiquid) + '</td>');
+                            tr.append('<td class="text-right">' + formatNumber(row.lastBulkLiquid) + '</td>');
+                            tr.append('<td class="text-right ' + getRateClass(row.bulkLiquidLastRate) + '">' + formatRate(row.bulkLiquidLastRate) + '</td>');
+                            tr.append('<td class="text-right ' + getRateClass(row.bulkLiquidYearRate) + '">' + formatRate(row.bulkLiquidYearRate) + '</td>');
+                            
+                            // 散装固体数据
+                            tr.append('<td class="text-right">' + formatNumber(row.currentBulkSolid) + '</td>');
+                            tr.append('<td class="text-right">' + formatNumber(row.lastBulkSolid) + '</td>');
+                            tr.append('<td class="text-right ' + getRateClass(row.bulkSolidLastRate) + '">' + formatRate(row.bulkSolidLastRate) + '</td>');
+                            tr.append('<td class="text-right ' + getRateClass(row.bulkSolidYearRate) + '">' + formatRate(row.bulkSolidYearRate) + '</td>');
+                            
+                            // 包装货物数据
+                            tr.append('<td class="text-right">' + formatNumber(row.currentPackagedCargo) + '</td>');
+                            tr.append('<td class="text-right">' + formatNumber(row.lastPackagedCargo) + '</td>');
+                            tr.append('<td class="text-right ' + getRateClass(row.packagedCargoLastRate) + '">' + formatRate(row.packagedCargoLastRate) + '</td>');
+                            tr.append('<td class="text-right ' + getRateClass(row.packagedCargoYearRate) + '">' + formatRate(row.packagedCargoYearRate) + '</td>');
+                            
+                            tableBody.append(tr);
+                        });
+                    });
+                    
+                    // 添加合计行
+                    var totalRow = $('<tr class="table-warning" style="font-weight: bold;"></tr>');
+                    totalRow.append('<td><strong>合计</strong></td>');
+                    totalRow.append('<td></td>'); // 港口列为空
+                    
+                    // 散装液体合计
+                    totalRow.append('<td class="text-right">' + formatNumber(totalData.currentBulkLiquid) + '</td>');
+                    totalRow.append('<td class="text-right">' + formatNumber(totalData.lastBulkLiquid) + '</td>');
+                    totalRow.append('<td class="text-right ' + getRateClass(totalData.bulkLiquidLastRate) + '">' + formatRate(totalData.bulkLiquidLastRate) + '</td>');
+                    totalRow.append('<td class="text-right ' + getRateClass(totalData.bulkLiquidYearRate) + '">' + formatRate(totalData.bulkLiquidYearRate) + '</td>');
+                    
+                    // 散装固体合计
+                    totalRow.append('<td class="text-right">' + formatNumber(totalData.currentBulkSolid) + '</td>');
+                    totalRow.append('<td class="text-right">' + formatNumber(totalData.lastBulkSolid) + '</td>');
+                    totalRow.append('<td class="text-right ' + getRateClass(totalData.bulkSolidLastRate) + '">' + formatRate(totalData.bulkSolidLastRate) + '</td>');
+                    totalRow.append('<td class="text-right ' + getRateClass(totalData.bulkSolidYearRate) + '">' + formatRate(totalData.bulkSolidYearRate) + '</td>');
+                    
+                    // 包装货物合计
+                    totalRow.append('<td class="text-right">' + formatNumber(totalData.currentPackagedCargo) + '</td>');
+                    totalRow.append('<td class="text-right">' + formatNumber(totalData.lastPackagedCargo) + '</td>');
+                    totalRow.append('<td class="text-right ' + getRateClass(totalData.packagedCargoLastRate) + '">' + formatRate(totalData.packagedCargoLastRate) + '</td>');
+                    totalRow.append('<td class="text-right ' + getRateClass(totalData.packagedCargoYearRate) + '">' + formatRate(totalData.packagedCargoYearRate) + '</td>');
+                    
+                    tableFooter.append(totalRow);
+                },
+                error: function(error) {
+                    console.error('获取港口吞吐量数据失败:', error);
+                    var tableBody = $('#port-throughput-body');
+                    tableBody.empty();
+                    tableBody.append('<tr><td colspan="14" class="text-center text-danger">数据获取失败，请重试</td></tr>');
+                }
+            });
+        }
+        
+        // 新增：格式化数字显示（保留两位小数）
+        function formatNumber(value) {
+            if (value === null || value === undefined || isNaN(value)) {
+                return '0.00';
+            }
+            return parseFloat(value).toFixed(2);
         }
     });
 </script>

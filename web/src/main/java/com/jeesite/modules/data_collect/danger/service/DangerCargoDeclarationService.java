@@ -265,4 +265,145 @@ public class DangerCargoDeclarationService extends CrudService<DangerCargoDeclar
 		return jdbcTemplate.queryForList(sql.toString(), params.toArray());
 	}
 	
+	/**
+	 * 根据备注类型和筛选条件获取各货物名称的总重量统计
+	 * @param remarkType 备注类型
+	 * @param cargoFlowDirection 货物流向
+	 * @param habor 港口
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return 货物名称重量统计列表
+	 */
+	public List<Map<String, Object>> getWeightStatsByCargoName(String remarkType, String cargoFlowDirection, String habor, String startDate, String endDate) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT dcd.cargo_name, SUM(dcd.total_weight) as totalWeight ");
+		sql.append("FROM danger_cargo_declaration dcd ");
+		sql.append("LEFT JOIN berth_habor bh ON dcd.berth = bh.berth ");
+		sql.append("WHERE dcd.remarks = ? ");
+		
+		List<Object> params = new ArrayList<>();
+		params.add(remarkType);
+		
+		if (cargoFlowDirection != null && !cargoFlowDirection.isEmpty() && !"all".equals(cargoFlowDirection)) {
+			sql.append("AND dcd.cargo_flow_direction = ? ");
+			params.add(cargoFlowDirection);
+		}
+		
+		if (habor != null && !habor.isEmpty() && !"all".equals(habor)) {
+			sql.append("AND bh.habor = ? ");
+			params.add(habor);
+		}
+		
+		if (startDate != null && !startDate.isEmpty()) {
+			sql.append("AND dcd.declaration_date >= ? ");
+			params.add(startDate);
+		}
+		if (endDate != null && !endDate.isEmpty()) {
+			sql.append("AND dcd.declaration_date <= ? ");
+			params.add(endDate);
+		}
+		
+		sql.append("AND dcd.cargo_name IS NOT NULL ");
+		sql.append("AND dcd.cargo_name != '' ");
+		sql.append("GROUP BY dcd.cargo_name ");
+		sql.append("ORDER BY totalWeight DESC");
+		
+		return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+	}
+	
+	/**
+	 * 获取所有港口列表
+	 * @return 港口列表
+	 */
+	public List<Map<String, Object>> getAllHabors() {
+		String sql = "SELECT DISTINCT habor FROM berth_habor WHERE habor IS NOT NULL AND habor != '' ORDER BY habor";
+		return jdbcTemplate.queryForList(sql);
+	}
+	
+	/**
+	 * 获取所有货物流向列表
+	 * @return 货物流向列表
+	 */
+	public List<Map<String, Object>> getAllCargoFlowDirections() {
+		String sql = "SELECT DISTINCT cargo_flow_direction FROM danger_cargo_declaration WHERE cargo_flow_direction IS NOT NULL AND cargo_flow_direction != '' ORDER BY cargo_flow_direction";
+		return jdbcTemplate.queryForList(sql);
+	}
+	
+	/**
+	 * 获取港口吞吐量统计数据
+	 * @param startDate 开始日期
+	 * @param endDate 结束日期
+	 * @return 港口吞吐量统计数据
+	 */
+	public List<Map<String, Object>> getPortThroughputStats(String startDate, String endDate) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT ");
+		sql.append("    bh.agency, ");
+		sql.append("    bh.habor, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd.remarks = '散装液体' THEN dcd.total_weight ELSE 0 END), 0) as bulkLiquid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd.remarks = '散装固体' THEN dcd.total_weight ELSE 0 END), 0) as bulkSolid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd.remarks = '包装货物' THEN dcd.total_weight ELSE 0 END), 0) as packagedCargo ");
+		sql.append("FROM berth_habor bh ");
+		sql.append("LEFT JOIN danger_cargo_declaration dcd ON bh.berth = dcd.berth ");
+		sql.append("    AND dcd.declaration_date >= ? AND dcd.declaration_date <= ? ");
+		sql.append("WHERE bh.agency IS NOT NULL AND bh.habor IS NOT NULL ");
+		sql.append("GROUP BY bh.agency, bh.habor ");
+		sql.append("ORDER BY bh.agency, bh.habor");
+		
+		return jdbcTemplate.queryForList(sql.toString(), startDate, endDate);
+	}
+	
+	/**
+	 * 获取港口吞吐量对比统计数据（包含环比和同比）
+	 * @param currentStartDate 当前期间开始日期
+	 * @param currentEndDate 当前期间结束日期
+	 * @param lastStartDate 上期开始日期
+	 * @param lastEndDate 上期结束日期
+	 * @param lastYearStartDate 去年同期开始日期
+	 * @param lastYearEndDate 去年同期结束日期
+	 * @return 港口吞吐量对比统计数据
+	 */
+	public List<Map<String, Object>> getPortThroughputCompareStats(
+			String currentStartDate, String currentEndDate,
+			String lastStartDate, String lastEndDate,
+			String lastYearStartDate, String lastYearEndDate) {
+		
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT ");
+		sql.append("    bh.agency, ");
+		sql.append("    bh.habor, ");
+		// 当前期间数据
+		sql.append("    COALESCE(SUM(CASE WHEN dcd1.remarks = '散装液体' THEN dcd1.total_weight ELSE 0 END), 0) as currentBulkLiquid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd1.remarks = '散装固体' THEN dcd1.total_weight ELSE 0 END), 0) as currentBulkSolid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd1.remarks = '包装货物' THEN dcd1.total_weight ELSE 0 END), 0) as currentPackagedCargo, ");
+		// 上期数据
+		sql.append("    COALESCE(SUM(CASE WHEN dcd2.remarks = '散装液体' THEN dcd2.total_weight ELSE 0 END), 0) as lastBulkLiquid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd2.remarks = '散装固体' THEN dcd2.total_weight ELSE 0 END), 0) as lastBulkSolid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd2.remarks = '包装货物' THEN dcd2.total_weight ELSE 0 END), 0) as lastPackagedCargo, ");
+		// 去年同期数据
+		sql.append("    COALESCE(SUM(CASE WHEN dcd3.remarks = '散装液体' THEN dcd3.total_weight ELSE 0 END), 0) as lastYearBulkLiquid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd3.remarks = '散装固体' THEN dcd3.total_weight ELSE 0 END), 0) as lastYearBulkSolid, ");
+		sql.append("    COALESCE(SUM(CASE WHEN dcd3.remarks = '包装货物' THEN dcd3.total_weight ELSE 0 END), 0) as lastYearPackagedCargo ");
+		
+		sql.append("FROM berth_habor bh ");
+		// 当前期间关联
+		sql.append("LEFT JOIN danger_cargo_declaration dcd1 ON bh.berth = dcd1.berth ");
+		sql.append("    AND dcd1.declaration_date >= ? AND dcd1.declaration_date <= ? ");
+		// 上期关联
+		sql.append("LEFT JOIN danger_cargo_declaration dcd2 ON bh.berth = dcd2.berth ");
+		sql.append("    AND dcd2.declaration_date >= ? AND dcd2.declaration_date <= ? ");
+		// 去年同期关联
+		sql.append("LEFT JOIN danger_cargo_declaration dcd3 ON bh.berth = dcd3.berth ");
+		sql.append("    AND dcd3.declaration_date >= ? AND dcd3.declaration_date <= ? ");
+		
+		sql.append("WHERE bh.agency IS NOT NULL AND bh.habor IS NOT NULL ");
+		sql.append("GROUP BY bh.agency, bh.habor ");
+		sql.append("ORDER BY bh.agency, bh.habor");
+		
+		return jdbcTemplate.queryForList(sql.toString(), 
+			currentStartDate, currentEndDate,
+			lastStartDate, lastEndDate,
+			lastYearStartDate, lastYearEndDate);
+	}
+	
 }

@@ -353,4 +353,231 @@ public class WeeklyReportDangerDefenseController extends BaseController {
         
         return result;
     }
+    
+    /**
+     * 获取货物名称饼图数据
+     */
+    @RequestMapping(value = "getCargoNamePieData")
+    @ResponseBody
+    public Map<String, Object> getCargoNamePieData(String remarkType, String cargoFlowDirection, String habor, String startDate, String endDate) {
+        List<Map<String, Object>> cargoData = dangerCargoDeclarationService.getWeightStatsByCargoName(remarkType, cargoFlowDirection, habor, startDate, endDate);
+        
+        // 转换为ECharts饼图数据格式，只显示前10名，其余归为"其他"
+        List<Map<String, Object>> pieData = new ArrayList<>();
+        double otherWeight = 0.0;
+        
+        for (int i = 0; i < cargoData.size(); i++) {
+            Map<String, Object> item = cargoData.get(i);
+            
+            if (i < 10) {
+                // 前10名直接添加
+                Map<String, Object> pieItem = new HashMap<>();
+                pieItem.put("name", item.get("cargo_name"));
+                pieItem.put("value", item.get("totalWeight"));
+                pieData.add(pieItem);
+            } else {
+                // 第11名及以后归为"其他"
+                Object weightObj = item.get("totalWeight");
+                if (weightObj != null) {
+                    if (weightObj instanceof Number) {
+                        otherWeight += ((Number) weightObj).doubleValue();
+                    }
+                }
+            }
+        }
+        
+        // 如果有"其他"数据，添加到饼图数据中
+        if (otherWeight > 0) {
+            Map<String, Object> otherItem = new HashMap<>();
+            otherItem.put("name", "其他");
+            otherItem.put("value", otherWeight);
+            pieData.add(otherItem);
+        }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", pieData);
+        result.put("title", remarkType + "货物名称分布");
+        
+        return result;
+    }
+    
+    /**
+     * 获取所有港口列表
+     */
+    @RequestMapping(value = "getAllHabors")
+    @ResponseBody
+    public Map<String, Object> getAllHabors() {
+        List<Map<String, Object>> haborData = dangerCargoDeclarationService.getAllHabors();
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("habors", haborData);
+        
+        return result;
+    }
+    
+    /**
+     * 获取所有货物流向列表
+     */
+    @RequestMapping(value = "getAllCargoFlowDirections")
+    @ResponseBody
+    public Map<String, Object> getAllCargoFlowDirections() {
+        List<Map<String, Object>> flowData = dangerCargoDeclarationService.getAllCargoFlowDirections();
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("directions", flowData);
+        
+        return result;
+    }
+    
+    /**
+     * 获取港口吞吐量数据表格
+     */
+    @RequestMapping(value = "getPortThroughputTableData")
+    @ResponseBody
+    public Map<String, Object> getPortThroughputTableData(String startDate, String endDate) {
+        try {
+            // 计算各个时间段
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date start = sdf.parse(startDate);
+            Date end = sdf.parse(endDate);
+            
+            // 计算时间跨度（天数）
+            long diff = end.getTime() - start.getTime();
+            long days = diff / (24 * 60 * 60 * 1000) + 1;
+            
+            // 上期时间（环比）- 向前推相同天数
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(start);
+            cal.add(Calendar.DAY_OF_YEAR, -(int)days);
+            String lastStartDate = sdf.format(cal.getTime());
+            
+            cal.setTime(end);
+            cal.add(Calendar.DAY_OF_YEAR, -(int)days);
+            String lastEndDate = sdf.format(cal.getTime());
+            
+            // 去年同期时间（同比）
+            cal.setTime(start);
+            cal.add(Calendar.YEAR, -1);
+            String lastYearStartDate = sdf.format(cal.getTime());
+            
+            cal.setTime(end);
+            cal.add(Calendar.YEAR, -1);
+            String lastYearEndDate = sdf.format(cal.getTime());
+            
+            // 获取对比数据
+            List<Map<String, Object>> rawData = dangerCargoDeclarationService.getPortThroughputCompareStats(
+                startDate, endDate,
+                lastStartDate, lastEndDate,  
+                lastYearStartDate, lastYearEndDate
+            );
+            
+            // 处理数据，添加变化率计算
+            List<Map<String, Object>> tableData = new ArrayList<>();
+            Map<String, Object> totalData = new HashMap<>();
+            
+            // 初始化合计数据
+            totalData.put("agency", "合计");
+            totalData.put("habor", "");
+            totalData.put("currentBulkLiquid", 0.0);
+            totalData.put("lastBulkLiquid", 0.0);
+            totalData.put("lastYearBulkLiquid", 0.0);
+            totalData.put("currentBulkSolid", 0.0);
+            totalData.put("lastBulkSolid", 0.0);
+            totalData.put("lastYearBulkSolid", 0.0);
+            totalData.put("currentPackagedCargo", 0.0);
+            totalData.put("lastPackagedCargo", 0.0);
+            totalData.put("lastYearPackagedCargo", 0.0);
+            
+            for (Map<String, Object> row : rawData) {
+                Map<String, Object> processedRow = new HashMap<>(row);
+                
+                // 转换数据类型
+                double currentBulkLiquid = convertToDouble(row.get("currentBulkLiquid"));
+                double lastBulkLiquid = convertToDouble(row.get("lastBulkLiquid"));
+                double lastYearBulkLiquid = convertToDouble(row.get("lastYearBulkLiquid"));
+                
+                double currentBulkSolid = convertToDouble(row.get("currentBulkSolid"));
+                double lastBulkSolid = convertToDouble(row.get("lastBulkSolid"));
+                double lastYearBulkSolid = convertToDouble(row.get("lastYearBulkSolid"));
+                
+                double currentPackagedCargo = convertToDouble(row.get("currentPackagedCargo"));
+                double lastPackagedCargo = convertToDouble(row.get("lastPackagedCargo"));
+                double lastYearPackagedCargo = convertToDouble(row.get("lastYearPackagedCargo"));
+                
+                // 计算环比和同比
+                processedRow.put("bulkLiquidLastRate", calculateChangeRate(lastBulkLiquid, currentBulkLiquid));
+                processedRow.put("bulkLiquidYearRate", calculateChangeRate(lastYearBulkLiquid, currentBulkLiquid));
+                
+                processedRow.put("bulkSolidLastRate", calculateChangeRate(lastBulkSolid, currentBulkSolid));
+                processedRow.put("bulkSolidYearRate", calculateChangeRate(lastYearBulkSolid, currentBulkSolid));
+                
+                processedRow.put("packagedCargoLastRate", calculateChangeRate(lastPackagedCargo, currentPackagedCargo));
+                processedRow.put("packagedCargoYearRate", calculateChangeRate(lastYearPackagedCargo, currentPackagedCargo));
+                
+                // 累加到合计
+                totalData.put("currentBulkLiquid", (Double)totalData.get("currentBulkLiquid") + currentBulkLiquid);
+                totalData.put("lastBulkLiquid", (Double)totalData.get("lastBulkLiquid") + lastBulkLiquid);
+                totalData.put("lastYearBulkLiquid", (Double)totalData.get("lastYearBulkLiquid") + lastYearBulkLiquid);
+                
+                totalData.put("currentBulkSolid", (Double)totalData.get("currentBulkSolid") + currentBulkSolid);
+                totalData.put("lastBulkSolid", (Double)totalData.get("lastBulkSolid") + lastBulkSolid);
+                totalData.put("lastYearBulkSolid", (Double)totalData.get("lastYearBulkSolid") + lastYearBulkSolid);
+                
+                totalData.put("currentPackagedCargo", (Double)totalData.get("currentPackagedCargo") + currentPackagedCargo);
+                totalData.put("lastPackagedCargo", (Double)totalData.get("lastPackagedCargo") + lastPackagedCargo);
+                totalData.put("lastYearPackagedCargo", (Double)totalData.get("lastYearPackagedCargo") + lastYearPackagedCargo);
+                
+                tableData.add(processedRow);
+            }
+            
+            // 计算合计的变化率
+            totalData.put("bulkLiquidLastRate", calculateChangeRate((Double)totalData.get("lastBulkLiquid"), (Double)totalData.get("currentBulkLiquid")));
+            totalData.put("bulkLiquidYearRate", calculateChangeRate((Double)totalData.get("lastYearBulkLiquid"), (Double)totalData.get("currentBulkLiquid")));
+            
+            totalData.put("bulkSolidLastRate", calculateChangeRate((Double)totalData.get("lastBulkSolid"), (Double)totalData.get("currentBulkSolid")));
+            totalData.put("bulkSolidYearRate", calculateChangeRate((Double)totalData.get("lastYearBulkSolid"), (Double)totalData.get("currentBulkSolid")));
+            
+            totalData.put("packagedCargoLastRate", calculateChangeRate((Double)totalData.get("lastPackagedCargo"), (Double)totalData.get("currentPackagedCargo")));
+            totalData.put("packagedCargoYearRate", calculateChangeRate((Double)totalData.get("lastYearPackagedCargo"), (Double)totalData.get("currentPackagedCargo")));
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("tableData", tableData);
+            result.put("totalData", totalData);
+            
+            return result;
+            
+        } catch (ParseException e) {
+            logger.error("日期解析错误", e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", "日期解析错误");
+            return errorResult;
+        }
+    }
+    
+    /**
+     * 转换Object为Double
+     */
+    private double convertToDouble(Object value) {
+        if (value == null) {
+            return 0.0;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        try {
+            return Double.parseDouble(value.toString());
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+    
+    /**
+     * 计算变化率
+     */
+    private double calculateChangeRate(double baseValue, double currentValue) {
+        if (baseValue == 0) {
+            return currentValue > 0 ? 100 : 0;
+        }
+        return ((currentValue - baseValue) / baseValue) * 100;
+    }
 } 
